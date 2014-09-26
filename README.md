@@ -54,4 +54,4 @@ Bitseal is a Bitmessage client for Android. Currently in Beta.
 
 - I have set up a few default servers which can be used for testing purposes. Anyone is free to set up and use their own. The server application is simply a copy of PyBitmessage with a modified API. 
 
-- The development of Bitseal has been a large project, taking many months of work. I'm doing it on a purely non-profit basis. Bitcoin donations are very gratefully received: 1L7amdWrPv4R4f1vLdanr2xU71TPs3wUEC
+- The development of Bitseal has been a large project, taking many months of work. I'm doing it on a purely non-profit basis. Bitcoin donations are very gratefully received: **1L7amdWrPv4R4f1vLdanr2xU71TPs3wUEC**
