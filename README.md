@@ -11,24 +11,37 @@ Bitseal is a Bitmessage client for Android. Currently in Beta.
 
 
 ##Working features:
-	- Sending messages
-	- Receiving messages
-	- QR codes for addresses
-	- Address Book
-	- Import addresses
-	- Export addresses
-	- Choose which servers to use (including your own)
+- Sending messages
+
+- Receiving messages
+
+- QR codes for addresses
+
+- Address Book
+
+- Import addresses
+
+- Export addresses
+
+- Choose which servers to use (including your own)
 
 
 ##Roadmap for development (subject to change):
-	- Update for Bitmessage Protocol Version 3
-	- Lite client message retrieval using prefix filters (credit to Peter Todd for suggesting this)
-	- Local encryption of the database, using SQLCipher
-	- SSL for connections between clients and servers
-	- POW implemented in C or C++ via the Android NDK
-	- Support for broadcasts
-	- Refresh the UI
-	- "Panic wipe" secure deletion of all local data
+- Update for Bitmessage Protocol Version 3
+
+- Lite client message retrieval using prefix filters (credit to Peter Todd for suggesting this)
+
+- Local encryption of the database, using SQLCipher
+
+- SSL for connections between clients and servers
+
+- POW implemented in C or C++ via the Android NDK
+
+- Support for broadcasts
+
+- Refresh the UI
+
+- "Panic wipe" secure deletion of all local data
 
 
 ##Notes:
