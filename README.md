@@ -3,8 +3,8 @@ Bitseal
 
 Bitseal is a Bitmessage client for Android. Currently in Beta. 
 
-<a href="Inbox"><img src="https://i.imgur.com/45OuinZ.png" align="left" height="640" width="360" ></a>
-<a href="Sent"><img src="https://i.imgur.com/R2xgeDW.png" align="left" height="640" width="360" style="margin-left:380px" ></a>
+<a href="Inbox"><img src="https://i.imgur.com/45OuinZ.png" align="left" height="640" width="360" hspace="20" vspace="20"></a>
+<a href="Sent"><img src="https://i.imgur.com/R2xgeDW.png" align="left" height="640" width="360" hspace="20" vspace="20" ></a>
 
 <br><br>
 
