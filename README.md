@@ -52,7 +52,7 @@ Bitseal is a Bitmessage client for Android, currently in Beta.
 
 - Bitseal is free, open source software, released under the Gnu General Public License Version 3. 
 
-- Some parts of Bitseal are based or reliant upon software written by others, including <a href="Jonathan Warren">https://github.com/Atheros1</a>, <a href="Sebastian Schmidt">https://github.com/ISibboI</a>, <a href="Tim Roes">https://github.com/timroes</a>, <a href="Roberto Tyley">https://github.com/rtyley</a>, the <a href="bitcoinj">https://github.com/bitcoinj/bitcoinj</a> developers, and the <a href="Bouncy Castle">https://www.bouncycastle.org/java.html</a> developers. This is noted in the source code where applicable.
+- Some parts of Bitseal are based or reliant upon software written by others, including <a href="https://github.com/Atheros1">Jonathan Warren</a>, <a href="https://github.com/ISibboI">Sebastian Schmidt</a>, <a href="https://github.com/timroes">Tim Roes</a>, <a href="https://github.com/rtyley">Roberto Tyley</a>, the <a href="https://github.com/bitcoinj/bitcoinj">bitcoinj</a> developers, and the <a href="https://www.bouncycastle.org/java.html">Bouncy Castle</a> developers. This is noted in the source code where applicable.
 
 - I have set up a few default servers which can be used for testing purposes. Anyone is free to set up and use their own. The server application is simply a copy of PyBitmessage with a modified API. 
 
