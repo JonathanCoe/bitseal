@@ -1,0 +1,47 @@
+<resources>
+    
+    <!--
+        Base application theme for API 11+. This theme completely replaces
+        AppBaseTheme from res/values/styles.xml on API 11+ devices.
+    -->
+    <style name="AppTheme" parent="@android:Theme.Holo.Light.DarkActionBar">
+        <item name="android:buttonStyle">@style/ButtonStyle</item>
+        <item name="android:actionBarStyle">@style/ActionBarStyle</item>
+    </style>
+
+    
+    
+    
+    
+    
+    
+    
+    <!-- Custom style for the action bar -->
+    <style name="ActionBarStyle" parent="@android:style/Widget.Holo.Light.ActionBar">
+        <item name="android:background">@color/darkerGrey_opaque</item>
+        <item name="android:titleTextStyle">@style/ActionBarTitleTextStyle</item>
+		<item name="android:actionMenuTextColor">@color/white_opaque</item>
+    </style>
+    
+    <!-- Custom style for the action bar's title text -->
+    <style name="ActionBarTitleTextStyle" parent="@android:TextAppearance.Holo.Widget.ActionBar.Title">
+    	<item name="android:textColor">@color/white_opaque</item>
+ 	</style>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <!-- Custom style for all buttons in the app. -->
+    <style name="ButtonStyle" parent="@android:style/Widget.Button">
+  		<item name="android:background">@color/darkerGrey_opaque</item>
+  		<item name="android:textColor">@color/white_opaque</item>
+  		<item name="android:textColorHighlight">@color/white_opaque</item>
+  		<item name="android:textColorHint">@color/white_opaque</item>
+ 	</style>
+
+</resources>

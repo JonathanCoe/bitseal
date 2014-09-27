@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout 
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:paddingTop="4dp"
+  android:paddingBottom="4dp"  
+  android:background="@drawable/background_activated" >
+    
+  <TextView
+    android:id="@+id/sent_messagelist_item_toaddress_textview"
+    android:layout_width="280dp"
+    android:layout_height="wrap_content"
+    android:paddingLeft="4dp"
+    android:paddingRight="4dp"
+    android:textSize="12sp"
+    android:textStyle="bold"
+    android:maxLines = "1"
+    />
+  
+  <TextView
+    android:id="@+id/sent_messagelist_item_date_textview"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_toRightOf="@+id/sent_messagelist_item_toaddress_textview"
+    android:gravity="right"
+    android:paddingLeft="4dp"
+    android:paddingRight="4dp"
+    android:textSize="12sp"
+    />
+    
+  <TextView
+    android:id="@+id/sent_messagelist_item_subject_textview"
+    android:layout_width="280dp"
+    android:layout_height="wrap_content"
+    android:layout_alignParentLeft="true"
+    android:layout_below="@+id/sent_messagelist_item_toaddress_textview"
+    android:paddingLeft="4dp"
+    android:paddingRight="4dp"
+    android:maxLines = "1"
+    />
+  
+  <TextView
+    android:id="@+id/sent_messagelist_item_status_textview"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_below="@+id/sent_messagelist_item_subject_textview"
+    android:paddingLeft="4dp"
+    android:paddingRight="4dp"
+    android:textSize="12sp"
+    />
+  
+</RelativeLayout>

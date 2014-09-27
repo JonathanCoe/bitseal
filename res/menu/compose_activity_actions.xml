@@ -1,0 +1,47 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/action_send"
+        android:orderInCategory="100"
+        android:showAsAction="always"
+        android:icon="@drawable/icon_action_send"
+        android:title="@string/action_compose_activity_send"
+        />
+
+	    <item
+	        android:id="@+id/menu_item_inbox"
+	        android:orderInCategory="1"
+	        android:showAsAction="never"
+	        android:title="@string/menu_item_label_inbox"  />
+	    
+	    <item
+	        android:id="@+id/menu_item_sent"
+	        android:orderInCategory="2"
+	        android:showAsAction="never"
+	        android:title="@string/menu_item_label_sent"  />
+	    
+	    <item
+	        android:id="@+id/menu_item_compose"
+	        android:orderInCategory="3"
+	        android:showAsAction="never"
+	        android:title="@string/menu_item_label_compose"  />
+	    
+	    <item
+	        android:id="@+id/menu_item_identities"
+	        android:orderInCategory="4"
+	        android:showAsAction="never"
+	        android:title="@string/menu_item_label_identities"  />
+	    
+	    <item
+	        android:id="@+id/menu_item_addressBook"
+	        android:orderInCategory="5"
+	        android:showAsAction="never"
+	        android:title="@string/menu_item_label_addressBook"  />
+	    
+	    <item
+	        android:id="@+id/menu_item_settings"
+	        android:orderInCategory="6"
+	        android:showAsAction="never"
+	        android:title="@string/menu_item_label_settings"  />
+
+</menu>

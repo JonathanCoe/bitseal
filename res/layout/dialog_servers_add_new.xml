@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout 
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="150dp"
+  android:layout_height="match_parent"
+  android:orientation="vertical"
+  android:background="@android:color/white" >
+    
+  <TextView
+    android:id="@+id/servers_dialog_add_new_url_title_textview"
+    android:layout_width="fill_parent"
+    android:layout_height="20dp"
+    android:layout_marginTop="2dp"
+    android:layout_marginBottom="0dp"
+    android:layout_marginLeft="5dp"
+    android:layout_marginRight="5dp"
+    android:textIsSelectable="true"
+    android:textSize="16sp"
+    android:textStyle="bold"
+    android:text="@string/servers_dialog_add_new_url_title"
+    />
+    
+  <EditText
+    android:id="@+id/servers_dialog_add_new_url_edittext"
+    android:layout_width="fill_parent"
+    android:layout_height="35dp"
+    android:layout_marginTop="2dp"
+    android:layout_marginBottom="0dp"
+    android:layout_marginLeft="0dp"
+    android:layout_marginRight="0dp"
+    android:textIsSelectable="true"
+    android:textSize="16sp"
+    android:inputType="textUri"
+    />
+  
+  <TextView
+    android:id="@+id/servers_dialog_add_new_username_textview"
+    android:layout_width="fill_parent"
+    android:layout_height="20dp"
+    android:layout_marginTop="2dp"
+    android:layout_marginBottom="0dp"
+    android:layout_marginLeft="5dp"
+    android:layout_marginRight="5dp"
+    android:textIsSelectable="true"
+    android:textSize="16sp"
+    android:textStyle="bold"
+    android:text="@string/servers_dialog_add_new_username_title" 
+    />
+  
+  <EditText
+    android:id="@+id/servers_dialog_add_new_username_edittext"
+    android:layout_width="fill_parent"
+    android:layout_height="35dp"
+    android:layout_marginTop="0dp"
+    android:layout_marginBottom="0dp"
+    android:layout_marginLeft="0dp"
+    android:layout_marginRight="0dp"
+    android:textIsSelectable="true"
+    android:textSize="16sp"
+    android:inputType="textNoSuggestions"
+    />
+  
+  <TextView
+    android:id="@+id/servers_dialog_add_new_password_textview"
+    android:layout_width="fill_parent"
+    android:layout_height="20dp"
+    android:layout_marginTop="2dp"
+    android:layout_marginBottom="0dp"
+    android:layout_marginLeft="5dp"
+    android:layout_marginRight="5dp"
+    android:textIsSelectable="true"
+    android:textSize="16sp"
+    android:textStyle="bold"
+    android:text="@string/servers_dialog_add_new_password_title" 
+    />
+  
+  <EditText
+    android:id="@+id/servers_dialog_add_new_password_edittext"
+    android:layout_width="fill_parent"
+    android:layout_height="35dp"
+    android:layout_marginTop="0dp"
+    android:layout_marginBottom="0dp"
+    android:layout_marginLeft="0dp"
+    android:layout_marginRight="0dp"
+    android:textIsSelectable="true"
+    android:textSize="16sp"
+    android:inputType="textPassword"
+    />
+  
+  	<LinearLayout 
+ 	  android:layout_width="match_parent"
+ 	  android:layout_height="wrap_content"
+	  android:orientation="horizontal"
+ 	  >
+  	    	
+	  <Button 
+	    android:id="@+id/servers_dialog_add_new_save_button"
+	    android:layout_width="wrap_content"
+	    android:layout_height="40dp"
+	    android:layout_weight="2"
+	    android:layout_marginTop="0dp"
+	    android:layout_marginBottom="8dp"
+	    android:layout_marginLeft="6dp"
+	    android:layout_marginRight="2dp"
+	    android:textSize="14sp"
+	    android:hint="@string/servers_dialog_add_new_save_button_label" 
+	    />
+  
+	  <Button 
+	    android:id="@+id/servers_dialog_add_new_cancel_button"
+	    android:layout_width="wrap_content"
+	    android:layout_height="40dp"
+	    android:layout_weight="2"
+	    android:layout_marginTop="0dp"
+	    android:layout_marginBottom="8dp"
+	    android:layout_marginLeft="2dp"
+	    android:layout_marginRight="2dp"
+	    android:textSize="14sp"
+	    android:hint="@string/servers_dialog_add_new_cancel_button_label"
+	    />
+	  
+	</LinearLayout>
+
+</LinearLayout>

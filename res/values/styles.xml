@@ -1,0 +1,20 @@
+<resources>
+    
+    <!-- Application theme. All customizations that are NOT specific to a particular API-level can go here. -->
+    <style name="AppTheme" parent="android:Theme.Light">
+        <item name="android:buttonStyle">@style/ButtonStyle</item>
+    </style>
+    
+    
+    
+    
+    
+    <!-- Custom style for all buttons in the app. -->
+    <style name="ButtonStyle" parent="@android:style/Widget.Button">
+  		<item name="android:background">@color/darkerGrey_opaque</item>
+  		<item name="android:textColor">@color/white_opaque</item>
+  		<item name="android:textColorHighlight">@color/white_opaque</item>
+  		<item name="android:textColorHint">@color/white_opaque</item>
+ 	</style>
+
+</resources>

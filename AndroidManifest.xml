@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.bitseal"
+    android:versionCode="7"
+    android:versionName="0.3" >
+
+    <uses-sdk
+        android:minSdkVersion="8"
+        android:targetSdkVersion="20" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application
+        android:name="org.bitseal.core.App" 
+        android:allowBackup="false"
+        android:icon="@drawable/bitseal_icon"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" > 
+        
+        <activity
+            android:name="org.bitseal.activities.InboxActivity"
+            android:label="@string/app_name"
+            android:windowSoftInputMode="stateHidden" >
+            <intent-filter android:label="@string/app_name" >
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        
+        <activity
+            android:name="org.bitseal.activities.InboxMessageActivity"
+            android:label="@string/inbox_message_activity_title"
+            android:windowSoftInputMode="stateHidden" >
+        </activity>
+        
+       <activity
+            android:name="org.bitseal.activities.SentActivity"
+            android:label="@string/sent_activity_title"
+            android:windowSoftInputMode="stateHidden" >
+        </activity>
+        
+        <activity
+            android:name="org.bitseal.activities.SentMessageActivity"
+            android:label="@string/sent_message_activity_title"
+            android:windowSoftInputMode="stateHidden" >
+        </activity>
+        
+        <activity
+            android:name="org.bitseal.activities.ComposeActivity"
+            android:label="@string/compose_activity_title"
+            android:windowSoftInputMode="stateHidden" >
+        </activity>
+        
+        <activity
+            android:name="org.bitseal.activities.IdentitiesActivity"
+            android:label="@string/identities_activity_title"
+            android:windowSoftInputMode="stateHidden" >
+        </activity>
+        
+        <activity
+            android:name="org.bitseal.activities.AddressBookActivity"
+            android:label="@string/addressBook_activity_title"
+            android:windowSoftInputMode="stateHidden" >
+        </activity>
+        
+        <activity
+            android:name="org.bitseal.activities.SettingsActivity"
+            android:label="@string/activity_settings_title"
+            android:windowSoftInputMode="stateHidden" >
+        </activity>
+        
+        <activity
+            android:name="org.bitseal.activities.ServersActivity"
+            android:label="@string/activity_servers_title"
+            android:windowSoftInputMode="stateUnchanged" >
+        </activity>
+        
+        <activity
+            android:name="org.bitseal.activities.ImportOrExportActivity"
+            android:label="@string/activity_import_or_export_title"
+            android:windowSoftInputMode="stateUnchanged" >
+        </activity>
+        
+        <activity
+            android:name="org.bitseal.activities.ExportAddressesActivity"
+            android:label="@string/activity_export_addresses_title"
+            android:windowSoftInputMode="stateUnchanged" >
+        </activity>
+        
+        <service
+            android:name="org.bitseal.services.BackgroundService" >
+        </service>
+        
+        <service
+            android:name="org.bitseal.services.NotificationsService" >
+        </service>
+        
+        <service
+            android:name="org.bitseal.services.DatabaseCleaningService" >
+        </service>
+        
+        <provider
+            android:name="org.bitseal.database.DatabaseContentProvider"
+            android:authorities="org.bitseal.database"
+            android:exported="false" >
+        </provider>
+        
+        <!-- Declaring broadcast receiver for BOOT_COMPLETED event -->
+        <receiver 
+            android:name="org.bitseal.services.BootSignalReceiver" 
+            android:enabled="true" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+        
+    </application>
+
+</manifest>

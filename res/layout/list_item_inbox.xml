@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:paddingTop="4dp"
+  android:paddingBottom="4dp"  
+  android:background="@drawable/background_activated"
+  android:orientation="vertical"
+  >
+		
+    <LinearLayout
+	  android:layout_width="match_parent"
+	  android:layout_height="wrap_content"
+	  android:orientation="horizontal"
+	  android:layout_marginTop="6dp"
+	  >
+  
+		<TextView
+		  android:id="@+id/inbox_messagelist_item_fromaddress_textview"
+		  android:layout_width="280dp"
+		  android:layout_height="wrap_content"
+		  android:paddingLeft="4dp"
+		  android:paddingRight="4dp"
+		  android:textSize="12sp"
+		  android:textStyle="bold"
+		  android:maxLines = "1"
+		  />
+		  
+		<TextView
+		  android:id="@+id/inbox_messagelist_item_date_textview"
+		  android:layout_width="match_parent"
+		  android:layout_height="wrap_content"
+		  android:gravity="end"
+		  android:paddingLeft="4dp"
+		  android:paddingRight="4dp"
+		  android:textSize="12sp"
+		  />
+		  
+	</LinearLayout>
+	
+    <LinearLayout
+	  android:layout_width="match_parent"
+	  android:layout_height="wrap_content"
+	  android:orientation="horizontal"
+	  android:layout_marginBottom="6dp"
+	  >
+  
+		<TextView
+		  android:id="@+id/inbox_messagelist_item_subject_textview"
+		  android:layout_width="280dp"
+		  android:layout_height="wrap_content"
+		  android:paddingLeft="4dp"
+		  android:paddingRight="4dp"
+		  android:maxLines = "1"
+		  android:textSize="14sp"
+		  />
+		  
+		<TextView
+		  android:id="@+id/inbox_messagelist_item_unread_textview"
+		  android:layout_width="match_parent"
+		  android:layout_height="wrap_content"
+		  android:gravity="end"
+		  android:paddingLeft="4dp"
+		  android:paddingRight="4dp"
+		  android:textSize="12sp"
+		  android:text="@string/inbox_unread_tag"
+		  android:textColor="@color/red_opaque"
+		  android:visibility="gone"
+		  />
+  
+  </LinearLayout>
+ 
+</LinearLayout>

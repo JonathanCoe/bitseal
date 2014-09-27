@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout 
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:orientation="vertical"
+  >
+	    
+      <TextView
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:text="@string/import_or_export_addresses_section_label" 
+	    style="?android:listSeparatorTextViewStyle"
+	    />
+      
+	 <Button 
+	    android:id="@+id/import_or_export_import_address_button"
+	    android:textSize="20sp"
+	    android:layout_width="match_parent"
+	    android:layout_height="50dp"
+	    android:layout_marginTop="15dp"
+	    android:layout_marginBottom="10dp"
+	    android:layout_marginLeft="16dp"
+	    android:layout_marginRight="16dp"
+	    android:hint="@string/import_or_export_import_address_button_label"
+	    />
+	  
+	  <Button 
+	    android:id="@+id/import_or_export_export_address_button"
+	    android:textSize="20sp"
+	    android:layout_width="match_parent"
+	    android:layout_height="50dp"
+	    android:layout_marginTop="10dp"
+	    android:layout_marginBottom="2dp"
+	    android:layout_marginLeft="16dp"
+	    android:layout_marginRight="16dp"
+	    android:hint="@string/import_or_export_export_address_button_label"
+	    />
+	 
+</LinearLayout>

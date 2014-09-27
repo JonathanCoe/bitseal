@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout 
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:paddingTop="4dp"
+  android:paddingBottom="4dp"  
+  android:background="@drawable/background_activated" >
+    
+  <TextView
+    android:id="@+id/servers_list_item_url_textview"
+    android:layout_width="match_parent"
+    android:layout_height="30dp"
+    android:layout_alignParentLeft="true"
+    android:textStyle="bold"
+    android:paddingLeft="4dp"
+    android:paddingRight="4dp"
+    android:textSize="16sp"
+    />
+  
+</RelativeLayout>

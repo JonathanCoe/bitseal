@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Note: These credentials only allow API calls via the
+	PyBitmessage API. They do not allow any other access to
+	the servers listed. --> 
+
+<DefaultServers>
+    
+	<ServerRecord>
+		<url>http://107.170.206.102:8442</url>
+		<username>aJVKF294</username>
+		<password>magnificent20405savedsunglightbehind</password>
+	</ServerRecord>
+	
+	<ServerRecord>
+		<url>http://128.199.211.11:8442</url>
+		<username>bLVJF495</username>
+		<password>483294unhappyspentwhereinbungalowfeature</password>
+	</ServerRecord>
+	
+	<ServerRecord>
+		<url>http://188.226.254.113:8442</url>
+		<username>842sdff</username>
+		<password>excellentYaltaforcesbluntwithprisoniglooface</password>
+	</ServerRecord>
+	
+	<ServerRecord>
+		<url>http://162.243.121.22:8442</url>
+		<username>hFD344</username>
+		<password>neverplace579horsesyachtseasideindigonews</password>
+	</ServerRecord>
+	
+</DefaultServers>

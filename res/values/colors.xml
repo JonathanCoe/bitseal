@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Define some colors to use -->
+	<color name="black_opaque">#FF000000</color>
+	<color name="white_opaque">#FFFFFFFF</color>
+	<color name="softWhite_opaque">#FFF3F3F3</color>
+    <color name="lightBlue_opaque">#FF33B5E5</color>
+    <color name="darkBlue_opaque">#FF0099CC</color>
+    <color name="lightGrey_opaque">#FFcccccc</color>
+    <color name="darkGrey_opaque">#FF444444</color>
+    <color name="darkerGrey_opaque">#FF2E2E2E</color>
+    <color name="red_opaque">#FFFF0000</color>
+</resources>

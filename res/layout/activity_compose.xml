@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ScrollView 
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/compose_scrollView"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent"
+  >
+
+	<LinearLayout
+	  android:layout_width="match_parent"
+	  android:layout_height="wrap_content"
+	  android:orientation="vertical"
+	  >
+			
+	      <LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="horizontal"
+			>
+			
+			  <TextView
+			    android:id="@+id/compose_toAddress_label_textview"
+			    android:layout_width="0dip"
+			    android:layout_height="wrap_content"
+			    android:layout_weight="1"
+			    android:layout_marginTop="3dp"
+			    android:layout_marginLeft="6dp"
+			    android:text="@string/compose_toAddress_label"
+			    android:textSize="16sp"
+			    android:textStyle="bold"
+			    />
+			  
+			  <EditText 
+			    android:id="@+id/compose_toAddress_EditText"
+			    android:layout_width="0dip"
+			    android:layout_height="wrap_content"
+			    android:layout_marginTop="4dp"
+			    android:layout_marginLeft="3dp"
+			    android:layout_marginRight="3dp"
+			    android:layout_weight="7"
+			    android:textSize="12.5sp"
+			    android:hint="@string/compose_toAddress_hint"
+			    android:imeOptions="actionNext"
+			    android:singleLine="true"
+			    android:inputType="textNoSuggestions"
+			    />
+		  
+		  </LinearLayout>
+		  
+	      <LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="horizontal"
+			>
+		    
+			  <TextView
+			    android:id="@+id/compose_fromAddress_label_textview"  
+			    android:layout_width="0dip"
+			    android:layout_height="wrap_content"
+			    android:layout_weight="1"
+			    android:layout_marginTop="3dp"
+			    android:layout_marginLeft="6dp"
+			    android:text="@string/compose_fromAddress_label"
+			    android:textSize="16sp"
+			    android:textStyle="bold"
+			    />
+			  
+			  <EditText
+			    android:id="@+id/compose_fromAddress_EditText"
+			    android:layout_width="0dip"
+			    android:layout_height="wrap_content"
+			    android:layout_marginTop="4dp"
+			    android:layout_marginLeft="3dp"
+			    android:layout_marginRight="3dp"
+			    android:layout_weight="7"
+			    android:textSize="12.5sp"
+			    android:hint="@string/compose_fromAddress_hint"
+			    android:imeOptions="actionNext"
+			    android:singleLine="true"
+			    android:inputType="textNoSuggestions"
+			    />
+		  
+		  </LinearLayout>
+		  
+	      <LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="horizontal"
+			>
+		    
+			  <TextView
+			    android:id="@+id/compose_subject_label_textview"
+			    android:layout_width="0dip"
+			    android:layout_height="wrap_content"
+			    android:layout_weight="1"
+			    android:layout_marginTop="3dp"
+			    android:layout_marginLeft="6dp"
+			    android:text="@string/compose_subject_label"
+			    android:textSize="16sp"
+			    android:textStyle="bold"
+			    />
+			  
+			  <EditText 
+			    android:id="@+id/compose_subject_EditText"
+			    android:layout_width="0dip"
+			    android:layout_height="wrap_content"
+			    android:layout_marginTop="4dp"
+			    android:layout_marginLeft="3dp"
+			    android:layout_marginRight="3dp"
+			    android:layout_weight="4"
+			    android:textSize="15sp"
+			    android:hint="@string/compose_subject_hint"
+			    android:imeOptions="actionNext"
+			    android:singleLine="true"
+			    android:inputType="textCapSentences"
+			    />
+		  
+		  </LinearLayout>
+		  
+	      <LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="horizontal"
+			>
+		  
+			  <TextView
+			    android:id="@+id/compose_body_label_textview"
+			    android:layout_width="0dip"
+			    android:layout_height="wrap_content"
+			    android:layout_weight="1"
+			    android:layout_marginTop="3dp"
+			    android:layout_marginLeft="6dp"
+			    android:text="@string/compose_body_label"
+			    android:textSize="16sp"
+			    android:textStyle="bold"
+			    />
+			  
+			  <EditText 
+			    android:id="@+id/compose_body_EditText"
+			    android:layout_width="0dip"
+			    android:layout_height="wrap_content"
+			    android:layout_marginTop="4dp"
+			    android:layout_marginLeft="3dp"
+			    android:layout_marginRight="3dp"
+			    android:layout_weight="4"
+			    android:textSize="15sp"
+			    android:hint="@string/compose_body_hint"
+			    android:inputType="textMultiLine|textCapSentences"
+			    />
+		  
+		  </LinearLayout>
+	  
+	</LinearLayout>
+	
+</ScrollView>

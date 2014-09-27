@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Button 
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/template_button_small"
+  android:layout_width="150dp"
+  android:layout_height="25dp"
+  android:layout_weight="1"
+  android:layout_marginTop="0dp"
+  android:layout_marginBottom="4dp"
+  android:layout_marginLeft="6dp"
+  android:layout_marginRight="0dp"
+  android:textSize="12sp"
+  />
+    

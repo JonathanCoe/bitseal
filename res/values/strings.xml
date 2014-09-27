@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Application: -->
+    <string name="app_name">Bitseal</string>
+    <string name="app_subtitle">In Atheros speramus</string>
+    
+    <!-- Action Bar: -->
+    <string name="action_settings">Settings</string>
+    <string name="action_compose_activity_send">Send</string>
+    <string name="action_inbox_message_activity_add_to_address_book">Add sender to address book</string>
+    <string name="action_sent_message_activity_add_to_address_book">Add recipient to address book</string>
+    <string name="action_address_book_activity_add_to_address_book">Add new entry</string>
+    <string name="action_identities_activity_create_new_address">Create new address</string>
+
+    <!-- Options Menu: -->
+    <string name="menu_item_label_inbox">Inbox</string>
+    <string name="menu_item_label_sent">Sent</string>
+    <string name="menu_item_label_compose">Compose</string>
+    <string name="menu_item_label_identities">My Addresses</string>
+    <string name="menu_item_label_addressBook">Address Book</string>
+    <string name="menu_item_label_settings">Settings</string>
+    <string name="menu_item_label_servers">Servers</string>
+
+    <!-- Inbox Activity: -->
+    <string name="inbox_activity_title">Inbox</string>
+    <string name="inbox_unread_tag">New</string>
+        
+    <!-- Inbox Message Activity: -->
+    <string name="inbox_message_activity_title">Message</string>
+    <string name="inbox_message_toAddress_label">To</string>
+    <string name="inbox_message_fromAddress_label">From</string>
+    <string name="inbox_message_subject_label">Subject</string>
+    <string name="inbox_message_body_label">Message</string>
+    <string name="inbox_message_reply_button_label">Reply</string>
+    <string name="inbox_message_copy_button_label">Copy</string>
+    <string name="inbox_message_delete_button_label">Delete</string>
+    <string name="inbox_message_delete_dialog_textView_text">Delete this message?</string>
+    <string name="inbox_message_delete_dialog_confirm_button_label">Delete</string>
+    <string name="inbox_message_delete_dialog_cancel_button_label">Cancel</string>
+    
+    <!-- Sent Activity: -->
+    <string name="sent_activity_title">Sent</string>
+    
+    <!-- Sent Message Activity: -->
+    <string name="sent_message_activity_title">Sent Message</string>
+    <string name="sent_message_toaddress_label">To</string>
+    <string name="sent_message_fromaddress_label">From</string>
+    <string name="sent_message_subject_label">Subject</string>
+    <string name="sent_message_body_label">Message</string>
+    <string name="sent_message_status_label">Status</string>
+    <string name="sent_message_copy_button_label">Copy</string>
+    <string name="sent_message_delete_button_label">Delete</string>
+    <string name="sent_message_delete_dialog_textView_text">Delete this message?</string>
+    <string name="sent_message_delete_dialog_confirm_button_label">Delete</string>
+    <string name="sent_message_delete_dialog_cancel_button_label">Cancel</string>
+
+    <!-- Compose Activity: -->
+    <string name="compose_activity_title">Compose</string>
+    <string name="compose_toAddress_label">To</string>
+    <string name="compose_toAddress_hint">Tap or type</string>
+    <string name="compose_fromAddress_label">From</string>
+    <string name="compose_fromAddress_hint">Tap or type</string>
+    <string name="compose_subject_label">Subject</string>
+    <string name="compose_subject_hint">Enter the message subject</string>
+    <string name="compose_body_label">Message</string>
+    <string name="compose_body_hint">Enter the message text</string>
+    <string name="compose_dialog_to_address_selection_title">Select to address</string>
+    <string name="compose_dialog_to_address_selection_scan_qr_code_button_label">Scan QR code</string>
+    <string name="compose_dialog_to_address_selection_cancel_button_label">Cancel</string>
+    <string name="compose_dialog_from_address_selection_title">Select from address</string>
+    <string name="compose_dialog_from_address_selection_cancel_button_label">Cancel</string>
+
+    <!-- Identities Activity: -->
+    <string name="identities_activity_title">My Addresses</string>
+    <string name="identities_confirm_address_creation_textView_text">Are you sure you want to create a new address?\n\nYou can have 
+        as many addresses as you like, but currently we recommend that you only have one.\n\nHaving more than one address can make Bitseal
+        run slower, because Bitseal must check for messages sent to each address you have.</string>
+    <string name="identities_confirm_address_creation_confirm_button_label">Create a new address</string>
+    <string name="identities_confirm_address_creation_cancel_button_label">Cancel</string>
+	<string name="identities_dialog_list_item_label_title">Label</string>
+	<string name="identities_dialog_list_item_address_title">Address</string>
+	<string name="identities_dialog_list_item_send_from_button_label">Send message from</string>
+	<string name="identities_dialog_list_item_show_qr_code_button_label">QR Code</string>
+	<string name="identities_dialog_list_item_save_button_label">Save</string>
+	<string name="identities_dialog_list_item_copy_button_label">Copy</string>
+	<string name="identities_dialog_list_item_delete_button_label">Delete</string>
+	<string name="identities_first_delete_dialog_textView_text">Delete this address? If you do so, it cannot be recovered.</string>
+    <string name="identities_first_delete_dialog_confirm_button_label">Delete</string>
+    <string name="identities_first_delete_dialog_cancel_button_label">Cancel</string>
+    <string name="identities_second_delete_dialog_textView_text">Are you sure you want to delete this address?\n\nPlease only do so if 
+        you are certain that you never want to use this address again.</string>
+    <string name="identities_second_delete_dialog_confirm_button_label">Yes, delete this address</string>
+    <string name="identities_second_delete_dialog_cancel_button_label">No, do not delete this address</string>
+    
+    <!-- Address Book Activity: -->
+    <string name="addressBook_add_new_entry_section_label">Add</string>
+    <string name="addressBook_label_edittext_default_text">Label</string>
+    <string name="addressBook_address_list_edittext_default_text">Address</string>
+    <string name="addressBook_activity_title">Address Book</string>
+    <string name="addressBook_dialog_new_entry_label_title">Label</string>
+    <string name="addressBook_dialog_new_entry_address_title">Address</string>
+    <string name="addressBook_dialog_new_entry_scan_qr_code_button_label">Scan QR code</string>
+    <string name="addressBook_dialog_new_entry_save_button_label">Save</string>
+    <string name="addressBook_dialog_new_entry_cancel_button_label">Cancel</string>
+    <string name="addressBook_dialog_list_item_label_title">Label</string>
+    <string name="addressBook_dialog_list_item_address_title">Address</string>
+    <string name="addressBook_dialog_list_item_send_to_button_label">Send message to</string>
+    <string name="addressBook_dialog_list_item_show_qr_code_button_label">QR Code</string>
+    <string name="addressBook_dialog_list_item_save_button_label">Save</string>
+    <string name="addressBook_dialog_list_item_copy_button_label">Copy</string>
+    <string name="addressBook_dialog_list_item_delete_button_label">Delete</string>
+    <string name="addressBook_delete_dialog_textView_text">Delete this entry?</string>
+    <string name="addressBook_delete_dialog_confirm_button_label">Delete</string>
+    <string name="addressBook_delete_dialog_cancel_button_label">Cancel</string>
+    
+    <!-- Settings Activity: -->
+    <string name="activity_settings_title">Settings</string>
+    <string name="settings_options_list_section_label">Server Settings</string>
+    <string name="settings_server_section_label">Server Settings</string>
+    <string name="settings_server_settings_button_label">Server Settings</string>
+    <string name="settings_data_section_label">Data settings</string>
+    <string name="settings_import_or_export_button_label">Import or export data</string>
+    <string name="settings_other_section_label">Other settings</string>
+    <string name="settings_restart_background_service_button_label">Restart background service</string>
+    <string name="settings_show_settings_textbox_label">Show settings (for advanced users only)</string>
+    
+    <!-- Servers Activity: -->
+    <string name="activity_servers_title">Servers</string>
+    <string name="servers_servers_section_label">Servers</string>
+    <string name="servers_dialog_list_item_url_title">URL</string>
+    <string name="servers_dialog_list_item_username_title">API Username</string>
+    <string name="servers_dialog_list_item_password_title">API Password</string>
+    <string name="servers_dialog_list_item_save_button_label">Save</string>
+    <string name="servers_dialog_list_item_copy_button_label">Copy</string>
+    <string name="servers_dialog_list_item_delete_button_label">Delete</string>
+    <string name="servers_delete_dialog_textView_text">Delete this server?</string>
+    <string name="servers_delete_dialog_confirm_button_label">Delete</string>
+    <string name="servers_delete_dialog_cancel_button_label">Cancel</string>
+    <string name="servers_add_new_button_label">Add new server</string>
+    <string name="servers_restore_defaults_button_label">Restore default servers</string>
+    <string name="servers_restore_defaults_dialog_title_textView_text">Restore the default set of servers?</string>
+    <string name="servers_restore_defaults_dialog_confirm_button_label">Yes</string>
+    <string name="servers_restore_defaults_dialog_cancel_button_label">No</string>
+    <string name="servers_dialog_add_new_url_title">URL</string>
+    <string name="servers_dialog_add_new_username_title">API Username</string>
+    <string name="servers_dialog_add_new_password_title">API Password</string>
+    <string name="servers_dialog_add_new_save_button_label">Save</string>
+    <string name="servers_dialog_add_new_cancel_button_label">Cancel</string>
+    <string name="servers_note">Note: Bitseal will use all the servers listed</string>
+    
+    <!-- Import or Export Activity: -->
+    <string name="activity_import_or_export_title">Import or Export Data</string>
+    <string name="import_or_export_addresses_section_label">Addresses</string>
+    <string name="import_or_export_import_address_button_label">Import address</string>
+    <string name="import_or_export_export_address_button_label">Export address</string>
+    
+    <!-- Export Addresses Activity: --> 
+    <string name="activity_export_addresses_title">Export Addresses</string>
+    <string name="export_addresses_address_list_section_label">Addresses</string>
+    <string name="export_addresses_dialog_label_title">Label</string>
+    <string name="export_addresses_dialog_address_title">Address</string>
+    <string name="export_addresses_dialog_address_show_qr_code_button_label">Show QR Code</string>
+    <string name="export_addresses_dialog_address_copy_button_label">Copy</string>
+    <string name="export_addresses_dialog_private_signing_key_label">Private Signing Key</string>
+    <string name="export_addresses_dialog_private_signing_key_show_qr_code_button_label">Show QR Code</string>
+    <string name="export_addresses_dialog_private_signing_key_copy_button_label">Copy</string>
+    <string name="export_addresses_dialog_private_encryption_key_label_title">Private Encryption Key</string>
+    <string name="export_addresses_dialog_private_encryption_key_show_qr_code_button_label">Show QR Code</string>
+    <string name="export_addresses_dialog_private_encryption_key_copy_button_label">Copy</string>
+    <string name="export_addresses_warning_dialog_textView_text">Warning: this will display your address\'s secret cryptographic keys. Are 
+        you sure you wish to continue?</string>
+    <string name="export_addresses_warning_dialog_confirm_button_label">Continue</string>
+    <string name="export_addresses_warning_dialog_cancel_button_label">Cancel</string>
+    <string name="import_address_dialog_private_signing_key_label">Private Signing Key</string>
+    <string name="import_address_dialog_private_signing_key_scan_qr_code_button_label">Scan QR Code</string>
+    <string name="import_address_dialog_private_encryption_key_label_title">Private Encryption Key</string>
+    <string name="import_address_dialog_private_encryption_key_scan_qr_code_button_label">Scan QR Code</string>
+    <string name="import_address_dialog_import_button_label">Import</string>
+     
+</resources>
