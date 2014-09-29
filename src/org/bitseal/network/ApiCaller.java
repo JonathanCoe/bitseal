@@ -43,7 +43,7 @@ public class ApiCaller
 	/**
 	 * This constant defines the timeout period for API calls.
 	 */
-	private static final int TIMEOUT_SECONDS = 10;
+	private static final int TIMEOUT_SECONDS = 60;
 	
 	/**
 	 * Api command used for connection testing
