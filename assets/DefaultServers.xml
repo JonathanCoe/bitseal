@@ -29,5 +29,12 @@
 		<username>hFD344</username>
 		<password>neverplace579horsesyachtseasideindigonews</password>
 	</ServerRecord>
+    
+    <!-- Convertor -->
+    <ServerRecord>
+		<url>http://bitseal.conver.tk:8442</url>
+		<username>AVeryWeakUsername</username>
+		<password>AVeryWeakPassword</password>
+	</ServerRecord>
 	
 </DefaultServers>
