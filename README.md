@@ -9,10 +9,13 @@ Bitseal is a Bitmessage client for Android, currently in Beta.
 <img src="https://i.imgur.com/R2xgeDW.png" align="left" height="620" width="349" hspace="5" vspace="20">
 
 
-## Screenshots:	https://imgur.com/a/utC00
+Screenshots
+---------------
+https://imgur.com/a/utC00
 
 
-## Working features:
+Working features
+---------------
 + Sending messages
 + Receiving messages
 + QR codes for addresses
@@ -22,7 +25,8 @@ Bitseal is a Bitmessage client for Android, currently in Beta.
 + Choose which servers to use (including your own)
 
 
-## Roadmap for development (subject to change):
+Roadmap for development (subject to change)
+---------------
 + Update for Bitmessage Protocol Version 3
 + Lite client message retrieval using prefix filters (credit to Peter Todd for suggesting this)
 + Local encryption of the database, using SQLCipher
@@ -33,7 +37,8 @@ Bitseal is a Bitmessage client for Android, currently in Beta.
 + "Panic wipe" secure deletion of all local data
 
 
-## Notes:
+NOTES
+---------------
 + The beta release should be used for testing purposes only. A first production release is planned once lite client message retrieval is implemented.
 + Bitseal is free, open source software, released under the Gnu General Public License Version 3. 
 + Some parts of Bitseal include, are based on, or are reliant upon software written by others, including [Jonathan Warren](https://github.com/Atheros1), [Sebastian Schmidt](https://github.com/ISibboI), [Tim Roes](https://github.com/timroes), [Roberto Tyley](https://github.com/rtyley), the [bitcoinj](https://github.com/bitcoinj/bitcoinj) developers, and the [Bouncy Castle](https://www.bouncycastle.org/java.html) developers. This is noted in the source code where applicable.
