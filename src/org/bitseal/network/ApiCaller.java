@@ -43,13 +43,13 @@ public class ApiCaller
 	/**
 	 * This constant defines the timeout period for API calls.
 	 */
-	private static final int TIMEOUT_SECONDS = 60;
+	private static final int TIMEOUT_SECONDS = 10;
 	
 	/**
-	 * Api command used for connection testing
+	 * API command used for connection testing
 	 */
 	private static final String API_METHOD_ADD = "add";
-		
+	
 	private static final String TAG = "API_CALLER";
 	
 	/**
@@ -205,7 +205,7 @@ public class ApiCaller
 	{
 		return numberOfServers;
 	}
-	
+		
 	/**
      * Performs a connection test by calling the "add" method from the PyBitmessage API and
      * checking if the returned result (if any) is correct. 

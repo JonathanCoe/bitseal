@@ -19,11 +19,7 @@ public class QueueRecordProcessor
 	public static final String TASK_SEND_MESSAGE = "sendMessage";
 	public static final String TASK_PROCESS_OUTGOING_MESSAGE = "processOutgoingMessage";
 	public static final String TASK_DISSEMINATE_MESSAGE = "disseminateMessage";
-	
-	// The tasks for performing the second major function of the application: receiving messages
-	public static final String TASK_PROCESS_INCOMING_MSGS_AND_SEND_ACKS = "processIncomingMsgsAndSendAcks";
-	public static final String TASK_SEND_ACKS = "sendAcks";
-	
+		
 	// The tasks for performing the third major function of the application: creating a new identity
 	public static final String TASK_CREATE_IDENTITY = "createIdentity";
 	public static final String TASK_DISSEMINATE_PUBKEY = "disseminatePubkey";
@@ -83,16 +79,6 @@ public class QueueRecordProcessor
 			q.setObject1Type(QueueRecord.QUEUE_RECORD_OBJECT_TYPE_PUBKEY);
 		}
 				
-		else if (task == TASK_PROCESS_INCOMING_MSGS_AND_SEND_ACKS)
-		{
-			// There is no data required for this task
-		}
-		
-		else if (task == TASK_SEND_ACKS)
-		{
-			// There is no data required for this task
-		}
-		
 		else if (task == TASK_CREATE_IDENTITY)
 		{
 			// Set object 0 ID and Type

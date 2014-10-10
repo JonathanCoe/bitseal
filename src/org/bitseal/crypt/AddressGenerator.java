@@ -86,10 +86,7 @@ public class AddressGenerator
 		byte[] ripeHash = calculateRipeHash(publicSigningKey, publicEncryptionKey);
 		
 		// Strip off any leading zeros from the ripe hash
-		while (ripeHash[0] == (byte) 0)
-		{
-			ripeHash = ArrayCopier.copyOfRange(ripeHash, 1, ripeHash.length);
-		}
+		ripeHash = ByteUtils.stripLeadingZeros(ripeHash);
 				
 		String addressString = calculateAddressString(addressVersion, streamNumber, ripeHash);
 		
@@ -110,7 +107,7 @@ public class AddressGenerator
 		
 		byte[] ripeHash = SHA512.sha512hash160(concatenatedPublicKeys);
 		
-		// Remove leading zeros from the resultant addresss hash
+		// Remove leading zeros from the resultant address hash
 		while (ripeHash[0] == (byte) 0)
 		{
 			ripeHash = ArrayCopier.copyOfRange(ripeHash, 1, ripeHash.length);

@@ -400,6 +400,10 @@ public class IncomingMessageProcessor
 		
 		byte[] destinationRipe = ArrayCopier.copyOfRange(plainText, readPosition, readPosition + 20);
 		readPosition += 20;
+		
+		// Strip any leading zeros from the extraction destination ripe hash
+		destinationRipe = ByteUtils.stripLeadingZeros(destinationRipe);
+		
 		if (Arrays.equals(destinationRipe, toAddress.getRipeHash()) == false)
 		{
 			throw new RuntimeException("The ripe hash read from the decrypted message text does not match the ripe hash of the address that " +
@@ -465,16 +469,20 @@ public class IncomingMessageProcessor
 			throw new RuntimeException("While attempting to parse a decrypted message in IncomingMessageProcessor.parseDecryptedMessage(), the signature was found to be invalid");
 		}
 		
-		// Save the acknowledgment data of this message as a Payload object and save it to 
-		// the database so that we can send it later
-		Payload ackPayload = new Payload();
-		ackPayload.setBelongsToMe(true); // i.e This is an acknowledgment that I will send
-		ackPayload.setPOWDone(true);
-		ackPayload.setType(Payload.OBJECT_TYPE_ACK);
-		ackPayload.setPayload(ackData);
-		
-		PayloadProvider payProv = PayloadProvider.get(App.getContext());
-		payProv.addPayload(ackPayload);
+		// In some rare instances such as PyBitmessage sending a message to one of its own addresses, no ack msg will be included
+		if (ackData.length != 0)
+		{
+			// Save the acknowledgment data of this message as a Payload object and save it to 
+			// the database so that we can send it later
+			Payload ackPayload = new Payload();
+			ackPayload.setBelongsToMe(true); // i.e This is an acknowledgment that I will send
+			ackPayload.setPOWDone(true);
+			ackPayload.setType(Payload.OBJECT_TYPE_ACK);
+			ackPayload.setPayload(ackData);
+			
+			PayloadProvider payProv = PayloadProvider.get(App.getContext());
+			payProv.addPayload(ackPayload);
+		}
 
 		return unencryptedMsg;
 	}
