@@ -27,6 +27,8 @@ Bitseal is a Bitmessage client for Android, currently in Beta.
 
 - Choose which servers to use (including your own)
 
+- Notifications for received messages
+
 
 ##Roadmap for development (subject to change):
 - Update for Bitmessage Protocol Version 3

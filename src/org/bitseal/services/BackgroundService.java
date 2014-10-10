@@ -57,20 +57,10 @@ public class BackgroundService extends IntentService
      * background service every minute. 
      */
 	public static final int BACKGROUND_SERVICE_NORMAL_START_INTERVAL = 60;
-	
-    /**
-     * The shorter period of time in seconds between each attempt to start the
-     * BackgroundService, in seconds. This is used when we are still significantly
-     * behind in catching up with the Bitmessage network. 
-     */
-	public static final int BACKGROUND_SERVICE_SHORT_START_INTERVAL = 5;
-	
+		
 	/** Determines how often the database cleaning routine should be run, in seconds. */
 	private static final long TIME_BETWEEN_DATABASE_CLEANING = 3600;
-	
-	/** A key used to store the time of the last successful 'check for new msgs' server request */
-	private static final String LAST_MSG_CHECK_TIME = "lastMsgCheckTime";
-	
+		
 	// Constants to identify requests from the UI
 	public static final String UI_REQUEST = "uiRequest";
 	public static final String UI_REQUEST_SEND_MESSAGE = "sendMessage";
@@ -104,7 +94,7 @@ public class BackgroundService extends IntentService
 	// The tasks for performing the fourth major function of the application: periodically re-disseminating our pubkeys
 	public static final String TASK_CHECK_IF_PUBKEY_RE_DISSEMINATION_IS_DUE = "checkIfPubkeyReDisseminationIsDue";
 	public static final String TASK_RE_DISSEMINATE_PUBKEYS = "reDisseminatePubkeys";
-	
+		
 	private static final String TAG = "BACKGROUND_SERVICE";
 	
 	public BackgroundService() 
@@ -217,23 +207,8 @@ public class BackgroundService extends IntentService
 		
 	    // Get the current time and add the number of seconds specified by BACKGROUND_SERVICE_START_INTERVAL_SECONDS to it
 	    Calendar cal = Calendar.getInstance();
-	    
-		// Check whether we are significantly behind in checking for new msgs. If we are AND there is an internet connection available
-	    // then we should restart the background service almost immediately. The small time gap allows a window for user-initiated tasks
-	    // such as sending a message to be started.
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(App.getContext());
-		long lastMsgCheckTime = prefs.getLong(LAST_MSG_CHECK_TIME, 0);
-		long currentTime = System.currentTimeMillis() / 1000;
-	    if (((currentTime - lastMsgCheckTime) > BACKGROUND_SERVICE_NORMAL_START_INTERVAL) && (NetworkHelper.checkInternetAvailability() == true))
-	    {
-	    	cal.add(Calendar.SECOND, BACKGROUND_SERVICE_SHORT_START_INTERVAL);
-		    Log.i(TAG, "The BackgroundService will be restarted in " + BACKGROUND_SERVICE_SHORT_START_INTERVAL + " seconds");
-	    }
-	    else
-	    {
-	    	cal.add(Calendar.SECOND, BACKGROUND_SERVICE_NORMAL_START_INTERVAL);
-	    	Log.i(TAG, "The BackgroundService will be restarted in " + BACKGROUND_SERVICE_NORMAL_START_INTERVAL + " seconds");
-	    }
+    	cal.add(Calendar.SECOND, BACKGROUND_SERVICE_NORMAL_START_INTERVAL);
+    	Log.i(TAG, "The BackgroundService will be restarted in " + BACKGROUND_SERVICE_NORMAL_START_INTERVAL + " seconds");
 	    
 	    // Register the pending intent with AlarmManager
 	    AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
@@ -368,15 +343,6 @@ public class BackgroundService extends IntentService
 					}
 				}
 				
-				else if (task.equals(TASK_SEND_ACKS))
-				{
-					// First check whether an Internet connection is available. If not, move on to the next QueueRecord
-					if (NetworkHelper.checkInternetAvailability() == true)
-					{
-						taskController.sendAcknowledgments(q);
-					}
-				}
-				
 				else if (task.equals(TASK_CREATE_IDENTITY))
 				{
 					taskController.createIdentity(q, DO_POW);
@@ -399,14 +365,12 @@ public class BackgroundService extends IntentService
 							"field was found. The invalid task field was : " + task);
 				}
 			}
-			// Once we have attempted all queued tasks once
-			runCheckForMessagesTask();
-			runCheckIfPubkeyReDisseminationIsDueTask();
+			
+			runPeriodicTasks();
 		}
 		else // If there are no other tasks that we need to do
 		{
-			runCheckForMessagesTask();
-			runCheckIfPubkeyReDisseminationIsDueTask();
+			runPeriodicTasks();
 			
 			// Check whether it is time to run the 'clean database' routine. If yes then run it. 
 			if (checkIfDatabaseCleaningIsRequired())
@@ -419,6 +383,17 @@ public class BackgroundService extends IntentService
 	}
 	
 	/**
+	 * Runs the tasks that must be done periodically, e.g. checking for new msgs. 
+	 */
+	private void runPeriodicTasks()
+	{
+		Log.i(TAG, "BackgroundService.runPeriodicTasks() called");
+		
+		runCheckForMessagesTask();
+		runCheckIfPubkeyReDisseminationIsDueTask();
+	}
+	
+	/**
 	 * This method runs the 'check for messages and send acks' task, via
 	 * the TaskController. <br><br>
 	 * 
@@ -427,6 +402,8 @@ public class BackgroundService extends IntentService
 	 */
 	private void runCheckForMessagesTask()
 	{
+		Log.i(TAG, "BackgroundService.runCheckForMessagesTask() called");
+		
 		// First check whether an Internet connection is available. If not, we cannot proceed. 
 		if (NetworkHelper.checkInternetAvailability() == true)
 		{
@@ -437,13 +414,7 @@ public class BackgroundService extends IntentService
 			{
 				// Attempt to complete the task
 				TaskController taskController = new TaskController();
-				int newMessagesProcessed = taskController.checkForMessagesAndSendAcks();
-				if (newMessagesProcessed > 0)
-				{
-				    Intent intent = new Intent(getBaseContext(), NotificationsService.class);
-				    intent.putExtra(NotificationsService.EXTRA_DISPLAY_NEW_MESSAGES_NOTIFICATION, newMessagesProcessed);
-				    startService(intent);
-				}
+				taskController.checkForMessagesAndSendAcks();
 			}
 			else
 			{
@@ -461,6 +432,8 @@ public class BackgroundService extends IntentService
 	 */
 	private void runCheckIfPubkeyReDisseminationIsDueTask()
 	{
+		Log.i(TAG, "BackgroundService.runCheckIfPubkeyReDisseminationIsDueTask() called");
+		
 		// First check whether an Internet connection is available. If not, we cannot proceed. 
 		if (NetworkHelper.checkInternetAvailability() == true)
 		{		
@@ -490,6 +463,8 @@ public class BackgroundService extends IntentService
 	 */
 	private boolean checkIfDatabaseCleaningIsRequired()
 	{	
+		Log.i(TAG, "BackgroundService.checkIfDatabaseCleaningIsRequired() called");
+		
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		long currentTime = System.currentTimeMillis() / 1000;
 		long lastDataCleanTime = prefs.getLong(DatabaseCleaningService.LAST_DATABASE_CLEAN_TIME, 0);

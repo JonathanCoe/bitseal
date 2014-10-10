@@ -432,7 +432,7 @@ public class ServerCommunicator
 			String resultString = callResult.toString();
 			Log.d(TAG, "The result of the 'request pubkey from server' API call was: " + resultString);
 			
-			if ((resultString.equals(RESULT_CODE_REQUEST_PUBKEY)) == false) // Check whether the call was successful
+			if ((resultString.equals(RESULT_CODE_REQUEST_PUBKEY)) == false) // If the call was successful
 			{
 				try
 				{									
@@ -500,8 +500,8 @@ public class ServerCommunicator
 	}
 	
 	/**
-	 * Takes an Address and makes a request to one or more PyBitmessage servers for
-	 * any msgs that have that address's tag as their destination identifier. 
+	 * Requests any new msgs for each of our addresses, using the stream number of each address
+	 * and the 'lastMsgCheckTime' value to shape the request. 
 	 * 
 	 * @param address - The Bitmessage Address which we want to check for messages sent to.
 	 */
@@ -546,7 +546,7 @@ public class ServerCommunicator
 				Object callResult = caller.call(API_METHOD_CHECK_FOR_NEW_MSGS, streamNumber, receivedSinceTime, receivedBeforeTime);
 				String resultString = callResult.toString();
 				
-				if ((resultString.equals(RESULT_CODE_CHECK_FOR_NEW_MSGS)) == false) // Check whether the call was successful
+				if ((resultString.equals(RESULT_CODE_CHECK_FOR_NEW_MSGS)) == false) // If the call was successful
 				{
 					try
 					{
@@ -597,7 +597,12 @@ public class ServerCommunicator
 						}
 						
 						Log.d(TAG, "Out of the " + msgStrings.size() + " msg payloads returned by the server, " + newPayloads + " were new.");
-					} 
+						
+						if ((i + 1) < serversToPoll) // Do not attempt to switch to a new server if we have finished making all our API calls
+						{
+							caller.switchToNextServer();
+						}	
+					}
 					catch (JSONException e)
 					{
 				    	throw new RuntimeException("JSONException occcurred in ServerCommunicator.checkServerForNewMsgs(). \n" +

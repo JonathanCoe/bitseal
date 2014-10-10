@@ -3,8 +3,8 @@ package org.bitseal.util;
 import java.math.BigInteger;
 
 /**
- * This class provides some static methods for converting between long values and 
- * byte arrays and for concatenating two byte arrays. 
+ * This class provides some static methods for manipulating bytes and
+ * byte arrays. 
  * 
  * @author Jonathan Coe
  */
@@ -188,5 +188,22 @@ public final class ByteUtils
 		byte[] firstPart = ArrayCopier.copyOfRange(original, 0, start);
 		byte[] secondPart = ArrayCopier.copyOfRange(original, end, original.length);
 		return concatenateByteArrays(firstPart, secondPart);
+	}
+	
+	/**
+	 * Strips any leading zero bytes from a given byte[].
+	 * 
+	 * @param input - The input byte[]
+	 * 
+	 * @return A byte[] with any leading zeros removed
+	 */
+	public static byte[] stripLeadingZeros(byte[] input)
+	{
+		while (input[0] == (byte) 0)
+		{
+			input = ArrayCopier.copyOfRange(input, 1, input.length);
+		}
+		
+		return input;
 	}
 }

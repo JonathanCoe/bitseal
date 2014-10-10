@@ -53,7 +53,7 @@ public class AckProcessor
 				}
 			}
 			
-			Log.i(TAG, "Number of acknowledgment messages that I need to send: " + acksToSend.size());
+			Log.d(TAG, "Number of acknowledgment messages that I need to send: " + acksToSend.size());
 			
 			// Attempt to send each ack payload retrieved from the database. If any of these payloads
 			// are not processed successfully, that failure is recorded in 'numberOfAcksNotProcessedSuccessfully'
@@ -98,17 +98,17 @@ public class AckProcessor
 	private boolean checkAndSendAcknowledgment(Payload p)
 	{
 		byte[] fullAckMessage = p.getPayload();
-		PayloadProvider payProv = PayloadProvider.get(App.getContext());
-		
+						
 		// Bitmessage acknowledgments are full Message objects, including the header data (magic bytes, command, length, checksum). 
 		// We only need the payload, so we will skip over the first 24 bytes. 
 		byte[] ackPayload = ArrayCopier.copyOfRange(fullAckMessage, 24, fullAckMessage.length);
-		
+				
 		// Check the proof of work
 		long powNonce = ByteUtils.bytesToLong(ArrayCopier.copyOf(ackPayload, 8));
 		byte[] payloadToCheck = ArrayCopier.copyOfRange(ackPayload, 8, ackPayload.length);
 		POWProcessor powProc = new POWProcessor();
-		boolean powValid = powProc.checkPOW(payloadToCheck, powNonce, DEFAULT_NONCE_TRIALS_PER_BYTE, DEFAULT_EXTRA_BYTES);	
+		boolean powValid = powProc.checkPOW(payloadToCheck, powNonce, DEFAULT_NONCE_TRIALS_PER_BYTE, DEFAULT_EXTRA_BYTES);
+		PayloadProvider payProv = PayloadProvider.get(App.getContext());
 		if (powValid == false)
 		{
 			Log.e(TAG, "While running AckProcessor.checkAndSendAcknowledgment(), an acknowledgment payload was found " +
@@ -116,7 +116,7 @@ public class AckProcessor
 			payProv.deletePayload(p);
 			return true;
 		}
-		
+				
 		// Check that the time value is valid (no more than 3 hours in the future)
 		long time = ByteUtils.bytesToInt((ArrayCopier.copyOfRange(ackPayload, 8, 12)));
 		if (time == 0) // Need to check whether 4 or 8 byte time has been used
@@ -132,7 +132,7 @@ public class AckProcessor
 			payProv.deletePayload(p);
 			return true;
 		}
-
+		
 		// Attempt to send the acknowledgment. 
 		ServerCommunicator servCom = new ServerCommunicator();
 		boolean disseminationSuccessful = servCom.disseminateMsg(ackPayload);
