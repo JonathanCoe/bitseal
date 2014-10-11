@@ -16,12 +16,8 @@ import org.bitseal.database.MessagesTable;
 import org.bitseal.database.PayloadProvider;
 import org.bitseal.network.NetworkHelper;
 import org.bitseal.services.BackgroundService;
-import org.bitseal.services.NotificationsService;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 /**
@@ -34,12 +30,6 @@ public class TaskController
 {
 	/** Used when broadcasting Intents to the UI so that it can refresh the data it is displaying */
 	public static final String UI_NOTIFICATION = "uiNotification";
-	
-	/** A key used to store the time of the last successful 'check for new msgs' server request */
-	private static final String LAST_MSG_CHECK_TIME = "lastMsgCheckTime";
-		
-	Thread messageDownloadThread;
-	Thread messageProcessingThread;
 		
 	private static final String TAG = "TASK_CONTROLLER";
 	
@@ -387,96 +377,11 @@ public class TaskController
 	{
 		Log.i(TAG, "TaskController.checkForMessagesAndAcks() called");
 		
-		// Create a thread for downloading new messages
-	    messageDownloadThread = new Thread(new Runnable()
-	    {
-	    	@Override
-	        public void run()
-	        {
-	            try
-	            {
-		        	Log.i(TAG, "Starting message download thread.");
-		            
-		        	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(App.getContext());
-		    		long lastMsgCheckTime = prefs.getLong(LAST_MSG_CHECK_TIME, 0);
-		    		long currentTime = System.currentTimeMillis() / 1000;
-		    		
-		    		// Check whether we are significantly behind in checking for new msgs. If we are AND there is an internet connection available
-		    	    // then we should keep downloading new msgs
-		    				    		
-		    		CheckForMessagesController controller = new CheckForMessagesController();
-		            while (((currentTime - lastMsgCheckTime) > BackgroundService.BACKGROUND_SERVICE_NORMAL_START_INTERVAL) && (NetworkHelper.checkInternetAvailability() == true))
-		            {
-		            	controller.checkServerForMessages();
-		            	
-			    		lastMsgCheckTime = prefs.getLong(LAST_MSG_CHECK_TIME, 0);
-			    		currentTime = System.currentTimeMillis() / 1000;
-			    		
-			    	    if (messageProcessingThread.isAlive() == false)
-			    	    {    	
-			    	    	messageProcessingThread.run();
-			    	    }
-		            }
-		            
-		            Log.i(TAG, "Finishing message download thread.");
-	            }
-	            catch (Exception e)
-	            {
-	            	Log.e(TAG, "While running TaskController.checkForMessagesAndSendAcks(), messageDownloadThread.run() threw an Execption. \n" +
-        					"The exception message was: " + e.getMessage());
-	            }
-	        }
-	    });
+		// Run the new message downloading thread.
+	    MessageDownloadThread.getInstance().startThread();
 	    
-	    // Create a thread for processing the messages we download
-	    messageProcessingThread = new Thread(new Runnable()
-	    {
-	    	@Override
-	        public void run()
-	        {
-	            try
-	            {
-	    			Log.i(TAG, "Starting message processing thread.");
-	    			
-		            int totalNewMessages = 0;
-		            int newMessagesReceived = processIncomingMessages();
-		            while (newMessagesReceived > 0)
-		            {
-		            	totalNewMessages = totalNewMessages + newMessagesReceived;
-		            	newMessagesReceived = processIncomingMessages();
-		            }
-		            
-					if (totalNewMessages > 0)
-					{
-						// Attempt to send any pending acknowledgments
-						sendAcknowledgments();
-						
-						// Display a notification for the new message(s)
-						Context appContext = App.getContext();
-						Intent intent = new Intent(appContext, NotificationsService.class);
-					    intent.putExtra(NotificationsService.EXTRA_DISPLAY_NEW_MESSAGES_NOTIFICATION, totalNewMessages);
-					    appContext.startService(intent);
-					}
-		            
-		            Log.i(TAG, "Finishing message processing thread.");
-	            }
-	            catch (Exception e)
-	            {
-	            	Log.e(TAG, "While running TaskController.checkForMessagesAndSendAcks(), messageDownloadThread.run() threw an Execption. \n" +
-        					"The exception message was: " + e.getMessage());
-	            }
-	        }
-	    });
-	    
-	    if (messageDownloadThread.isAlive() == false)
-		{
-	    	messageDownloadThread.start();
-		}
-	    
-	    if (messageProcessingThread.isAlive() == false)
-	    {
-	    	messageProcessingThread.start();
-	    }
+	    // Run the new message processing thread.
+	    MessageProcessingThread.getInstance().startThread();
 	}
 	
 	/**
