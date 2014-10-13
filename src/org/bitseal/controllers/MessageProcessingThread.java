@@ -23,8 +23,12 @@ public class MessageProcessingThread
     {
         static final MessageProcessingThread INSTANCE = new MessageProcessingThread();
     }
-
-    public static MessageProcessingThread getInstance() 
+	
+	/**
+	 * Returns a singleton instance of the MessageProcessingThread. This ensures that
+	 * only one instance of the thread will ever be exist at once. 
+	 */
+    public static MessageProcessingThread getInstance()
     {
         return Holder.INSTANCE;
     }
@@ -74,8 +78,8 @@ public class MessageProcessingThread
     }
     
     /**
-     * Starts the thread for processing new messages, in such a way
-     * that only one instance of the thread can be active at any given time. 
+     * Starts the thread for processing new messages, in such a way that the 
+     * thread will only be started if it is not already running. 
      */
     protected void startThread()
     {

@@ -27,7 +27,11 @@ public class MessageDownloadThread
     {
         static final MessageDownloadThread INSTANCE = new MessageDownloadThread();
     }
-
+	
+	/**
+	 * Returns a singleton instance of the MessageDownloadThread. This ensures that
+	 * only one instance of the thread will ever be exist at once. 
+	 */
     public static MessageDownloadThread getInstance() 
     {
         return Holder.INSTANCE;
@@ -59,10 +63,11 @@ public class MessageDownloadThread
 		            	
 			    		lastMsgCheckTime = prefs.getLong(LAST_MSG_CHECK_TIME, 0);
 			    		currentTime = System.currentTimeMillis() / 1000;
+			    		
+			    		// Attempt to start the message processing thread
+			    		MessageProcessingThread.getInstance().startThread();
 		            }
-		            
-		            MessageProcessingThread.getInstance().startThread();
-		            
+		             
 		            Log.i(TAG, "Finishing message download thread.");
 	            }
 	            catch (Exception e)
@@ -75,8 +80,8 @@ public class MessageDownloadThread
     }
     
     /**
-     * Starts the thread for downloading new messages, in such a way
-     * that only one instance of the thread can be active at any given time. 
+     * Starts the thread for downloading new messages, in such a way that the 
+     * thread will only be started if it is not already running. 
      */
     protected void startThread()
     {
