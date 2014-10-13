@@ -43,6 +43,7 @@ Notes
 + Bitseal is free, open source software, released under the Gnu General Public License Version 3. 
 + Some parts of Bitseal include, are based on, or are reliant upon software written by others, including [Jonathan Warren](https://github.com/Atheros1), [Sebastian Schmidt](https://github.com/ISibboI), [Tim Roes](https://github.com/timroes), [Roberto Tyley](https://github.com/rtyley), the [bitcoinj](https://github.com/bitcoinj/bitcoinj) developers, and the [Bouncy Castle](https://www.bouncycastle.org/java.html) developers. This is noted in the source code where applicable.
 + I have set up a few default servers which can be used for testing purposes. Anyone is free to set up and use their own. The server application is simply a copy of PyBitmessage with a modified API. 
++ See also the repositories [bitseal-server](https://github.com/JonathanCoe/bitseal-server) and [bitseal-tests](https://github.com/JonathanCoe/bitseal-tests)
 
 
 License
