@@ -2,7 +2,6 @@ package org.bitseal.activities;
 
 import org.bitseal.R;
 import org.bitseal.core.AddressProcessor;
-import org.bitseal.database.QueueRecordProvider;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -73,9 +72,6 @@ public class ImportOrExportActivity extends Activity
 		        startActivityForResult(i, 0);
 			}
 		});
-		
-		QueueRecordProvider queueProv = QueueRecordProvider.get(getApplicationContext());
-		queueProv.deleteAllQueueRecords();
 	}
 	
 	private void openImportDialog()
