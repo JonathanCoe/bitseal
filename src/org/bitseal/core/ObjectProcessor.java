@@ -35,7 +35,7 @@ public class ObjectProcessor
 	 * @return An Object created from the parsed data
 	 */
 	public Object parseObject (byte[] objectBytes)
-	{
+	{	
 		// Parse the data from the byte[] 
 		int readPosition = 0;
 		
@@ -51,7 +51,7 @@ public class ObjectProcessor
 		// --------------------------------------------------Upgrade period code------------------------------------------------------
 		long currentTime = System.currentTimeMillis() / 1000;
 		int objectVersion = 0;
-		if ((currentTime < 1416175200 && objectType == 2) == false) // All object apart from msgs received before Sun, 16 November 2014 22:00:00 GMT
+		if ((currentTime < 1416175200 && objectType == 2) == false) // All objects apart from msgs received before Sun, 16 November 2014 22:00:00 GMT
 		{
 			long[] decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(objectBytes, readPosition, readPosition + 9)); // Take 9 bytes, the maximum length for an encoded var_int
 			objectVersion = (int) decoded[0]; // Get the var_int encoded value

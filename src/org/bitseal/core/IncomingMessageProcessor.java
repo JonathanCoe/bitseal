@@ -212,7 +212,7 @@ public class IncomingMessageProcessor
 		ArrayList<Payload> expectedAckPayloads = new ArrayList<Payload>();
 		for (Payload p : ackPayloads)
 		{
-			if (p.belongsToMe() == false) // i.e. The acknowledgment is being sent by someone else 
+			if (p.belongsToMe() == true) // i.e. The acknowledgment was created by me
 			{
 				expectedAckPayloads.add(p);
 			}
@@ -459,7 +459,8 @@ public class IncomingMessageProcessor
 			// Save the acknowledgment data of this msg as a Payload object and save it to 
 			// the database so that we can send it later
 			Payload ackPayload = new Payload();
-			ackPayload.setBelongsToMe(true); // i.e This is an acknowledgment that I will send
+			ackPayload.setBelongsToMe(false); // i.e This is the acknowledgment of a msg created by someone else
+			ackPayload.setProcessingComplete(true); // Set 'processing complete' to true so that we won't attempt to process this as a new incoming msg
 			ackPayload.setPOWDone(true);
 			ackPayload.setAck(true); // This payload is an acknowledgment
 			ackPayload.setType(Payload.OBJECT_TYPE_MSG); // Currently we treat all acks from other people as msgs. Strictly though they can be objects of any type, so this may change

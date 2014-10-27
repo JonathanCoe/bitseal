@@ -84,7 +84,6 @@ org.bitseal.controllers
 
 org.bitseal.core:
 	- AckProcessor
-		- THREE_HOURS_IN_SECONDS
 		- NETWORK_NONCE_TRIALS_PER_BYTE
 		- NETWORK_EXTRA_BYTES
 	- Address Processor

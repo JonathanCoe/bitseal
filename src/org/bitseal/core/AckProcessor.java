@@ -6,9 +6,7 @@ import org.bitseal.data.Payload;
 import org.bitseal.database.PayloadProvider;
 import org.bitseal.database.PayloadsTable;
 import org.bitseal.network.ServerCommunicator;
-import org.bitseal.pow.POWProcessor;
 import org.bitseal.util.ArrayCopier;
-import org.bitseal.util.ByteUtils;
 
 import android.util.Log;
 
@@ -19,9 +17,7 @@ import android.util.Log;
  * @author Jonathan Coe
  */
 public class AckProcessor
-{	
-	private static final long THREE_HOURS_IN_SECONDS = 10800;
-	
+{
 	/** In Bitmessage protocol version 3, the network standard value for nonce trials per byte is 1000. */
 	public static final int NETWORK_NONCE_TRIALS_PER_BYTE = 1000;
 	
@@ -42,14 +38,14 @@ public class AckProcessor
 	public boolean sendAcknowledgments()
 	{
 		PayloadProvider payProv = PayloadProvider.get(App.getContext());
-		ArrayList<Payload> allAcks = payProv.searchPayloads(PayloadsTable.COLUMN_TYPE, "ack");
+		ArrayList<Payload> allAcks = payProv.searchPayloads(PayloadsTable.COLUMN_ACK, String.valueOf(1)); // 1 stands for true in the database
 		if (allAcks.size() > 0)
 		{
 			ArrayList<Payload> acksToSend = new ArrayList<Payload>();
 			
 			for (Payload p : allAcks)
 			{
-				if (p.belongsToMe() == true)
+				if (p.belongsToMe() == false)
 				{
 					acksToSend.add(p);
 				}
@@ -103,47 +99,20 @@ public class AckProcessor
 						
 		// Bitmessage acknowledgments are full Message objects, including the header data (magic bytes, command, length, checksum). 
 		// We only need the payload, so we will skip over the first 24 bytes. 
-		byte[] ackPayload = ArrayCopier.copyOfRange(fullAckMessage, 24, fullAckMessage.length);
+		byte[] ackObjectBytes = ArrayCopier.copyOfRange(fullAckMessage, 24, fullAckMessage.length);
 				
-		// Check the proof of work
-		long powNonce = ByteUtils.bytesToLong(ArrayCopier.copyOf(ackPayload, 8));
-		long expirationTime = ByteUtils.bytesToLong(ArrayCopier.copyOfRange(ackPayload, 8, 16));
-		byte[] payloadToCheck = ArrayCopier.copyOfRange(ackPayload, 8, ackPayload.length);
-		POWProcessor powProc = new POWProcessor();
-		boolean powValid = powProc.checkPOW(payloadToCheck, powNonce, NETWORK_NONCE_TRIALS_PER_BYTE, NETWORK_EXTRA_BYTES, expirationTime);
-		PayloadProvider payProv = PayloadProvider.get(App.getContext());
-		if (powValid == false)
-		{
-			Log.e(TAG, "While running AckProcessor.checkAndSendAcknowledgment(), an acknowledgment payload was found " +
-					"to have an invalid proof of work nonce. The paylaod will now be deleted from the databse.");
-			payProv.deletePayload(p);
-			return true;
-		}
-				
-		// Check that the time value is valid (no more than 3 hours in the future)
-		long time = ByteUtils.bytesToInt((ArrayCopier.copyOfRange(ackPayload, 8, 12)));
-		if (time == 0) // Need to check whether 4 or 8 byte time has been used
-		{
-			time = ByteUtils.bytesToLong((ArrayCopier.copyOfRange(ackPayload, 8, 16)));
-		}
-		long currentTime = System.currentTimeMillis() / 1000;
-		boolean timeValid = ((currentTime + THREE_HOURS_IN_SECONDS) > time);
-		if (timeValid == false)
-		{
-			Log.e(TAG, "While running AckProcessor.checkAndSendAcknowledgment(), an acknowledgment payload was found " +
-					"to have an invalid embedded time value, which was: " + time + ". The paylaod will now be deleted from the database.");
-			payProv.deletePayload(p);
-			return true;
-		}
+		// Check whether this ack is a valid Bitmessage object
+		new ObjectProcessor().parseObject(ackObjectBytes);
 		
 		// Attempt to send the acknowledgment. 
 		ServerCommunicator servCom = new ServerCommunicator();
-		boolean disseminationSuccessful = servCom.disseminateMsg(ackPayload);
+		boolean disseminationSuccessful = servCom.disseminateMsg(ackObjectBytes);
 		
 		// If it is sent successfully, delete it from the database. If not, it will be kept
 		// and we will try to send it again later. 
 		if (disseminationSuccessful == true)
 		{
+			PayloadProvider payProv = PayloadProvider.get(App.getContext());
 			payProv.deletePayload(p);
 			return true;
 		}
