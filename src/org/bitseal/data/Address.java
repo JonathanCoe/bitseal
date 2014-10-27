@@ -4,100 +4,93 @@ package org.bitseal.data;
  * An object representing a Bitmessage address. <br><br>
  * 
  * <b>NOTE:</b> This class is intended to only be used for addresses 
- * that belong to the user of the app.
+ * that belong to the user of the app. Other people's addresses should
+ * be represented using the AddressBookRecord class.
  * 
  * @author Jonathan Coe
  */
 public class Address
 {
-	// The first four fields are for internal use by Bitseal, and are not part of the Bitmessage protocol
-	private long mId;
-	private long mCorrespondingPubkeyId;
-	private String mLabel;
+	// The first three fields are for internal use by Bitseal, and are not part of the Bitmessage protocol
+	private long id;
+	private long correspondingPubkeyId;
+	private String label;
 	
-	private String mAddress;
-	private String mPrivateSigningKey;
-	private String mPrivateEncryptionKey;
-	private byte[] mRipeHash;
-	private byte[] mTag;
+	private String address;
+	private String privateSigningKey;
+	private String privateEncryptionKey;
+	private byte[] ripeHash;
+	private byte[] tag;
 	
 	public long getId() 
 	{
-		return mId;
+		return id;
 	}
-	
 	public void setId(long id) 
 	{
-		mId = id;
+		this.id = id;
 	}
 
 	public long getCorrespondingPubkeyId() 
 	{
-		return mCorrespondingPubkeyId;
+		return correspondingPubkeyId;
 	}
-
 	public void setCorrespondingPubkeyId(long correspondingPubkeyId) 
 	{
-		mCorrespondingPubkeyId = correspondingPubkeyId;
+		this.correspondingPubkeyId = correspondingPubkeyId;
 	}
 	
 	public String getLabel() 
 	{
-		return mLabel;
+		return label;
 	}
-
 	public void setLabel(String label) 
 	{
-		mLabel = label;
+		this.label = label;
 	}
 
 	public String getAddress() 
 	{
-		return mAddress;
+		return address;
 	}
-
 	public void setAddress(String address) 
 	{
-		mAddress = address;
+		this.address = address;
 	}
-
+	
 	public String getPrivateSigningKey() 
 	{
-		return mPrivateSigningKey;
+		return privateSigningKey;
 	}
-
 	public void setPrivateSigningKey(String privateSigningKey) 
 	{
-		mPrivateSigningKey = privateSigningKey;
+		this.privateSigningKey = privateSigningKey;
 	}
 
 	public String getPrivateEncryptionKey() 
 	{
-		return mPrivateEncryptionKey;
+		return privateEncryptionKey;
 	}
-
 	public void setPrivateEncryptionKey(String privateEncryptionKey) 
 	{
-		mPrivateEncryptionKey = privateEncryptionKey;
+		this.privateEncryptionKey = privateEncryptionKey;
 	}
 
 	public byte[] getRipeHash() 
 	{
-		return mRipeHash;
+		return ripeHash;
 	}
-
 	public void setRipeHash(byte[] ripeHash) 
 	{
-		mRipeHash = ripeHash;
+		this.ripeHash = ripeHash;
 	}
-
+	
 	public byte[] getTag()
 	{
-		return mTag;
+		return tag;
 	}
-
 	public void setTag(byte[] tag)
 	{
-		mTag = tag;
+		this.tag = tag;
 	}
 }

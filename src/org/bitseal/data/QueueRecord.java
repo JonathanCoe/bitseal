@@ -1,39 +1,49 @@
 package org.bitseal.data;
 
 /**
- * A class that serves as a record in the queue of tasks to be done by the 
+ * Class for an object that serves as a record in the queue of tasks to be done by the 
  * application. <br><br> 
  * 
  * Each QueueRecord can store references to up to two items in 
- * the database (e.g. a msg payload to send and the destination Pubkey). 
+ * the database (e.g. a msg payload to send and the destination pubkey). 
  * 
  * @author Jonathan Coe
  */
 public class QueueRecord implements Comparable<QueueRecord>
 {
 	/** The unique ID number of this QueueRecord" */
-	private long mId;
+	private long id;
 	
 	/** The task that this record refers to - e.g. "sendMsg" */
-	private String mTask;
+	private String task;
+	
+	/** A Unix time value (in seconds). If this is set to a time in the future, this QueueRecord will not 
+	 * be processed until that time. This value can also be set to zero, in which case the QueueRecord will be processed immediately. */
+	private long triggerTime;
+	
+	/** 
+	 * The number of QueueRecords that have already been created for the task referred to. This is done because some tasks
+	 * may need to be completed several times. <br><br>
+	 * 
+	 * For example, when we send a message, if we do not receive the acknowledgement for that message before its time to
+	 * live has expired, we will need to send that message again until we receive the acknowledgment. 
+	 * */
+	private int recordCount;
 	
 	/** The last time that the task referred to by this record was attempted */
-	private long mLastAttemptTime;
-	
-	/** The number of times that the task this record refers to has been attempted */
-	private int mAttempts;
+	private long lastAttemptTime;
+	/** The number of times that we have attempted to process this particular QueueRecord. Note that this is separate from the 'record count'. */
+	private int attempts;
 	
 	/** The id number of the first object that is to be processed, if any */
-	private long mObject0Id;
-	
+	private long object0Id;
 	/** The type of the first object that this record refers to - e.g. "Pubkey" or "UnencryptedsMsg" */
-	private String mObject0Type;
+	private String object0Type;
 	
 	/** The id number of the second object that is to be processed, if any */
-	private long mObject1Id;
-	
+	private long object1Id;
 	/** The type of the second object that this record refers to - e.g. "Pubkey" or "UnencryptedsMsg" */
-	private String mObject1Type;
+	private String object1Type;
 	
 	// Constant values for the "Object Type" Strings in QueueRecords
 	public static final String QUEUE_RECORD_OBJECT_TYPE_ADDRESS = "Address";
@@ -47,79 +57,97 @@ public class QueueRecord implements Comparable<QueueRecord>
 	@Override
 	public int compareTo(QueueRecord q)
 	{
-	     return (int) (mLastAttemptTime - q.getLastAttemptTime());
+	     return (int) (lastAttemptTime - q.getLastAttemptTime());
 	}
 	
 	public long getId()
 	{
-		return mId;
+		return id;
 	}
 	public void setId(long mId)
 	{
-		this.mId = mId;
+		this.id = mId;
 	}
 	
 	public String getTask()
 	{
-		return mTask;
+		return task;
 	}
 	public void setTask(String task)
 	{
-		this.mTask = task;
+		this.task = task;
 	}
 	
+	public long getTriggerTime()
+	{
+		return triggerTime;
+	}
+	public void setTriggerTime(long triggerTime)
+	{
+		this.triggerTime = triggerTime;
+	}
+
+	public int getRecordCount()
+	{
+		return recordCount;
+	}
+	public void setRecordCount(int recordCount)
+	{
+		this.recordCount = recordCount;
+	}
+
 	public long getLastAttemptTime()
 	{
-		return mLastAttemptTime;
+		return lastAttemptTime;
 	}
 	public void setLastAttemptTime(long lastAttemptTime)
 	{
-		this.mLastAttemptTime = lastAttemptTime;
+		this.lastAttemptTime = lastAttemptTime;
 	}
 	
 	public int getAttempts()
 	{
-		return mAttempts;
+		return attempts;
 	}
 	public void setAttempts(int attempts)
 	{
-		this.mAttempts = attempts;
+		this.attempts = attempts;
 	}
 	
 	public long getObject0Id()
 	{
-		return mObject0Id;
+		return object0Id;
 	}
 	
 	public void setObject0Id(long id)
 	{
-		this.mObject0Id = id;
+		this.object0Id = id;
 	}
 
 	public String getObject0Type()
 	{
-		return mObject0Type;
+		return object0Type;
 	}
 	public void setObject0Type(String type)
 	{
-		this.mObject0Type = type;
+		this.object0Type = type;
 	}
 	
 	public long getObject1Id()
 	{
-		return mObject1Id;
+		return object1Id;
 	}
 	public void setObject1Id(long id)
 	{
-		this.mObject1Id = id;
+		this.object1Id = id;
 	}
 
 	public String getObject1Type()
 	{
-		return mObject1Type;
+		return object1Type;
 	}
 	public void setObject1Type(String type)
 	{
-		this.mObject1Type = type;
+		this.object1Type = type;
 	}
 }

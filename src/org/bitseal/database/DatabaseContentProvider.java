@@ -505,26 +505,28 @@ public class DatabaseContentProvider extends ContentProvider
 
 		    else if (uriType == QUEUE_RECORDS || uriType == QUEUE_RECORD_ID)
 	    	{
-		    	String[] available = {QueueRecordsTable.COLUMN_ID, QueueRecordsTable.COLUMN_TASK, QueueRecordsTable.COLUMN_LAST_ATTEMPT_TIME, 
-		    			QueueRecordsTable.COLUMN_ATTEMPTS, QueueRecordsTable.COLUMN_OBJECT_0_ID, QueueRecordsTable.COLUMN_OBJECT_0_TYPE, 
-		    			QueueRecordsTable.COLUMN_OBJECT_1_ID, QueueRecordsTable.COLUMN_OBJECT_1_TYPE};
+		    	String[] available = {QueueRecordsTable.COLUMN_ID, QueueRecordsTable.COLUMN_TASK, QueueRecordsTable.COLUMN_TRIGGER_TIME, 
+		    			QueueRecordsTable.COLUMN_RECORD_COUNT, QueueRecordsTable.COLUMN_LAST_ATTEMPT_TIME, QueueRecordsTable.COLUMN_ATTEMPTS, 
+		    			QueueRecordsTable.COLUMN_OBJECT_0_ID, QueueRecordsTable.COLUMN_OBJECT_0_TYPE, QueueRecordsTable.COLUMN_OBJECT_1_ID,
+		    			QueueRecordsTable.COLUMN_OBJECT_1_TYPE};
 		    	return available;
 	    	}
 		    
 		    else if (uriType == PAYLOADS || uriType == PAYLOAD_ID)
 	    	{
 		    	String[] available = {PayloadsTable.COLUMN_ID, PayloadsTable.COLUMN_RELATED_ADDRESS_ID, PayloadsTable.COLUMN_BELONGS_TO_ME,
-		    			PayloadsTable.COLUMN_PROCESSING_COMPLETE, PayloadsTable.COLUMN_TIME, PayloadsTable.COLUMN_TYPE, PayloadsTable.COLUMN_POW_DONE,
-		    			PayloadsTable.COLUMN_PAYLOAD};
+		    			PayloadsTable.COLUMN_PROCESSING_COMPLETE, PayloadsTable.COLUMN_TIME, PayloadsTable.COLUMN_TYPE, PayloadsTable.COLUMN_ACK, 
+		    			PayloadsTable.COLUMN_POW_DONE, PayloadsTable.COLUMN_PAYLOAD};
 		    	return available;
 	    	}
 		    
 		    else if (uriType == PUBKEYS || uriType == PUBKEY_ID)
 	    	{
-		    	String[] available = {PubkeysTable.COLUMN_ID, PubkeysTable.COLUMN_CORRESPONDING_ADDRESS_ID, PubkeysTable.COLUMN_BELONGS_TO_ME, PubkeysTable.COLUMN_RIPE_HASH,
-		    			PubkeysTable.COLUMN_LAST_DISSEMINATION_TIME, PubkeysTable.COLUMN_POW_NONCE, PubkeysTable.COLUMN_TIME, PubkeysTable.COLUMN_ADDRESS_VERSION,
-		    			PubkeysTable.COLUMN_STREAM_NUMBER, PubkeysTable.COLUMN_BEHAVIOUR_BITFIELD,	PubkeysTable.COLUMN_PUBLIC_SIGNING_KEY, PubkeysTable.COLUMN_PUBLIC_ENCRYPTION_KEY,
-		    			PubkeysTable.COLUMN_NONCE_TRIALS_PER_BYTE, PubkeysTable.COLUMN_EXTRA_BYTES, PubkeysTable.COLUMN_SIGNATURE_LENGTH, PubkeysTable.COLUMN_SIGNATURE};
+		    	String[] available = {PubkeysTable.COLUMN_ID, PubkeysTable.COLUMN_BELONGS_TO_ME, PubkeysTable.COLUMN_POW_NONCE, PubkeysTable.COLUMN_EXPIRATION_TIME, 
+		    			PubkeysTable.COLUMN_OBJECT_TYPE, PubkeysTable.COLUMN_OBJECT_VERSION, PubkeysTable.COLUMN_STREAM_NUMBER, PubkeysTable.COLUMN_CORRESPONDING_ADDRESS_ID,
+		    			PubkeysTable.COLUMN_RIPE_HASH, PubkeysTable.COLUMN_LAST_DISSEMINATION_TIME,PubkeysTable.COLUMN_BEHAVIOUR_BITFIELD,	PubkeysTable.COLUMN_PUBLIC_SIGNING_KEY,
+		    			PubkeysTable.COLUMN_PUBLIC_ENCRYPTION_KEY, PubkeysTable.COLUMN_NONCE_TRIALS_PER_BYTE, PubkeysTable.COLUMN_EXTRA_BYTES, PubkeysTable.COLUMN_SIGNATURE_LENGTH,
+		    			PubkeysTable.COLUMN_SIGNATURE};
 		    	return available;
 	    	}
 		    

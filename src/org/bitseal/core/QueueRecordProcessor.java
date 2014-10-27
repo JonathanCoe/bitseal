@@ -8,8 +8,7 @@ import org.bitseal.data.QueueRecord;
 import org.bitseal.database.QueueRecordProvider;
 
 /**
- * This class provides some convenient methods for handling
- * QueueRecord objects
+ * This class provides some convenient methods for handling QueueRecord objects
  * 
  * @author Jonathan Coe
  */
@@ -30,6 +29,9 @@ public class QueueRecordProcessor
 	 * 
 	 * @param task - A String representing the task which this QueueRecord
 	 * is for. 
+	 * @param triggerTime - The 'trigger time' to use for this QueueRecord. If it should be
+	 * processed immediately, set this to zero.
+	 * @param recordCount - The number of QueueRecords which have already been created for this task
 	 * @param object0 - The first Object which this QueueRecord should have a reference
 	 * to, if any
 	 * @param object1 - The second Object which this QueueRecord should have a reference
@@ -37,10 +39,12 @@ public class QueueRecordProcessor
 	 * 
 	 * @return A QueueRecord object for the given task and data
 	 */
-	public QueueRecord createAndSaveQueueRecord(String task, Object object0, Object object1)
+	public QueueRecord createAndSaveQueueRecord(String task, long triggerTime, int recordCount, Object object0, Object object1)
 	{
 		QueueRecord q = new QueueRecord();
 		q.setTask(task);
+		q.setTriggerTime(triggerTime);
+		q.setRecordCount(recordCount);
 		q.setLastAttemptTime(System.currentTimeMillis() / 1000); // The current time in seconds
 		q.setAttempts(0);
 		
@@ -104,7 +108,7 @@ public class QueueRecordProcessor
 		// Save the QueueRecord we have created to the database
 		long queueRecordID = saveQueueRecord(q);
 		
-		// Finally, set the ID field of the new QueueRecord with the ID created by the SQLite databse
+		// Finally, set the ID field of the new QueueRecord with the ID created by the SQLite database
 		q.setId(queueRecordID);
 		
 		return q;

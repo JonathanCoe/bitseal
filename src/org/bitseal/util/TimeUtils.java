@@ -1,5 +1,7 @@
 package org.bitseal.util;
 
+import java.util.Random;
+
 import org.bitseal.core.App;
 
 import android.content.SharedPreferences;
@@ -13,6 +15,11 @@ import android.preference.PreferenceManager;
  */
 public final class TimeUtils 
 {   
+	/**
+	 * The range of time (in seconds) by which we 'fuzz' (obscure) certain time values.
+	 */
+	private static final int FUZZ_TIME_RANGE = 300; // Currently set to five minutes
+	
 	private static final int SECONDS_IN_A_DAY = 86400;
 	private static final int SECONDS_IN_AN_HOUR = 3600;
 	private static final int MINUTES_IN_AN_HOUR = 60;
@@ -25,6 +32,34 @@ public final class TimeUtils
 	private TimeUtils()
 	{
     	// The constructor of this class is private in order to prevent the class being instantiated
+	}
+	
+	/**
+	 * Returns a 'time to live' value and uses it to produce a
+	 * fuzzed expiration time - which is the current time plus
+	 * the time to live, giving us a time value in the future. 
+	 * 
+	 * @param timeToLive - The 'time to live' value, in seconds
+	 * 
+	 * @return The fuzzed expiration time
+	 */
+	public static long getFuzzedExpirationTime(long timeToLive)
+	{
+		return getFuzzedTime() + timeToLive;
+	}
+	
+	/**
+	 * Returns the current Unix time, plus or minus a random value in a
+	 * pre-defined range. This fuzzing of time values is not strictly part
+	 * of the Bitmessage protocol, but is commonly done in order to reduce
+	 * the potential for security breaches caused by the various time values
+	 * embedded in Bitmessage data.
+	 */
+	private static long getFuzzedTime()
+	{
+		long currentTime = System.currentTimeMillis() / 1000; // Gets the current Unix time
+    	int timeModifier = (new Random().nextInt(FUZZ_TIME_RANGE * 2)) - FUZZ_TIME_RANGE;
+    	return currentTime + timeModifier; // Gives us the current Unix time plus or minus a random value within the 'fuzz time range'
 	}
     
     /**

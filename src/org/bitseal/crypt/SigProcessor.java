@@ -2,7 +2,6 @@ package org.bitseal.crypt;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -30,7 +29,7 @@ public class SigProcessor
 {	
 	private static final String ALGORITHM = "ECDSA";
 	private static final String PROVIDER = "SC"; // Spongy Castle
-	
+		
 	private static final String TAG = "SIG_PROCESSOR";
 	
 	/**
@@ -46,42 +45,78 @@ public class SigProcessor
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		try
 		{
-			if (pubkey.getAddressVersion() < 4)
+			// --------------------------------------Upgrade period code---------------------------------------------------------------------
+			long currentTime = System.currentTimeMillis() / 1000;
+			if (currentTime < 1416175200) // Sun, 16 November 2014 22:00:00 GMT
 			{
-				outputStream.write(ByteUtils.intToBytes((int) pubkey.getTime())); // Pubkeys of version 3 and below use 4 byte time
+				outputStream.write(ByteUtils.longToBytes(pubkey.getExpirationTime() - 2419200)); // Expiration time minus 28 days
+				outputStream.write(VarintEncoder.encode(pubkey.getObjectVersion()));
+				outputStream.write(VarintEncoder.encode(pubkey.getStreamNumber()));
+				outputStream.write(ByteUtils.intToBytes(pubkey.getBehaviourBitfield()));
+				
+				// If the public signing or public encryption key have their leading 0x04 byte in place then we need to remove them
+				byte[] publicSigningKey = pubkey.getPublicSigningKey();
+				if (publicSigningKey[0] == (byte) 4  && publicSigningKey.length == 65)
+				{
+					publicSigningKey = ArrayCopier.copyOfRange(publicSigningKey, 1, publicSigningKey.length);
+				}
+				outputStream.write(publicSigningKey);
+				
+				byte[] publicEncryptionKey = pubkey.getPublicEncryptionKey();
+				if (publicEncryptionKey[0] == (byte) 4  && publicEncryptionKey.length == 65)
+				{
+					publicEncryptionKey = ArrayCopier.copyOfRange(publicEncryptionKey, 1, publicEncryptionKey.length);
+				}
+				outputStream.write(publicEncryptionKey);
+				
+				outputStream.write(VarintEncoder.encode(pubkey.getNonceTrialsPerByte()));
+				outputStream.write(VarintEncoder.encode(pubkey.getExtraBytes()));
 			}
+			// -----------------------------------------------------------------------------------------------------------------------------
+			
+			// Protocol version 3 code
 			else
 			{
-				outputStream.write(ByteUtils.longToBytes(pubkey.getTime())); // Pubkeys of version 4 and above use 8 byte time
+				if (pubkey.getObjectVersion() < 4)
+				{
+					outputStream.write(ByteUtils.intToBytes((int) pubkey.getExpirationTime())); // Pubkeys of version 3 and below use 4 byte time
+				}
+				else
+				{
+					outputStream.write(ByteUtils.longToBytes(pubkey.getExpirationTime())); // Pubkeys of version 4 and above use 8 byte time
+				}
+				outputStream.write(ByteUtils.intToBytes(pubkey.getObjectType()));
+				outputStream.write(VarintEncoder.encode(pubkey.getObjectVersion()));
+				outputStream.write(VarintEncoder.encode(pubkey.getStreamNumber()));
+				outputStream.write(ByteUtils.intToBytes(pubkey.getBehaviourBitfield()));
+				
+				// If the public signing or public encryption key have their leading 0x04 byte in place then we need to remove them
+				byte[] publicSigningKey = pubkey.getPublicSigningKey();
+				if (publicSigningKey[0] == (byte) 4  && publicSigningKey.length == 65)
+				{
+					publicSigningKey = ArrayCopier.copyOfRange(publicSigningKey, 1, publicSigningKey.length);
+				}
+				outputStream.write(publicSigningKey);
+				
+				byte[] publicEncryptionKey = pubkey.getPublicEncryptionKey();
+				if (publicEncryptionKey[0] == (byte) 4  && publicEncryptionKey.length == 65)
+				{
+					publicEncryptionKey = ArrayCopier.copyOfRange(publicEncryptionKey, 1, publicEncryptionKey.length);
+				}
+				outputStream.write(publicEncryptionKey);
+				
+				outputStream.write(VarintEncoder.encode(pubkey.getNonceTrialsPerByte()));
+				outputStream.write(VarintEncoder.encode(pubkey.getExtraBytes()));
 			}
-			outputStream.write(VarintEncoder.encode(pubkey.getAddressVersion())); 
-			outputStream.write(VarintEncoder.encode(pubkey.getStreamNumber())); 
-			outputStream.write(ByteBuffer.allocate(4).putInt(pubkey.getBehaviourBitfield()).array());  //The behaviour bitfield should always be 4 bytes in length
-			
-			// If the public signing or public encryption key have their leading 0x04 byte in place then we need to remove them
-			byte[] publicSigningKey = pubkey.getPublicSigningKey();
-			if (publicSigningKey[0] == (byte) 4  && publicSigningKey.length == 65)
-			{
-				publicSigningKey = ArrayCopier.copyOfRange(publicSigningKey, 1, publicSigningKey.length);
-			}
-			outputStream.write(publicSigningKey);
-			
-			byte[] publicEncryptionKey = pubkey.getPublicEncryptionKey();
-			if (publicEncryptionKey[0] == (byte) 4  && publicEncryptionKey.length == 65)
-			{
-				publicEncryptionKey = ArrayCopier.copyOfRange(publicEncryptionKey, 1, publicEncryptionKey.length);
-			}
-			outputStream.write(publicEncryptionKey);
-			
-			outputStream.write(VarintEncoder.encode(pubkey.getNonceTrialsPerByte()));
-			outputStream.write(VarintEncoder.encode(pubkey.getExtraBytes()));
 			
 			payload = outputStream.toByteArray();
 		} 
 		catch (IOException e)
 		{
-			throw new RuntimeException("IOException occurred in SigProcessor.constructPubkeyPayload()", e);
+			throw new RuntimeException("IOException occurred in SigProcessor.createPubkeySignaturePayload()", e);
 		}
+		
+		Log.i(TAG, "Pubkey signature payload: " + ByteFormatter.byteArrayToHexString(payload));
 
 		return payload;
 	}
@@ -99,69 +134,113 @@ public class SigProcessor
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		try 
 		{
-			outputStream.write(VarintEncoder.encode(unencMsg.getMsgVersion())); 
-			outputStream.write(VarintEncoder.encode(unencMsg.getAddressVersion())); 
-			outputStream.write(VarintEncoder.encode(unencMsg.getStreamNumber()));
-			outputStream.write(ByteBuffer.allocate(4).putInt(unencMsg.getBehaviourBitfield()).array()); //The behaviour bitfield should always be 4 bytes in length
-			
-			// If the public signing and public encryption keys have their leading 0x04 byte in place then we need to remove them
-			byte[] publicSigningKey = unencMsg.getPublicSigningKey();
-			if (publicSigningKey[0] == (byte) 4  && publicSigningKey.length == 65)
+			// --------------------------------------Upgrade period code---------------------------------------------------------------------
+			long currentTime = System.currentTimeMillis() / 1000;
+			if (currentTime < 1416175200) // Sun, 16 November 2014 22:00:00 GMT
 			{
-				publicSigningKey = ArrayCopier.copyOfRange(publicSigningKey, 1, publicSigningKey.length);
+				outputStream.write(VarintEncoder.encode(1)); // Message Version
+				outputStream.write(VarintEncoder.encode(unencMsg.getSenderAddressVersion()));
+				outputStream.write(VarintEncoder.encode(unencMsg.getSenderStreamNumber()));
+				outputStream.write(ByteUtils.intToBytes(unencMsg.getBehaviourBitfield()));
+				
+				// If the public signing and public encryption keys have their leading 0x04 byte in place then we need to remove them
+				byte[] publicSigningKey = unencMsg.getPublicSigningKey();
+				if (publicSigningKey[0] == (byte) 4  && publicSigningKey.length == 65)
+				{
+					publicSigningKey = ArrayCopier.copyOfRange(publicSigningKey, 1, publicSigningKey.length);
+				}
+				outputStream.write(publicSigningKey);
+				
+				byte[] publicEncryptionKey = unencMsg.getPublicEncryptionKey();
+				if (publicEncryptionKey[0] == (byte) 4  && publicEncryptionKey.length == 65)
+				{
+					publicEncryptionKey = ArrayCopier.copyOfRange(publicEncryptionKey, 1, publicEncryptionKey.length);
+				}
+				outputStream.write(publicEncryptionKey);
+				
+				if (unencMsg.getSenderAddressVersion() >= 3) // The nonceTrialsPerByte and extraBytes fields are only included when the address version is >= 3
+				{
+					outputStream.write(VarintEncoder.encode(unencMsg.getNonceTrialsPerByte()));
+					outputStream.write(VarintEncoder.encode(unencMsg.getExtraBytes()));
+				}
+				
+				// For the purposes of signature payloads, the ripe hash must always be 20 bytes in length
+				byte[] ripeHash = unencMsg.getDestinationRipe();
+				// If the ripe hash is less than 20 bytes in length, it needs to be padded with zero bytes until it is
+				while (ripeHash.length < 20)
+				{
+					byte[] zeroByte = new byte[]{0};
+					ripeHash = ByteUtils.concatenateByteArrays(zeroByte, ripeHash);
+				}
+				outputStream.write(ripeHash);
+				
+				outputStream.write(VarintEncoder.encode(unencMsg.getEncoding())); 
+				outputStream.write(VarintEncoder.encode(unencMsg.getMessageLength())); 
+				outputStream.write(unencMsg.getMessage());
+				outputStream.write(VarintEncoder.encode(unencMsg.getAckLength())); 
+				outputStream.write(unencMsg.getAckMsg());
 			}
-			outputStream.write(publicSigningKey);
+			// ------------------------------------------------------------------------------------------------------------------------------------
 			
-			byte[] publicEncryptionKey = unencMsg.getPublicEncryptionKey();
-			if (publicEncryptionKey[0] == (byte) 4  && publicEncryptionKey.length == 65)
+			// Protocol version 3 code
+			else
 			{
-				publicEncryptionKey = ArrayCopier.copyOfRange(publicEncryptionKey, 1, publicEncryptionKey.length);
-			}
-			outputStream.write(publicEncryptionKey);
+				outputStream.write(ByteUtils.longToBytes(unencMsg.getExpirationTime()));
+				outputStream.write(ByteUtils.intToBytes(unencMsg.getObjectType()));
+				outputStream.write(VarintEncoder.encode(unencMsg.getObjectVersion()));
+				outputStream.write(VarintEncoder.encode(unencMsg.getStreamNumber()));
+				outputStream.write(VarintEncoder.encode(unencMsg.getSenderAddressVersion()));
+				outputStream.write(VarintEncoder.encode(unencMsg.getSenderStreamNumber()));
+				outputStream.write(ByteUtils.intToBytes(unencMsg.getBehaviourBitfield()));
+				
+				// If the public signing and public encryption keys have their leading 0x04 byte in place then we need to remove them
+				byte[] publicSigningKey = unencMsg.getPublicSigningKey();
+				if (publicSigningKey[0] == (byte) 4  && publicSigningKey.length == 65)
+				{
+					publicSigningKey = ArrayCopier.copyOfRange(publicSigningKey, 1, publicSigningKey.length);
+				}
+				outputStream.write(publicSigningKey);
+				
+				byte[] publicEncryptionKey = unencMsg.getPublicEncryptionKey();
+				if (publicEncryptionKey[0] == (byte) 4  && publicEncryptionKey.length == 65)
+				{
+					publicEncryptionKey = ArrayCopier.copyOfRange(publicEncryptionKey, 1, publicEncryptionKey.length);
+				}
+				outputStream.write(publicEncryptionKey);
+				
+				if (unencMsg.getSenderAddressVersion() >= 3) // The nonceTrialsPerByte and extraBytes fields are only included when the address version is >= 3
+				{
+					outputStream.write(VarintEncoder.encode(unencMsg.getNonceTrialsPerByte()));
+					outputStream.write(VarintEncoder.encode(unencMsg.getExtraBytes()));
+				}
 			
-			if (unencMsg.getAddressVersion() >= 3) // The nonceTrialsPerByte and extraBytes fields are only included when the address version is >= 3
-			{
-				outputStream.write(VarintEncoder.encode(unencMsg.getNonceTrialsPerByte()));
-				outputStream.write(VarintEncoder.encode(unencMsg.getExtraBytes()));
+				// For the purposes of signature payloads, the ripe hash must always be 20 bytes in length
+				byte[] ripeHash = unencMsg.getDestinationRipe();
+				// If the ripe hash is less than 20 bytes in length, it needs to be padded with zero bytes until it is
+				while (ripeHash.length < 20)
+				{
+					byte[] zeroByte = new byte[]{0};
+					ripeHash = ByteUtils.concatenateByteArrays(zeroByte, ripeHash);
+				}
+				outputStream.write(ripeHash);
+
+				outputStream.write(VarintEncoder.encode(unencMsg.getEncoding())); 
+				outputStream.write(VarintEncoder.encode(unencMsg.getMessageLength())); 
+				outputStream.write(unencMsg.getMessage());
+				outputStream.write(VarintEncoder.encode(unencMsg.getAckLength())); 
+				outputStream.write(unencMsg.getAckMsg());
 			}
-		
-			outputStream.write(unencMsg.getDestinationRipe());
-			outputStream.write(VarintEncoder.encode(unencMsg.getEncoding())); 
-			outputStream.write(VarintEncoder.encode(unencMsg.getMessageLength())); 
-			outputStream.write(unencMsg.getMessage());
-			outputStream.write(VarintEncoder.encode(unencMsg.getAckLength())); 
-			outputStream.write(unencMsg.getAckMsg());
+
 		
 			payload = outputStream.toByteArray();
 			outputStream.close();
 		}
 		catch (IOException e) 
 		{
-			throw new RuntimeException("IOException occurred in SigProcessor.constructUnencryptedMsgPayload()", e);
+			throw new RuntimeException("IOException occurred in SigProcessor.createUnencryptedMsgSignaturePayload()", e);
 		}
 		
 		return payload;
-	}
-
-	
-	/**
-	 * Produces an ECDSA signature for a given payload, using a private key in Wallet Import
-	 * Format to produce the signature.
-	 * 
-	 * @param payloadToSign - The payload to be signed
-	 * @param wifPrivateKey - A String containing the private key which will be used to create the 
-	 * signature, encoded in Bitcoin-style Wallet Import Format. 
-	 * 
-	 * @return A byte[] containing the newly created signature. 
-	 */
-	public byte[] signWithWIFKey(byte[] payloadToSign, String wifPrivateKey)
-	{
-		KeyConverter converter = new KeyConverter();
-		ECPrivateKey privKey = converter.decodePrivateKeyFromWIF(wifPrivateKey);
-		
-		byte[] signature = sign(payloadToSign, privKey);
-		
-		return signature;
 	}
 	
 	/**
@@ -203,13 +282,33 @@ public class SigProcessor
 		
 		if (signatureValid == false)
 		{
-			Log.i(TAG, "While running SigProc.verifySignature(), the following signature was found to be invalid:\n"
+			Log.e(TAG, "While running SigProc.verifySignature(), the following signature was found to be invalid:\n"
 					 + "Invalid signature: " + ByteFormatter.byteArrayToHexString(signature) + "\n"
 					 + "Length of invalid signature: " + signature.length + " bytes" + "\n"
 					 + "Payload for which the signature was invalid: " + ByteFormatter.byteArrayToHexString(payloadToVerify));
 		}
 		
 		return signatureValid;
+	}
+	
+	/**
+	 * Produces an ECDSA signature for a given payload, using a private key in Wallet Import
+	 * Format to produce the signature.
+	 * 
+	 * @param payloadToSign - The payload to be signed
+	 * @param wifPrivateKey - A String containing the private key which will be used to create the 
+	 * signature, encoded in Bitcoin-style Wallet Import Format. 
+	 * 
+	 * @return A byte[] containing the newly created signature. 
+	 */
+	public byte[] signWithWIFKey(byte[] payloadToSign, String wifPrivateKey)
+	{
+		KeyConverter converter = new KeyConverter();
+		ECPrivateKey privKey = converter.decodePrivateKeyFromWIF(wifPrivateKey);
+		
+		byte[] signature = sign(payloadToSign, privKey);
+		
+		return signature;
 	}
 	
 	/**

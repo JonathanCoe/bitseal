@@ -33,12 +33,14 @@ public class SendMessageController
 	 * to retrieve the pubkey
 	 * @param getpubkeyPayload - A Payload containing a getpubkey object which has 
 	 * been created in order to retrieve this pubkey. 
+	 * @param timeToLive - The 'time to live' value (in seconds) to be used in creating 
+	 * a getpubkey object to retrieve the pubkey
 	 * 
 	 * @return An Object, which will either be a Pubkey (if the pubkey was successfully
 	 * retrieved) or a Payload (if we could not retrieve the pubkey and had to send a 
 	 * getpubkey request). 
 	 */
-	public Object retrieveToPubkey(String toAddress, Payload getpubkeyPayload)
+	public Object retrieveToPubkey(String toAddress, Payload getpubkeyPayload, long timeToLive)
 	{
 		PubkeyProcessor pubProc = new PubkeyProcessor();
 		Pubkey toPubkey = null;
@@ -75,7 +77,7 @@ public class SendMessageController
 			else
 			{
 				// Create a new getpubkey Payload and disseminate it
-				Payload newGetpubkeyPayload = getProc.constructAndDisseminateGetpubkeyRequst(toAddress);
+				Payload newGetpubkeyPayload = getProc.constructAndDisseminateGetpubkeyRequst(toAddress, timeToLive);
 				return newGetpubkeyPayload;
 			}
 		}
@@ -98,13 +100,14 @@ public class SendMessageController
 	 * @param doPOW - A boolean indicating whether or not proof of 
 	 * work calculations should be done for the msg created
 	 * during this process.
+	 * @param timeToLive - The 'time to live' value (in seconds) to be used in sending this message
 	 * 
 	 * @return A Payload object containing the msg payload for this message
 	 */
-	public Payload processOutgoingMessage (Message messageToSend, Pubkey toPubkey, boolean doPOW)
+	public Payload processOutgoingMessage (Message messageToSend, Pubkey toPubkey, boolean doPOW, long timeToLive)
 	{
 		OutgoingMessageProcessor outMsgProc = new OutgoingMessageProcessor();
-		Payload msgPayload = outMsgProc.processOutgoingMessage(messageToSend, toPubkey, doPOW);
+		Payload msgPayload = outMsgProc.processOutgoingMessage(messageToSend, toPubkey, doPOW, timeToLive);
 		
 		return msgPayload;
 	}

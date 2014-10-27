@@ -2,7 +2,6 @@ package org.bitseal.core;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import org.bitseal.crypt.AddressGenerator;
@@ -10,6 +9,7 @@ import org.bitseal.crypt.CryptProcessor;
 import org.bitseal.crypt.KeyConverter;
 import org.bitseal.crypt.SigProcessor;
 import org.bitseal.data.Address;
+import org.bitseal.data.Object;
 import org.bitseal.data.Payload;
 import org.bitseal.data.Pubkey;
 import org.bitseal.database.AddressProvider;
@@ -34,14 +34,11 @@ import android.util.Log;
  */
 public class PubkeyProcessor
 {
-	private static final int MIN_VALID_ADDRESS_VERSION = 1;
-	private static final int MAX_VALID_ADDRESS_VERSION = 4;
+	/** In Bitmessage protocol version 3, the network standard value for nonce trials per byte is 1000. */
+	public static final int NETWORK_NONCE_TRIALS_PER_BYTE = 1000;
 	
-	private static final int MIN_VALID_STREAM_NUMBER = 1;
-	private static final int MAX_VALID_STREAM_NUMBER = 1;
-	
-	private static final int DEFAULT_NONCE_TRIALS_PER_BYTE = 320;
-	private static final int DEFAULT_EXTRA_BYTES = 14000;
+	/** In Bitmessage protocol version 3, the network standard value for extra bytes is 1000. */
+	public static final int NETWORK_EXTRA_BYTES = 1000;
 	
 	private static final int EMPTY_SIGNATURE_LENGTH = 0; // Pubkeys of version 2 and below do not have signatures
 	private static final byte[] EMPTY_SIGNATURE = new byte[]{0};
@@ -75,7 +72,7 @@ public class PubkeyProcessor
 		// address version number, and stream number to recreate the address string that it corresponds to.
 		// This should match the address string that we started with.
 		AddressGenerator addGen = new AddressGenerator();
-		String recreatedAddress = addGen.recreateAddressString(pubkey.getAddressVersion(), pubkey.getStreamNumber(),
+		String recreatedAddress = addGen.recreateAddressString(pubkey.getObjectVersion(), pubkey.getStreamNumber(),
 				pubkey.getPublicSigningKey(), pubkey.getPublicEncryptionKey());
 		
 		Log.i(TAG, "Recreated address String: " + recreatedAddress);
@@ -133,8 +130,9 @@ public class PubkeyProcessor
 		byte[] ripeHash = new AddressProcessor().extractRipeHashFromAddress(addressString);
 		
 		// Now search the application's database to see if the pubkey we need is stored there
+		// Note that when ripe hashes in the database have their leading zeros removed
 		PubkeyProvider pubProv = PubkeyProvider.get(App.getContext());
-		ArrayList<Pubkey> retrievedPubkeys = pubProv.searchPubkeys(PubkeysTable.COLUMN_RIPE_HASH, Base64.encodeToString(ripeHash, Base64.DEFAULT));
+		ArrayList<Pubkey> retrievedPubkeys = pubProv.searchPubkeys(PubkeysTable.COLUMN_RIPE_HASH, Base64.encodeToString(ByteUtils.stripLeadingZeros(ripeHash), Base64.DEFAULT));
 		if (retrievedPubkeys.size() > 1)
 		{
 			Log.i(TAG, "We seem to have found duplicate pubkeys during the database search. We will use the first one and delete the duplicates.");
@@ -206,43 +204,17 @@ public class PubkeyProcessor
 	 */
 	public Pubkey reconstructPubkey (byte[] pubkeyData, String addressString)
 	{
-		// Parse the individual fields from the decrypted msg data
+		// First parse the standard Bitmessage object data
+		Object pubkeyObject = new ObjectProcessor().parseObject(pubkeyData);
+		
+		// Now parse the pubkey-specific data
+		byte[] pubkeyPayload = pubkeyObject.getPayload();
 		int readPosition = 0;
 		
-		long powNonce = ByteUtils.bytesToLong((ArrayCopier.copyOfRange(pubkeyData, readPosition, readPosition + 8)));
-		readPosition += 8; //The pow nonce should always be 8 bytes in length
-		
-		long time = ByteUtils.bytesToInt((ArrayCopier.copyOfRange(pubkeyData, readPosition, readPosition + 4)));
-		if (time == 0) // Need to check whether 4 or 8 byte time has been used
-		{
-			time = ByteUtils.bytesToLong((ArrayCopier.copyOfRange(pubkeyData, readPosition, readPosition + 8)));
-			readPosition += 8;
-		}
-		else
-		{
-			readPosition += 4;
-		}
-		
-		long[] decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(pubkeyData, readPosition, readPosition + 9)); // Take 9 bytes, the maximum length for an encoded var_int
-		int addressVersion = (int) decoded[0]; // Get the var_int encoded value
-		readPosition += (int) decoded[1]; // Find out how many bytes the var_int was in length and adjust the read position accordingly
-		if (addressVersion < MIN_VALID_ADDRESS_VERSION || addressVersion > MAX_VALID_ADDRESS_VERSION)
-		{
-			throw new RuntimeException("Decoded address version number was invalid. Aborting pubkey decoding. The invalid value was " + addressVersion);
-		}
-		
-		decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(pubkeyData, readPosition, readPosition + 9)); // Take 9 bytes, the maximum length for an encoded var_int
-		int streamNumber = (int) decoded[0]; // Get the var_int encoded value
-		readPosition += (int) decoded[1]; // Find out how many bytes the var_int was in length and adjust the read position accordingly
-		if (streamNumber < MIN_VALID_STREAM_NUMBER || streamNumber > MAX_VALID_STREAM_NUMBER)
-		{
-			throw new RuntimeException("Decoded stream number was invalid. Aborting pubkey decoding. The invalid value was " + streamNumber);
-		}
-		
 		// Pubkeys of version 4 and above have most of their data encrypted. 
-		if (addressVersion >= 4)
+		if (pubkeyObject.getObjectVersion() >= 4)
 		{
-			byte[] encryptedData = ArrayCopier.copyOfRange(pubkeyData, readPosition + 32, pubkeyData.length); // Skip over the tag
+			byte[] encryptedData = ArrayCopier.copyOfRange(pubkeyPayload, readPosition + 32, pubkeyPayload.length); // Skip over the tag
 			
 			// Create the ECPrivateKey object that we will use to decrypt encrypted the pubkey data
 			AddressProcessor addProc = new AddressProcessor();
@@ -252,29 +224,29 @@ public class PubkeyProcessor
 			
 			// Attempt to decrypt the encrypted pubkey data
 			CryptProcessor cryptProc = new CryptProcessor();
-			pubkeyData = cryptProc.decrypt(encryptedData, k);
+			pubkeyPayload = cryptProc.decrypt(encryptedData, k);
 			readPosition = 0; // Reset the read position so that we start from the beginning of the decrypted data
 		}
 		
-		int behaviourBitfield = ByteUtils.bytesToInt((ArrayCopier.copyOfRange(pubkeyData, readPosition, readPosition + 4))); 
+		int behaviourBitfield = ByteUtils.bytesToInt((ArrayCopier.copyOfRange(pubkeyPayload, readPosition, readPosition + 4))); 
 		readPosition += 4; //The behaviour bitfield should always be 4 bytes in length
 		
-		byte[] publicSigningKey = ArrayCopier.copyOfRange(pubkeyData, readPosition, readPosition + 64);
+		byte[] publicSigningKey = ArrayCopier.copyOfRange(pubkeyPayload, readPosition, readPosition + 64);
 		readPosition += 64;
 		// Both the public signing and public encryption keys need to have the 0x04 byte which was stripped off for transmission
 		// over the wire added back on to them
 		byte[] fourByte = new byte[]{4};
 		publicSigningKey = ByteUtils.concatenateByteArrays(fourByte, publicSigningKey); 
 		
-		byte[] publicEncryptionKey = ArrayCopier.copyOfRange(pubkeyData, readPosition, readPosition + 64);
+		byte[] publicEncryptionKey = ArrayCopier.copyOfRange(pubkeyPayload, readPosition, readPosition + 64);
 		readPosition += 64;
 		publicEncryptionKey = ByteUtils.concatenateByteArrays(fourByte, publicEncryptionKey);
 		
-		// Set the nonceTrialsPerByte and extraBytes values to their defaults. If the pubkey adrress version is 
+		// Set the nonceTrialsPerByte and extraBytes values to the network standard values. If the pubkey address version is 
 		// 3 or greater, we will then set these two values to those specified in the pubkey. Otherwise they remain at
 		// their default values.
-		int nonceTrialsPerByte = DEFAULT_NONCE_TRIALS_PER_BYTE;
-		int extraBytes = DEFAULT_EXTRA_BYTES;
+		int nonceTrialsPerByte = NETWORK_NONCE_TRIALS_PER_BYTE;
+		int extraBytes = NETWORK_EXTRA_BYTES;
 		
 		// Set the signature and signature length to some default blank values. Pubkeys of address version 2 and below
 		// do not have signatures.
@@ -284,21 +256,21 @@ public class PubkeyProcessor
 		// Only unencrypted msgs of address version 3 or greater contain
 		// values for nonceTrialsPerByte, extraBytes, signatureLength, and
 		// signature
-		if (addressVersion >= 3)
+		if (pubkeyObject.getObjectVersion() >= 3)
 		{
-			decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(pubkeyData, readPosition, readPosition + 9)); // Take 9 bytes, the maximum length for an encoded var_int
+			long[] decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(pubkeyPayload, readPosition, readPosition + 9)); // Take 9 bytes, the maximum length for an encoded var_int
 			nonceTrialsPerByte = (int) decoded[0]; // Get the var_int encoded value
 			readPosition += (int) decoded[1]; // Find out how many bytes the var_int was in length and adjust the read position accordingly
 			
-			decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(pubkeyData, readPosition, readPosition + 9)); // Take 9 bytes, the maximum length for an encoded var_int
+			decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(pubkeyPayload, readPosition, readPosition + 9)); // Take 9 bytes, the maximum length for an encoded var_int
 			extraBytes = (int) decoded[0]; // Get the var_int encoded value
 			readPosition += (int) decoded[1]; // Find out how many bytes the var_int was in length and adjust the read position accordingly
 		
-			decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(pubkeyData, readPosition, readPosition + 9)); // Take 9 bytes, the maximum length for an encoded var_int
+			decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(pubkeyPayload, readPosition, readPosition + 9)); // Take 9 bytes, the maximum length for an encoded var_int
 			signatureLength = (int) decoded[0]; // Get the var_int encoded value
 			readPosition += (int) decoded[1]; // Find out how many bytes the var_int was in length and adjust the read position accordingly
 			
-			signature = (ArrayCopier.copyOfRange(pubkeyData, readPosition, readPosition + signatureLength));
+			signature = (ArrayCopier.copyOfRange(pubkeyPayload, readPosition, readPosition + signatureLength));
 		}
 				
 		// Recalculate the ripe hash of this pubkey so that it can be stored in the database
@@ -306,11 +278,12 @@ public class PubkeyProcessor
 
 		Pubkey pubkey = new Pubkey();
 		pubkey.setBelongsToMe(false);
+		pubkey.setPOWNonce(pubkeyObject.getPOWNonce());
+		pubkey.setExpirationTime(pubkeyObject.getExpirationTime());
+		pubkey.setObjectType(pubkeyObject.getObjectType());
+		pubkey.setObjectVersion(pubkeyObject.getObjectVersion());
+		pubkey.setStreamNumber(pubkeyObject.getStreamNumber());
 		pubkey.setRipeHash(ripeHash);
-		pubkey.setPOWNonce(powNonce);
-		pubkey.setTime(time);
-		pubkey.setAddressVersion(addressVersion);
-		pubkey.setStreamNumber(streamNumber);
 		pubkey.setBehaviourBitfield(behaviourBitfield);
 		pubkey.setPublicSigningKey(publicSigningKey);
 		pubkey.setPublicEncryptionKey(publicEncryptionKey);
@@ -323,13 +296,13 @@ public class PubkeyProcessor
 	}
 	
 	/**
-	 * Takes a Pubkey and encodes it into a single byte[], in a way that is compatible
-	 * with the way that PyBitmessage does. This payload can then be sent to a server
-	 * to be disseminated across the network.  
+	 * Takes a Pubkey and encodes it into a single byte[] (in a way that is compatible
+	 * with the way that PyBitmessage does), and does POW for this payload. This payload
+	 * can then be sent to a server to be disseminated across the network. 
 	 * 
 	 * @param pubkey - An Pubkey object containing the pubkey data used to create
 	 * the payload.
-	 * @param powDone - A boolean value indicating whether or not POW has been done for this pubkey
+	 * @param doPOW - A boolean value indicating whether or not to do POW for this pubkey
 	 * 
 	 * @return A Payload object containing the pubkey payload
 	 */
@@ -340,16 +313,17 @@ public class PubkeyProcessor
 		ByteArrayOutputStream payloadStream = new ByteArrayOutputStream();
 		try
 		{
-			payloadStream.write(ByteUtils.longToBytes(pubkey.getTime()));
-			payloadStream.write(VarintEncoder.encode(pubkey.getAddressVersion())); 
+			payloadStream.write(ByteUtils.longToBytes(pubkey.getExpirationTime()));
+			payloadStream.write(ByteUtils.intToBytes(pubkey.getObjectType()));
+			payloadStream.write(VarintEncoder.encode(pubkey.getObjectVersion())); 
 			payloadStream.write(VarintEncoder.encode(pubkey.getStreamNumber())); 
 			
-			if (pubkey.getAddressVersion() >= 4) // Pubkeys of version 4 and above have most of their data encrypted
+			if (pubkey.getObjectVersion() >= 4) // Pubkeys of version 4 and above have most of their data encrypted
 			{
 				// Combine all the data to be encrypted into a single byte[]
 				ByteArrayOutputStream dataToEncryptStream = new ByteArrayOutputStream();
 				
-				dataToEncryptStream.write(ByteBuffer.allocate(4).putInt(pubkey.getBehaviourBitfield()).array());
+				dataToEncryptStream.write(ByteUtils.intToBytes(pubkey.getBehaviourBitfield()));
 				
 				// If the public signing and public encryption keys have their leading 0x04 byte in place then we need to remove them
 				byte[] publicSigningKey = pubkey.getPublicSigningKey();
@@ -397,7 +371,7 @@ public class PubkeyProcessor
 			
 			else // For pubkeys of version 3 and below
 			{
-				payloadStream.write(ByteBuffer.allocate(4).putInt(pubkey.getBehaviourBitfield()).array());  //The behaviour bitfield should always be 4 bytes in length
+				payloadStream.write(ByteUtils.intToBytes(pubkey.getBehaviourBitfield()));
 				
 				// If the public signing and public encryption keys have their leading 0x04 byte in place then we need to remove them
 				byte[] publicSigningKey = pubkey.getPublicSigningKey();
@@ -426,10 +400,10 @@ public class PubkeyProcessor
 		{
 			throw new RuntimeException("IOException occurred in PubkeyProcessor.constructPubkeyPayloadForDissemination()", e);
 		}
-		
+			
 		if (doPOW == true)
 		{
-			long powNonce = new POWProcessor().doPOW(payload, POWProcessor.NETWORK_NONCE_TRIALS_PER_BYTE, POWProcessor.NETWORK_EXTRA_BYTES);
+			long powNonce = new POWProcessor().doPOW(payload, pubkey.getExpirationTime(), POWProcessor.NETWORK_NONCE_TRIALS_PER_BYTE, POWProcessor.NETWORK_EXTRA_BYTES);
 			payload = ByteUtils.concatenateByteArrays(ByteUtils.longToBytes(powNonce), payload);
 		}
 		

@@ -1,55 +1,51 @@
 package org.bitseal.data;
 
 /**
- * An object representing an server record. Includes the URL, username, and password.
+ * Class for an object representing a server record. Includes the URL, username, and password.
  * This should be all the data necessary to access the server.
  * 
  * @author Jonathan Coe
  */
 public class ServerRecord
 {
-	private long mId;
-	private String mURL;
-	private String mUsername;
-	private String mPassword;
+	private long id;
+	private String url;
+	private String username;
+	private String password;
 	
 	public long getId()
 	{
-		return mId;
+		return id;
 	}
-
 	public void setId(long id)
 	{
-		mId = id;
+		this.id = id;
 	}
 	
 	public String getURL()
 	{
-		return mURL;
+		return url;
 	}
-
 	public void setURL(String url)
 	{
-		mURL = url;
+		this.url = url;
 	}
 
 	public String getUsername()
 	{
-		return mUsername;
+		return username;
 	}
-
 	public void setUsername(String username)
 	{
-		mUsername = username;
+		this.username = username;
 	}
 
 	public String getPassword()
 	{
-		return mPassword;
+		return password;
 	}
-
 	public void setPassword(String password)
 	{
-		mPassword = password;
+		this.password = password;
 	}
 }

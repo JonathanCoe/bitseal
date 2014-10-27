@@ -118,8 +118,8 @@ public class ApiCaller
      * 
      * Attempts to establish a connection to one of the listed servers. The method will attempt to
 	 * connect to each server in sequence, until either a connection is successfully established or
-	 * all servers have been tested without any succcessful connection. If a connection is successfully
-	 * established, then the Api call will be made.
+	 * all servers have been tested without any successful connection. If a connection is successfully
+	 * established, then the API call will be made.
      *
      * @param method - A String which specifies the API method to be called
      * @param params - One or more Objects which provide the parameters for the API call

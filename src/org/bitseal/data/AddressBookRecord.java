@@ -1,7 +1,7 @@
 package org.bitseal.data;
 
 /**
- * An object representing an addressbook record. 
+ * An object representing an record in our address book.
  * 
  * @author Jonathan Coe
  */
@@ -9,7 +9,7 @@ public class AddressBookRecord implements Comparable<AddressBookRecord>
 {
 	private long id;
 	
-	private int colourR; // Colour values
+	private int colourR; 
 	private int colourG;
 	private int colourB;
 	
@@ -29,7 +29,6 @@ public class AddressBookRecord implements Comparable<AddressBookRecord>
 	{
 		return id;
 	}
-
 	public void setId(long id)
 	{
 		this.id = id;
@@ -39,7 +38,6 @@ public class AddressBookRecord implements Comparable<AddressBookRecord>
 	{
 		return colourR;
 	}
-
 	public void setColourR(int r)
 	{
 		this.colourR = r;
@@ -49,7 +47,6 @@ public class AddressBookRecord implements Comparable<AddressBookRecord>
 	{
 		return colourG;
 	}
-
 	public void setColourG(int g)
 	{
 		this.colourG = g;
@@ -59,7 +56,6 @@ public class AddressBookRecord implements Comparable<AddressBookRecord>
 	{
 		return colourB;
 	}
-
 	public void setColourB(int b)
 	{
 		this.colourB = b;
@@ -69,7 +65,6 @@ public class AddressBookRecord implements Comparable<AddressBookRecord>
 	{
 		return label;
 	}
-
 	public void setLabel(String label)
 	{
 		this.label = label;
@@ -79,7 +74,6 @@ public class AddressBookRecord implements Comparable<AddressBookRecord>
 	{
 		return address;
 	}
-
 	public void setAddress(String address)
 	{
 		this.address = address;

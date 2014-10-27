@@ -70,14 +70,15 @@ public class PubkeyProvider
     	}
     	
     	ContentValues values = new ContentValues();
-    	values.put(PubkeysTable.COLUMN_CORRESPONDING_ADDRESS_ID, p.getCorrespondingAddressId());
     	values.put(PubkeysTable.COLUMN_BELONGS_TO_ME, belongsToMe);
+    	values.put(PubkeysTable.COLUMN_POW_NONCE, p.getPOWNonce());
+    	values.put(PubkeysTable.COLUMN_EXPIRATION_TIME, p.getExpirationTime());
+    	values.put(PubkeysTable.COLUMN_OBJECT_TYPE, p.getObjectType());
+    	values.put(PubkeysTable.COLUMN_OBJECT_VERSION, p.getObjectVersion());
+    	values.put(PubkeysTable.COLUMN_STREAM_NUMBER, p.getStreamNumber());
+    	values.put(PubkeysTable.COLUMN_CORRESPONDING_ADDRESS_ID, p.getCorrespondingAddressId());
     	values.put(PubkeysTable.COLUMN_RIPE_HASH, Base64.encodeToString(p.getRipeHash(), Base64.DEFAULT));
     	values.put(PubkeysTable.COLUMN_LAST_DISSEMINATION_TIME, p.getLastDisseminationTime());
-    	values.put(PubkeysTable.COLUMN_POW_NONCE, p.getPOWNonce());
-    	values.put(PubkeysTable.COLUMN_TIME, p.getTime());
-    	values.put(PubkeysTable.COLUMN_ADDRESS_VERSION, p.getAddressVersion());
-    	values.put(PubkeysTable.COLUMN_STREAM_NUMBER, p.getStreamNumber());
     	values.put(PubkeysTable.COLUMN_BEHAVIOUR_BITFIELD, p.getBehaviourBitfield());
     	values.put(PubkeysTable.COLUMN_PUBLIC_SIGNING_KEY, Base64.encodeToString(p.getPublicSigningKey(), Base64.DEFAULT));
     	values.put(PubkeysTable.COLUMN_PUBLIC_ENCRYPTION_KEY, Base64.encodeToString(p.getPublicEncryptionKey(), Base64.DEFAULT));
@@ -88,7 +89,7 @@ public class PubkeyProvider
 			
 		Uri insertionUri = mContentResolver.insert(DatabaseContentProvider.CONTENT_URI_PUBKEYS, values);
     	
-		// Parse the ID of the newly created record from the insertion Uri
+		// Parse the ID of the newly created record from the insertion URI
 		String uriString = insertionUri.toString();
 		String idString = uriString.substring(uriString.indexOf("/") + 1);
 		long id = Long.parseLong(idString);
@@ -125,17 +126,18 @@ public class PubkeyProvider
     {
     	ArrayList<Pubkey> matchingRecords = new ArrayList<Pubkey>();
 
-    	// Specify which colums from the table we are interested in
+    	// Specify which columns from the table we are interested in
 		String[] projection = {
-				PubkeysTable.COLUMN_ID, 
-				PubkeysTable.COLUMN_CORRESPONDING_ADDRESS_ID,
+				PubkeysTable.COLUMN_ID,
 				PubkeysTable.COLUMN_BELONGS_TO_ME,
+				PubkeysTable.COLUMN_POW_NONCE,
+				PubkeysTable.COLUMN_EXPIRATION_TIME,
+				PubkeysTable.COLUMN_OBJECT_TYPE,
+				PubkeysTable.COLUMN_OBJECT_VERSION,
+				PubkeysTable.COLUMN_STREAM_NUMBER,
+				PubkeysTable.COLUMN_CORRESPONDING_ADDRESS_ID,
 				PubkeysTable.COLUMN_RIPE_HASH,
 				PubkeysTable.COLUMN_LAST_DISSEMINATION_TIME,
-				PubkeysTable.COLUMN_POW_NONCE,
-				PubkeysTable.COLUMN_TIME,
-				PubkeysTable.COLUMN_ADDRESS_VERSION,
-				PubkeysTable.COLUMN_STREAM_NUMBER,
 				PubkeysTable.COLUMN_BEHAVIOUR_BITFIELD,
 				PubkeysTable.COLUMN_PUBLIC_SIGNING_KEY,
 				PubkeysTable.COLUMN_PUBLIC_ENCRYPTION_KEY,
@@ -157,39 +159,41 @@ public class PubkeyProvider
     	    do 
     	    {
     	        long id = cursor.getLong(0);
-    	        long correspondingAddressId = cursor.getLong(1);
     	        
-    	        int belongsToMeValue = cursor.getInt(2);
+    	        int belongsToMeValue = cursor.getInt(1);
     	        boolean belongsToMe = false;
     	        if (belongsToMeValue == 1)
     	        {
     	        	belongsToMe = true;
     	        }
     	        
-    	        byte[] ripeHash = Base64.decode(cursor.getString(3), Base64.DEFAULT);
-    	        long lastDisseminationTime = cursor.getLong(4);
-    	        long powNonce = cursor.getLong(5);
-    	        long time = cursor.getLong(6);
-    	        int addressVersion = cursor.getInt(7);
-    	        int streamNumber = cursor.getInt(8);
-    	        int behaviourBitfield = cursor.getInt(9);
-    	        byte[] publicSigningKey = Base64.decode(cursor.getString(10), Base64.DEFAULT);
-    	        byte[] publicEncryptionKey = Base64.decode(cursor.getString(11), Base64.DEFAULT);
-    	        int nonceTrialsPerByte = cursor.getInt(12);
-    	        int extraBytes = cursor.getInt(13);
-    	        int signatureLength = cursor.getInt(14);
-    	        byte[] signature = Base64.decode(cursor.getString(15), Base64.DEFAULT);
+    	        long powNonce = cursor.getLong(2);
+    	        long time = cursor.getLong(3);
+    	        int objectType = cursor.getInt(4);
+    	        int objectVersion = cursor.getInt(5);
+    	        int streamNumber = cursor.getInt(6);
+    	        long correspondingAddressId = cursor.getLong(7);
+    	        byte[] ripeHash = Base64.decode(cursor.getString(8), Base64.DEFAULT);
+    	        long lastDisseminationTime = cursor.getLong(9);
+    	        int behaviourBitfield = cursor.getInt(10);
+    	        byte[] publicSigningKey = Base64.decode(cursor.getString(11), Base64.DEFAULT);
+    	        byte[] publicEncryptionKey = Base64.decode(cursor.getString(12), Base64.DEFAULT);
+    	        int nonceTrialsPerByte = cursor.getInt(13);
+    	        int extraBytes = cursor.getInt(14);
+    	        int signatureLength = cursor.getInt(15);
+    	        byte[] signature = Base64.decode(cursor.getString(16), Base64.DEFAULT);
     	      
     	        Pubkey p = new Pubkey();
     	        p.setId(id);
-    	        p.setCorrespondingAddressId(correspondingAddressId);
     	        p.setBelongsToMe(belongsToMe);
+    	        p.setPOWNonce(powNonce);
+    	        p.setExpirationTime(time);
+    	        p.setObjectType(objectType);
+    	        p.setObjectVersion(objectVersion);
+    	        p.setStreamNumber(streamNumber);
+    	        p.setCorrespondingAddressId(correspondingAddressId);
     	        p.setRipeHash(ripeHash);
     	        p.setLastDisseminationTime(lastDisseminationTime);
-    	        p.setPOWNonce(powNonce);
-    	        p.setTime(time);
-    	        p.setAddressVersion(addressVersion);
-    	        p.setStreamNumber(streamNumber);
     	        p.setBehaviourBitfield(behaviourBitfield);
     	        p.setPublicSigningKey(publicSigningKey);
     	        p.setPublicEncryptionKey(publicEncryptionKey);
@@ -248,17 +252,18 @@ public class PubkeyProvider
     {
     	ArrayList<Pubkey> pubkeys = new ArrayList<Pubkey>();
     	
-        // Specify which colums from the table we are interested in
+        // Specify which columns from the table we are interested in
 		String[] projection = {
 				PubkeysTable.COLUMN_ID, 
-				PubkeysTable.COLUMN_CORRESPONDING_ADDRESS_ID,
 				PubkeysTable.COLUMN_BELONGS_TO_ME,
+				PubkeysTable.COLUMN_POW_NONCE,
+				PubkeysTable.COLUMN_EXPIRATION_TIME,
+				PubkeysTable.COLUMN_OBJECT_TYPE,
+				PubkeysTable.COLUMN_OBJECT_VERSION,
+				PubkeysTable.COLUMN_STREAM_NUMBER,
+				PubkeysTable.COLUMN_CORRESPONDING_ADDRESS_ID,
 				PubkeysTable.COLUMN_RIPE_HASH,
 				PubkeysTable.COLUMN_LAST_DISSEMINATION_TIME,
-				PubkeysTable.COLUMN_POW_NONCE,
-				PubkeysTable.COLUMN_TIME,
-				PubkeysTable.COLUMN_ADDRESS_VERSION,
-				PubkeysTable.COLUMN_STREAM_NUMBER,
 				PubkeysTable.COLUMN_BEHAVIOUR_BITFIELD,
 				PubkeysTable.COLUMN_PUBLIC_SIGNING_KEY,
 				PubkeysTable.COLUMN_PUBLIC_ENCRYPTION_KEY,
@@ -277,53 +282,56 @@ public class PubkeyProvider
     	
     	if (cursor.moveToFirst())
     	{
-    	   do 
-    	   {
-	   	        long id = cursor.getLong(0);
-	   	        long correspondingAddressId = cursor.getLong(1);
-	   	        
-	   	        int belongsToMeValue = cursor.getInt(2);
-	   	        boolean belongsToMe = false;
-	   	        if (belongsToMeValue == 1)
-	   	        {
-	   	        	belongsToMe = true;
-	   	        }
-	   	        
-	   	        byte[] ripeHash = Base64.decode(cursor.getString(3), Base64.DEFAULT);
-	   	        long lastDisseminationTime = cursor.getLong(4);
-	   	        long powNonce = cursor.getLong(5);
-	   	        long time = cursor.getLong(6);
-	   	        int addressVersion = cursor.getInt(7);
-	   	        int streamNumber = cursor.getInt(8);
-	   	        int behaviourBitfield = cursor.getInt(9);
-	   	        byte[] publicSigningKey = Base64.decode(cursor.getString(10), Base64.DEFAULT);
-	   	        byte[] publicEncryptionKey = Base64.decode(cursor.getString(11), Base64.DEFAULT);
-	   	        int nonceTrialsPerByte = cursor.getInt(12);
-	   	        int extraBytes = cursor.getInt(13);
-	   	        int signatureLength = cursor.getInt(14);
-	   	        byte[] signature = Base64.decode(cursor.getString(15), Base64.DEFAULT);
-	   	      
-	   	        Pubkey p = new Pubkey();
-	   	        p.setId(id);
-	   	        p.setCorrespondingAddressId(correspondingAddressId);
-	   	        p.setBelongsToMe(belongsToMe);
-	   	        p.setRipeHash(ripeHash);
-	   	        p.setLastDisseminationTime(lastDisseminationTime);
-	   	        p.setPOWNonce(powNonce);
-	   	        p.setTime(time);
-	   	        p.setAddressVersion(addressVersion);
-	   	        p.setStreamNumber(streamNumber);
-	   	        p.setBehaviourBitfield(behaviourBitfield);
-	   	        p.setPublicSigningKey(publicSigningKey);
-	   	        p.setPublicEncryptionKey(publicEncryptionKey);
-	   	        p.setNonceTrialsPerByte(nonceTrialsPerByte);
-	   	        p.setExtraBytes(extraBytes);
-	   	        p.setSignatureLength(signatureLength);
-	   	        p.setSignature(signature);
+    	    do 
+    	    {
+    	        long id = cursor.getLong(0);
+    	        
+    	        
+    	        int belongsToMeValue = cursor.getInt(1);
+    	        boolean belongsToMe = false;
+    	        if (belongsToMeValue == 1)
+    	        {
+    	        	belongsToMe = true;
+    	        }
+    	        
+    	        long powNonce = cursor.getLong(2);
+    	        long time = cursor.getLong(3);
+    	        int objectType = cursor.getInt(4);
+    	        int objectVersion = cursor.getInt(5);
+    	        int streamNumber = cursor.getInt(6);
+    	        long correspondingAddressId = cursor.getLong(7);
+    	        byte[] ripeHash = Base64.decode(cursor.getString(8), Base64.DEFAULT);
+    	        long lastDisseminationTime = cursor.getLong(9);
+    	        int behaviourBitfield = cursor.getInt(10);
+    	        byte[] publicSigningKey = Base64.decode(cursor.getString(11), Base64.DEFAULT);
+    	        byte[] publicEncryptionKey = Base64.decode(cursor.getString(12), Base64.DEFAULT);
+    	        int nonceTrialsPerByte = cursor.getInt(13);
+    	        int extraBytes = cursor.getInt(14);
+    	        int signatureLength = cursor.getInt(15);
+    	        byte[] signature = Base64.decode(cursor.getString(16), Base64.DEFAULT);
+    	      
+    	        Pubkey p = new Pubkey();
+    	        p.setId(id);
+    	        p.setBelongsToMe(belongsToMe);
+    	        p.setPOWNonce(powNonce);
+    	        p.setExpirationTime(time);
+    	        p.setObjectType(objectType);
+    	        p.setObjectVersion(objectVersion);
+    	        p.setStreamNumber(streamNumber);
+    	        p.setCorrespondingAddressId(correspondingAddressId);
+    	        p.setRipeHash(ripeHash);
+    	        p.setLastDisseminationTime(lastDisseminationTime);
+    	        p.setBehaviourBitfield(behaviourBitfield);
+    	        p.setPublicSigningKey(publicSigningKey);
+    	        p.setPublicEncryptionKey(publicEncryptionKey);
+    	        p.setNonceTrialsPerByte(nonceTrialsPerByte);
+    	        p.setExtraBytes(extraBytes);
+    	        p.setSignatureLength(signatureLength);
+    	        p.setSignature(signature);
     	      
     	        pubkeys.add(p);
-    	   } 
-    	   while (cursor.moveToNext());
+    	    } 
+    	    while (cursor.moveToNext());
     	}
     	
     	return pubkeys;
@@ -346,14 +354,15 @@ public class PubkeyProvider
     	}
     	
     	ContentValues values = new ContentValues();
-    	values.put(PubkeysTable.COLUMN_CORRESPONDING_ADDRESS_ID, p.getCorrespondingAddressId());
     	values.put(PubkeysTable.COLUMN_BELONGS_TO_ME, belongsToMe);
+    	values.put(PubkeysTable.COLUMN_POW_NONCE, p.getPOWNonce());
+    	values.put(PubkeysTable.COLUMN_EXPIRATION_TIME, p.getExpirationTime());
+    	values.put(PubkeysTable.COLUMN_OBJECT_TYPE, p.getObjectType());
+    	values.put(PubkeysTable.COLUMN_OBJECT_VERSION, p.getObjectVersion());
+    	values.put(PubkeysTable.COLUMN_STREAM_NUMBER, p.getStreamNumber());
+    	values.put(PubkeysTable.COLUMN_CORRESPONDING_ADDRESS_ID, p.getCorrespondingAddressId());
     	values.put(PubkeysTable.COLUMN_RIPE_HASH, Base64.encodeToString(p.getRipeHash(), Base64.DEFAULT));
     	values.put(PubkeysTable.COLUMN_LAST_DISSEMINATION_TIME, p.getLastDisseminationTime());
-    	values.put(PubkeysTable.COLUMN_POW_NONCE, p.getPOWNonce());
-    	values.put(PubkeysTable.COLUMN_TIME, p.getTime());
-    	values.put(PubkeysTable.COLUMN_ADDRESS_VERSION, p.getAddressVersion());
-    	values.put(PubkeysTable.COLUMN_STREAM_NUMBER, p.getStreamNumber());
     	values.put(PubkeysTable.COLUMN_BEHAVIOUR_BITFIELD, p.getBehaviourBitfield());
     	values.put(PubkeysTable.COLUMN_PUBLIC_SIGNING_KEY, Base64.encodeToString(p.getPublicSigningKey(), Base64.DEFAULT));
     	values.put(PubkeysTable.COLUMN_PUBLIC_ENCRYPTION_KEY, Base64.encodeToString(p.getPublicEncryptionKey(), Base64.DEFAULT));

@@ -1,200 +1,117 @@
 package org.bitseal.data;
 
-import java.util.Random;
-
 /**
- * A class representing a pubkey in the Bitmessage protocol. Note that version 2 pubkeys do not
- * have the fields nonceTrialsPerByte, extraBytes, signatureLength, and signature.
+ * Class for a Bitmessage 'pubkey' object.<br><br>
+ * 
+ * Note: Version 2 pubkeys do NOT have the following fields: <br>
+ * nonceTrialsPerByte, extraBytes, signatureLength, signature.<br><br> 
  * 
  * For more information see https://bitmessage.org/wiki/Protocol_specification#pubkey
  * 
  * @author Jonathan Coe
  */
-public class Pubkey
+public class Pubkey extends Object
 {
-	// The first four fields of this class are for internal use by the Bitseal app and are not part of the data to be sent over the wire
-	private long mId;
-	private long mCorrespondingAddressId;
-	private boolean mBelongsToMe;
-	private byte[] mRipeHash; // The ripe hash calculated from the two public keys of this pubkey
-	private long mLastDisseminationTime; // The last time at which this pubkey was successfully disseminated to the Bitmessage network
+	// The first three fields of this class are for internal use by the Bitseal app and are not part of the data to be sent over the wire
+	private long correspondingAddressId;
+	private byte[] ripeHash; // The ripe hash calculated from the two public keys of this pubkey
+	private long lastDisseminationTime; // The last time at which this pubkey was successfully disseminated to the Bitmessage network
 	
-	private long mPOWNonce;
-	private long mTime; // The time that this pubkey was generated
-	private int mAddressVersion;
-	private int mStreamNumber;
-	private int mBehaviourBitfield; //A bitfield of optional behaviors and features that can be expected from the node with this pubkey. 4 bytes in length, e.g. '\x00\x00\x00\x01'
-	private byte[] mPublicSigningKey;
-	private byte[] mPublicEncryptionKey;
-	private int mNonceTrialsPerByte;
-	private int mExtraBytes;
-	private int mSignatureLength;
-	private byte[] mSignature;
-	    
-    public Pubkey()
-    {
-    	mTime = System.currentTimeMillis() / 1000; // Gets the current time in seconds
-    	int timeModifier = (new Random().nextInt(600)) - 300;
-    	mTime = mTime + timeModifier; // Gives us the current time plus or minus 300 seconds (five minutes). This is also done by PyBitmessage. 
-    }
+	private int behaviourBitfield; //A bitfield of optional behaviours and features that can be expected from the node with this pubkey. 4 bytes in length, e.g. '\x00\x00\x00\x01'
+	private byte[] publicSigningKey;
+	private byte[] publicEncryptionKey;
+	private int nonceTrialsPerByte;
+	private int extraBytes;
+	private int signatureLength;
+	private byte[] signature;
     
-	public long getId() 
-	{
-		return mId;
-	}
-	
-	public void setId(long id) 
-	{
-		mId = id;
-	}
-
 	public long getCorrespondingAddressId()
 	{
-		return mCorrespondingAddressId;
+		return correspondingAddressId;
 	}
-
 	public void setCorrespondingAddressId(long correspondingAddressId) 
 	{
-		mCorrespondingAddressId = correspondingAddressId;
-	}
-
-	public long getPOWNonce() 
-	{
-		return mPOWNonce;
-	}
-
-	public void setPOWNonce(long POWNonce) 
-	{
-		mPOWNonce = POWNonce;
-	}
-
-	public boolean belongsToMe() 
-	{
-		return mBelongsToMe;
-	}
-
-	public void setBelongsToMe(boolean belongsToMe) 
-	{
-		mBelongsToMe = belongsToMe;
+		this.correspondingAddressId = correspondingAddressId;
 	}
 
 	public byte[] getRipeHash()
 	{
-		return mRipeHash;
+		return ripeHash;
 	}
-
 	public void setRipeHash(byte[] ripeHash)
 	{
-		this.mRipeHash = ripeHash;
-	}
-
-	public long getTime() 
-	{
-		return mTime;
-	}
-
-	public void setTime(long time) 
-	{
-		mTime = time;
-	}
-
-	public int getAddressVersion() 
-	{
-		return mAddressVersion;
-	}
-
-	public void setAddressVersion(int addressVersion) 
-	{
-		mAddressVersion = addressVersion;
-	}
-
-	public int getStreamNumber() 
-	{
-		return mStreamNumber;
-	}
-
-	public void setStreamNumber(int streamNumber) 
-	{
-		mStreamNumber = streamNumber;
+		this.ripeHash = ripeHash;
 	}
 
 	public int getBehaviourBitfield() 
 	{
-		return mBehaviourBitfield;
+		return behaviourBitfield;
 	}
-
 	public void setBehaviourBitfield(int behaviourBitfield) 
 	{
-		mBehaviourBitfield = behaviourBitfield;
+		this.behaviourBitfield = behaviourBitfield;
 	}
 
 	public byte[] getPublicSigningKey() 
 	{
-		return mPublicSigningKey;
+		return publicSigningKey;
 	}
-
 	public void setPublicSigningKey(byte[] publicSigningKey) 
 	{
-		mPublicSigningKey = publicSigningKey;
+		this.publicSigningKey = publicSigningKey;
 	}
 
 	public byte[] getPublicEncryptionKey() 
 	{
-		return mPublicEncryptionKey;
+		return publicEncryptionKey;
 	}
-
 	public void setPublicEncryptionKey(byte[] publicEncryptionKey) 
 	{
-		mPublicEncryptionKey = publicEncryptionKey;
+		this.publicEncryptionKey = publicEncryptionKey;
 	}
 
 	public int getNonceTrialsPerByte() 
 	{
-		return mNonceTrialsPerByte;
+		return nonceTrialsPerByte;
 	}
-
 	public void setNonceTrialsPerByte(int nonceTrialsPerByte) 
 	{
-		mNonceTrialsPerByte = nonceTrialsPerByte;
+		this.nonceTrialsPerByte = nonceTrialsPerByte;
 	}
 
 	public int getExtraBytes() 
 	{
-		return mExtraBytes;
+		return extraBytes;
 	}
-
 	public void setExtraBytes(int extraBytes) 
 	{
-		mExtraBytes = extraBytes;
+		this.extraBytes = extraBytes;
 	}
 
 	public int getSignatureLength() 
 	{
-		return mSignatureLength;
+		return signatureLength;
 	}
-
 	public void setSignatureLength(int signatureLength) 
 	{
-		mSignatureLength = signatureLength;
+		this.signatureLength = signatureLength;
 	}
 
 	public byte[] getSignature() 
 	{
-		return mSignature;
+		return signature;
 	}
-
 	public void setSignature(byte[] signature) 
 	{
-		mSignature = signature;
+		this.signature = signature;
 	}
 
 	public long getLastDisseminationTime()
 	{
-		return mLastDisseminationTime;
+		return lastDisseminationTime;
 	}
-
 	public void setLastDisseminationTime(long lastDisseminationTime)
 	{
-		mLastDisseminationTime = lastDisseminationTime;
+		this.lastDisseminationTime = lastDisseminationTime;
 	}
 }

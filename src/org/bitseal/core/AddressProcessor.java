@@ -77,7 +77,7 @@ public final class AddressProcessor
 		
 		byte[] checksum = ArrayCopier.copyOfRange(addressDataBytes, (addressDataBytes.length - 4), addressDataBytes.length);
 		
-		byte[] testChecksumFullHash = SHA512.doubleDigest(combinedChecksumData);
+		byte[] testChecksumFullHash = SHA512.doubleHash(combinedChecksumData);
 		
 		byte[] testChecksum = ArrayCopier.copyOfRange(testChecksumFullHash, 0, 4);
 		
@@ -210,7 +210,7 @@ public final class AddressProcessor
 			// Discard the final 4 bytes (the checksum)
 			byte[] combinedChecksumData = ArrayCopier.copyOfRange(combinedAddressData, 0, combinedAddressData.length - 4);
 			
-			// Do Varint check on first 9 bytes (for the address version)
+			// Do varint check on first 9 bytes (for the address version)
 			long[] decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(combinedChecksumData, 0, 9));
 			int bytesUsedForAddressVersion = (int) decoded[1]; // The number of bytes that were used to encode the address version
 			
@@ -288,7 +288,7 @@ public final class AddressProcessor
 			byte[] dataToHash = extractEncodedAddressData(addressString);
 			
 			// Double-hash the address data
-			byte[] doubleHashOfAddressData = SHA512.doubleDigest(dataToHash);
+			byte[] doubleHashOfAddressData = SHA512.doubleHash(dataToHash);
 			
 			return doubleHashOfAddressData;
 		}
@@ -366,7 +366,7 @@ public final class AddressProcessor
 			byte[] dataToHash = ByteUtils.concatenateByteArrays(encodedAddressData, timeValueBytes);
 			
 			// Hash the input data to get the full tag
-			byte[] fullTag = SHA512.doubleDigest(dataToHash);
+			byte[] fullTag = SHA512.doubleHash(dataToHash);
 			
 			// Get the first 32 bytes of the full tag. The result is the message tag. 
 			byte[] messageTag = ArrayCopier.copyOf(fullTag, 32);

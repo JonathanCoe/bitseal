@@ -133,7 +133,7 @@ public class KeyConverter
 	}
 	
 	/** 
-	 * Converts a private key in Bitcoin-esque "Wallet Import Format" into an ECPrivateKey object. The process to do
+	 * Converts a private key "Wallet Import Format" (as used by Bitcoin) into an ECPrivateKey object. The process to do
 	 * so is as follows: <br><br>
 	 * 
 	 * 1) Convert the Base58 encoded String into byte[] form.<br><br>

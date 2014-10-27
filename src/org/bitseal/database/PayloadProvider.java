@@ -86,13 +86,14 @@ public class PayloadProvider
     	values.put(PayloadsTable.COLUMN_PROCESSING_COMPLETE, processingComplete);
     	values.put(PayloadsTable.COLUMN_TIME, p.getTime());
     	values.put(PayloadsTable.COLUMN_TYPE, p.getType());
+    	values.put(PayloadsTable.COLUMN_ACK, p.isAck());
     	values.put(PayloadsTable.COLUMN_POW_DONE, powDone);   	
     	values.put(PayloadsTable.COLUMN_PAYLOAD, Base64.encodeToString(p.getPayload(), Base64.DEFAULT));
 			
 		Uri insertionUri = mContentResolver.insert(DatabaseContentProvider.CONTENT_URI_PAYLOADS, values);
     	Log.i(TAG, "Payload with type " + p.getType() + " and time value " + p.getTime() + " saved to database");
     	
-		// Parse the ID of the newly created record from the insertion Uri
+		// Parse the ID of the newly created record from the insertion URI
 		String uriString = insertionUri.toString();
 		String idString = uriString.substring(uriString.indexOf("/") + 1);
 		long id = Long.parseLong(idString);
@@ -126,7 +127,7 @@ public class PayloadProvider
     {
     	ArrayList<Payload> matchingRecords = new ArrayList<Payload>();
 
-    	// Specify which colums from the table we are interested in
+    	// Specify which columns from the table we are interested in
 		String[] projection = {
 				PayloadsTable.COLUMN_ID, 
 				PayloadsTable.COLUMN_RELATED_ADDRESS_ID, 
@@ -134,6 +135,7 @@ public class PayloadProvider
 				PayloadsTable.COLUMN_PROCESSING_COMPLETE, 
 				PayloadsTable.COLUMN_TIME,
 				PayloadsTable.COLUMN_TYPE,
+				PayloadsTable.COLUMN_ACK,
 				PayloadsTable.COLUMN_POW_DONE,
 				PayloadsTable.COLUMN_PAYLOAD};
 		
@@ -164,14 +166,20 @@ public class PayloadProvider
     	        	processingComplete = true;
     	        }  	         	        
     	        long time = cursor.getLong(4);
-    	        String type = cursor.getString(5);   	        
-    	        int powDoneValue = cursor.getInt(6);
+    	        String type = cursor.getString(5);
+    	        int isAckValue = cursor.getInt(6);
+    	        boolean isAck = false;
+    	        if (isAckValue == 1)
+    	        {
+    	        	isAck = true;
+    	        }
+    	        int powDoneValue = cursor.getInt(7);
     	        boolean powDone = false;
     	        if (powDoneValue == 1)
     	        {
     	        	powDone = true;
     	        }    	        
-    	        byte[] payload = Base64.decode(cursor.getString(7), Base64.DEFAULT);
+    	        byte[] payload = Base64.decode(cursor.getString(8), Base64.DEFAULT);
 
     	        Payload p = new Payload();
     	        p.setId(id);
@@ -180,7 +188,8 @@ public class PayloadProvider
     	        p.setProcessingComplete(processingComplete);
     	        p.setTime(time);
     	        p.setType(type);
-    	        p.setPOWDone(powDone);   
+    	        p.setAck(isAck);
+    	        p.setPOWDone(powDone);
     	        p.setPayload(payload);
 
     	        matchingRecords.add(p);
@@ -198,7 +207,7 @@ public class PayloadProvider
      * method allows for multiple search terms. 
      * 
      * @param columnNames - The columns in the table to use in the query
-     * @param selectinos - The selections for each column
+     * @param selections - The selections for each column
      * 
      * @return An ArrayList containing Payload objects populated with the data from
      *  the database search
@@ -207,7 +216,7 @@ public class PayloadProvider
     {
     	ArrayList<Payload> matchingRecords = new ArrayList<Payload>();
 
-    	// Specify which colums from the table we are interested in
+    	// Specify which columns from the table we are interested in
 		String[] projection = {
 				PayloadsTable.COLUMN_ID, 
 				PayloadsTable.COLUMN_RELATED_ADDRESS_ID, 
@@ -215,6 +224,7 @@ public class PayloadProvider
 				PayloadsTable.COLUMN_PROCESSING_COMPLETE, 
 				PayloadsTable.COLUMN_TIME,
 				PayloadsTable.COLUMN_TYPE,
+				PayloadsTable.COLUMN_ACK,
 				PayloadsTable.COLUMN_POW_DONE,
 				PayloadsTable.COLUMN_PAYLOAD};
 		
@@ -244,7 +254,7 @@ public class PayloadProvider
 			
 		if (cursor.moveToFirst())
     	{
-    	    do 
+			do 
     	    {
     	        long id = cursor.getLong(0);
     	        long relatedAddressId = cursor.getLong(1);   	        
@@ -261,14 +271,20 @@ public class PayloadProvider
     	        	processingComplete = true;
     	        }  	         	        
     	        long time = cursor.getLong(4);
-    	        String type = cursor.getString(5);   	        
-    	        int powDoneValue = cursor.getInt(6);
+    	        String type = cursor.getString(5);
+    	        int isAckValue = cursor.getInt(6);
+    	        boolean isAck = false;
+    	        if (isAckValue == 1)
+    	        {
+    	        	isAck = true;
+    	        }
+    	        int powDoneValue = cursor.getInt(7);
     	        boolean powDone = false;
     	        if (powDoneValue == 1)
     	        {
     	        	powDone = true;
     	        }    	        
-    	        byte[] payload = Base64.decode(cursor.getString(7), Base64.DEFAULT);
+    	        byte[] payload = Base64.decode(cursor.getString(8), Base64.DEFAULT);
 
     	        Payload p = new Payload();
     	        p.setId(id);
@@ -277,7 +293,8 @@ public class PayloadProvider
     	        p.setProcessingComplete(processingComplete);
     	        p.setTime(time);
     	        p.setType(type);
-    	        p.setPOWDone(powDone);   
+    	        p.setAck(isAck);
+    	        p.setPOWDone(powDone);
     	        p.setPayload(payload);
 
     	        matchingRecords.add(p);
@@ -326,7 +343,7 @@ public class PayloadProvider
     	
     	ArrayList<Payload> payloads = new ArrayList<Payload>();
     	
-        // Specify which colums from the table we are interested in
+        // Specify which columns from the table we are interested in
 		String[] projection = {
 				PayloadsTable.COLUMN_ID, 
 				PayloadsTable.COLUMN_RELATED_ADDRESS_ID, 
@@ -334,6 +351,7 @@ public class PayloadProvider
 				PayloadsTable.COLUMN_PROCESSING_COMPLETE, 
 				PayloadsTable.COLUMN_TIME,
 				PayloadsTable.COLUMN_TYPE,
+				PayloadsTable.COLUMN_ACK,
 				PayloadsTable.COLUMN_POW_DONE,
 				PayloadsTable.COLUMN_PAYLOAD};
 		
@@ -347,45 +365,52 @@ public class PayloadProvider
     	
     	if (cursor.moveToFirst())
     	{
-    	   do 
-    	   {
-	   	        long id = cursor.getLong(0);
-	   	        long relatedAddressId = cursor.getLong(1);   	        
-	   	        int belongsToMeValue = cursor.getInt(2);
-	   	        boolean belongsToMe = false;
-	   	        if (belongsToMeValue == 1)
-	   	        {
-	   	        	belongsToMe = true;
-	   	        }
-	   	        int processingCompleteValue = cursor.getInt(3);
-	   	        boolean processingComplete = false;
-	   	        if (processingCompleteValue == 1)
-	   	        {
-	   	        	processingComplete = true;
-	   	        }  	         	        
-	   	        long time = cursor.getLong(4);
-	   	        String type = cursor.getString(5);   	        
-	   	        int powDoneValue = cursor.getInt(6);
-	   	        boolean powDone = false;
-	   	        if (powDoneValue == 1)
-	   	        {
-	   	        	powDone = true;
-	   	        }    	        
-	   	        byte[] payload = Base64.decode(cursor.getString(7), Base64.DEFAULT);
-	
-	   	        Payload p = new Payload();
-	   	        p.setId(id);
-	   	        p.setRelatedAddressId(relatedAddressId);
-	   	        p.setBelongsToMe(belongsToMe);
-	   	        p.setProcessingComplete(processingComplete);
-	   	        p.setTime(time);
-	   	        p.setType(type);
-	   	        p.setPOWDone(powDone);   
-	   	        p.setPayload(payload);
-    	      
-	   	        payloads.add(p);
-    	   } 
-    	   while (cursor.moveToNext());
+    		do 
+    	    {
+    	        long id = cursor.getLong(0);
+    	        long relatedAddressId = cursor.getLong(1);   	        
+    	        int belongsToMeValue = cursor.getInt(2);
+    	        boolean belongsToMe = false;
+    	        if (belongsToMeValue == 1)
+    	        {
+    	        	belongsToMe = true;
+    	        }
+    	        int processingCompleteValue = cursor.getInt(3);
+    	        boolean processingComplete = false;
+    	        if (processingCompleteValue == 1)
+    	        {
+    	        	processingComplete = true;
+    	        }  	         	        
+    	        long time = cursor.getLong(4);
+    	        String type = cursor.getString(5);
+    	        int isAckValue = cursor.getInt(6);
+    	        boolean isAck = false;
+    	        if (isAckValue == 1)
+    	        {
+    	        	isAck = true;
+    	        }
+    	        int powDoneValue = cursor.getInt(7);
+    	        boolean powDone = false;
+    	        if (powDoneValue == 1)
+    	        {
+    	        	powDone = true;
+    	        }    	        
+    	        byte[] payload = Base64.decode(cursor.getString(8), Base64.DEFAULT);
+
+    	        Payload p = new Payload();
+    	        p.setId(id);
+    	        p.setRelatedAddressId(relatedAddressId);
+    	        p.setBelongsToMe(belongsToMe);
+    	        p.setProcessingComplete(processingComplete);
+    	        p.setTime(time);
+    	        p.setType(type);
+    	        p.setAck(isAck);
+    	        p.setPOWDone(powDone);
+    	        p.setPayload(payload);
+
+    	        payloads.add(p);
+    	    } 
+    	    while (cursor.moveToNext());
     	}
     	
     	return payloads;
@@ -425,6 +450,7 @@ public class PayloadProvider
     	values.put(PayloadsTable.COLUMN_PROCESSING_COMPLETE, processingComplete);
     	values.put(PayloadsTable.COLUMN_TIME, p.getTime());
     	values.put(PayloadsTable.COLUMN_TYPE, p.getType());
+    	values.put(PayloadsTable.COLUMN_ACK, p.isAck());
     	values.put(PayloadsTable.COLUMN_POW_DONE, powDone);   	
     	values.put(PayloadsTable.COLUMN_PAYLOAD, Base64.encodeToString(p.getPayload(), Base64.DEFAULT));
 		

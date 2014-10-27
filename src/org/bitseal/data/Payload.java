@@ -1,108 +1,111 @@
 package org.bitseal.data;
 
 /**
- * Contains the payload of a single Bitmessage object, along with some related data. 
+ * Class for an object containing the payload of a single Bitmessage object,
+ * along with some related data. 
  * 
  * @author Jonathan Coe
  */
 public class Payload
 {
-	private long mId;
-	private long mRelatedAddressId;
-	private boolean mBelongsToMe;
-	private boolean mProcessingComplete;
-	private long mTime;
-	private String mType;
-	private boolean mPOWDone;
-	private byte[] mPayload;
+	private long id;
+	private long relatedAddressId;
+	private boolean belongsToMe;
+	private boolean processingComplete;
+	private long time; // The time at which this this Payload was created
+	private String type;
+	private boolean ack; // Whether the object contained in this Payload should be treated as an acknowledgment
+	private boolean powDone;
+	private byte[] payload;
 	
 	public static final String OBJECT_TYPE_MSG = "msg";
-	public static final String OBJECT_TYPE_ACK = "ack";
 	public static final String OBJECT_TYPE_PUBKEY = "pubkey";
 	public static final String OBJECT_TYPE_GETPUBKEY = "getpubkey";
+	public static final String OBJECT_TYPE_BROADCAST = "broadcast";
 	
     public Payload()
     {
-    	mTime = System.currentTimeMillis() / 1000; // The current time in seconds
+    	time = System.currentTimeMillis() / 1000; // The current time in seconds
     }
 
 	public long getId() 
 	{
-		return mId;
+		return id;
 	}
-
 	public void setId(long id) 
 	{
-		mId = id;
+		this.id = id;
 	}
 
 	public long getRelatedAddressId()
 	{
-		return mRelatedAddressId;
+		return relatedAddressId;
 	}
-
 	public void setRelatedAddressId(long relatedAddressId)
 	{
-		mRelatedAddressId = relatedAddressId;
+		this.relatedAddressId = relatedAddressId;
 	}
 
 	public boolean belongsToMe()
 	{
-		return mBelongsToMe;
+		return belongsToMe;
 	}
-
 	public void setBelongsToMe(boolean belongsToMe)
 	{
-		mBelongsToMe = belongsToMe;
+		this.belongsToMe = belongsToMe;
 	}
 
 	public boolean processingComplete()
 	{
-		return mProcessingComplete;
+		return processingComplete;
 	}
-
 	public void setProcessingComplete(boolean processingComplete)
 	{
-		mProcessingComplete = processingComplete;
+		this.processingComplete = processingComplete;
 	}
 
 	public long getTime() 
 	{
-		return mTime;
+		return time;
 	}
-
 	public void setTime(long time) 
 	{
-		mTime = time;
+		this.time = time;
 	}
 	
 	public String getType()
 	{
-		return mType;
+		return type;
 	}
-	
 	public void setType(String type)
 	{
-		mType = type;
+		this.type = type;
+	}
+	
+	public boolean isAck()
+	{
+		return ack;
+	}
+	public void setAck(boolean ack)
+	{
+		this.ack = ack;
 	}
 
 	public boolean powDone()
 	{
-		return mPOWDone;
+		return powDone;
 	}
-
 	public void setPOWDone(boolean powDone)
 	{
-		mPOWDone = powDone;
+		this.powDone = powDone;
 	}
 
 	public byte[] getPayload()
 	{
-		return mPayload;
+		return payload;
 	}
-
 	public void setPayload(byte[] payload)
 	{
-		mPayload = payload;
+		this.payload = payload;
 	}
 }

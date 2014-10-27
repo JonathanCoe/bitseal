@@ -2,6 +2,7 @@ package org.bitseal.services;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Iterator;
 
 import org.bitseal.controllers.TaskController;
 import org.bitseal.core.App;
@@ -16,6 +17,7 @@ import org.bitseal.database.MessageProvider;
 import org.bitseal.database.PayloadProvider;
 import org.bitseal.database.PubkeyProvider;
 import org.bitseal.database.QueueRecordProvider;
+import org.bitseal.database.QueueRecordsTable;
 import org.bitseal.network.NetworkHelper;
 
 import android.app.AlarmManager;
@@ -44,16 +46,41 @@ public class BackgroundService extends IntentService
 	public static final boolean DO_POW = true;
 	
 	/**
+	 * The 'time to live' value (in seconds) that we use in the 'first attempt' to create
+	 * and send some types of objects (such as msgs sent by us). This is done
+	 * because in protocol version 3, objects with a lower time to live require less
+	 * proof of work for the network to relay them. <br><br>
+	 * 
+	 * Therefore in some situations it is advantageous to use a low time to live
+	 * when creating and sending an object, for example when you are sending a
+	 * msg and the recipient is online and therefore able to receive and acknowledge
+	 * it immediately. 
+	 */
+	public static final long FIRST_ATTEMPT_TTL = 3600; // Currently set to 1 hour
+	
+	/**
+	 * The 'time to live' value (in seconds) that we use in all attempts after the
+	 * first attempt  to create and send some types of objects (such as msgs sent
+	 * by us). <br><br>
+	 * 
+	 * If we create and send out an object using a low time to live and the first attempt is 
+	 * not successful (e.g. we do not receive an acknowledgment for a sent msg) then we can 
+	 * re-create and re-send the object with a longer time to live. That time to live is 
+	 * determined by this constant.  
+	 */
+	public static final long SUBSEQUENT_ATTEMPTS_TTL = 86400; // Currently set to 1 day
+		
+	/**
 	 * This 'maximum attempts' constant determines the number of times
 	 * that a task will be attempted before it is abandoned and deleted
 	 * from the queue.
 	 */
-	public static final int MAXIMUM_ATTEMPTS = 1000;
+	public static final int MAXIMUM_ATTEMPTS = 500;
 	
     /**
      * The normal amount of time in seconds between each attempt to start the
      * BackgroundService, in seconds. e.g. If this value is set to 60, then
-     * a PendingIntent will be registed with the AlarmManager to start the
+     * a PendingIntent will be registered with the AlarmManager to start the
      * background service every minute. 
      */
 	public static final int BACKGROUND_SERVICE_NORMAL_START_INTERVAL = 60;
@@ -85,16 +112,7 @@ public class BackgroundService extends IntentService
 	public static final String TASK_SEND_MESSAGE = "sendMessage";
 	public static final String TASK_PROCESS_OUTGOING_MESSAGE = "processOutgoingMessage";
 	public static final String TASK_DISSEMINATE_MESSAGE = "disseminateMessage";
-	
-	// The tasks for performing the third major function of the application: receiving messages
-	public static final String TASK_CHECK_FOR_MESSAGES_AND_SEND_ACKS = "checkServerForMessagesAndSendAcks";
-	public static final String TASK_PROCESS_INCOMING_MSGS_AND_SEND_ACKS = "processIncomingMsgsAndSendAcks";
-	public static final String TASK_SEND_ACKS = "sendAcks";
-	
-	// The tasks for performing the fourth major function of the application: periodically re-disseminating our pubkeys
-	public static final String TASK_CHECK_IF_PUBKEY_RE_DISSEMINATION_IS_DUE = "checkIfPubkeyReDisseminationIsDue";
-	public static final String TASK_RE_DISSEMINATE_PUBKEYS = "reDisseminatePubkeys";
-		
+			
 	private static final String TAG = "BACKGROUND_SERVICE";
 	
 	public BackgroundService() 
@@ -114,7 +132,7 @@ public class BackgroundService extends IntentService
 		Log.i(TAG, "BackgroundService.onHandleIntent() called");
 		
 		// Determine whether the intent came from a request for periodic
-		// background processing or from a ui request
+		// background processing or from a UI request
 		if (i.hasExtra(PERIODIC_BACKGROUND_PROCESSING_REQUEST))
 		{
 			processTasks();
@@ -152,14 +170,18 @@ public class BackgroundService extends IntentService
 								
 				// Create a new QueueRecord for the 'send message' task and save it to the database
 				QueueRecordProcessor queueProc = new QueueRecordProcessor();
-				QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, messageToSend, null);
+				QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, 0, 0, messageToSend, null);
+				
+				// Also create a new QueueRecord for re-sending this msg in the event that we do not receive an acknowledgment for it
+				// before its time to live expires. If we do receive the acknowledgment before then, this QueueRecord will be deleted
+				queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, (System.currentTimeMillis() / 1000) + FIRST_ATTEMPT_TTL, 1, messageToSend, null);
 				
 				// First check whether an Internet connection is available. If not, the QueueRecord which records the 
 				// need to send the message will be stored (as above) and processed later
 				if (NetworkHelper.checkInternetAvailability() == true)
 				{
 					// Attempt to send the message
-					taskController.sendMessage(queueRecord, messageToSend, DO_POW);
+					taskController.sendMessage(queueRecord, messageToSend, DO_POW, FIRST_ATTEMPT_TTL, FIRST_ATTEMPT_TTL);
 				}
 			}
 			
@@ -189,7 +211,7 @@ public class BackgroundService extends IntentService
 				
 				// Create a new QueueRecord for the create identity task and save it to the database
 				QueueRecordProcessor queueProc = new QueueRecordProcessor();
-				QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(TASK_CREATE_IDENTITY, address, null);
+				QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(TASK_CREATE_IDENTITY, 0, 0, address, null);
 				
 				// Attempt to complete the create identity task
 				taskController.createIdentity(queueRecord, DO_POW);
@@ -232,9 +254,25 @@ public class BackgroundService extends IntentService
 		
 		// Check the database TaskQueue table for any queued tasks
 		QueueRecordProvider queueProv = QueueRecordProvider.get(getApplicationContext());
+		QueueRecordProcessor queueProc = new QueueRecordProcessor();
 		
 		ArrayList<QueueRecord> queueRecords = queueProv.getAllQueueRecords();
 		Log.i(TAG, "Number of QueueRecords found: " + queueRecords.size());
+		
+		// Ignore any QueueRecords that have a 'trigger time' in the future
+		long currentTime = System.currentTimeMillis() / 1000;
+		Iterator<QueueRecord> iterator = queueRecords.iterator();
+		while (iterator.hasNext())
+		{
+		    QueueRecord q = iterator.next();
+			if (q.getTriggerTime() > currentTime)
+			{
+				Log.i(TAG, "Ignoring a QueueRecord for a " + q.getTask() + " task because its trigger time has not been reached yet.\n"
+						+ "Its trigger time will be reached in roughly " + (q.getTriggerTime() - currentTime) + " seconds");
+				iterator.remove();;
+			}
+		}
+		
 		if (queueRecords.size() > 0)
 		{
 			// Sort the queue records so that we will process the records with the earliest 'last attempt time' first
@@ -259,7 +297,6 @@ public class BackgroundService extends IntentService
 						messageToSend.setStatus(Message.STATUS_SENDING_FAILED);
 						msgProv.updateMessage(messageToSend);
 					}
-					QueueRecordProcessor queueProc = new QueueRecordProcessor();
 					queueProc.deleteQueueRecord(q);
 					continue;
 				}
@@ -275,7 +312,44 @@ public class BackgroundService extends IntentService
 						{
 							MessageProvider msgProv = MessageProvider.get(getApplicationContext());
 							Message messageToSend = msgProv.searchForSingleRecord(q.getObject0Id());
-							taskController.sendMessage(q, messageToSend, DO_POW);
+							
+							// First we need to check whether there is already an existing QueueRecord for sending this msg 
+							// with a lower trigger time than this QueueRecord. If there is, push the trigger time of this QueueRecord
+							// further into the future
+							ArrayList<QueueRecord> matchingRecords = queueProv.searchQueueRecords(QueueRecordsTable.COLUMN_OBJECT_0_ID, String.valueOf(q.getObject0Id()));
+							for (QueueRecord match : matchingRecords)
+							{
+								if (match.getTask().equals(TASK_SEND_MESSAGE) || match.getTask().equals(TASK_PROCESS_OUTGOING_MESSAGE))
+								{
+									if (match.getTriggerTime() < q.getTriggerTime())
+									{
+										if (match.getRecordCount() == 0)
+										{
+											q.setTriggerTime(q.getTriggerTime() + FIRST_ATTEMPT_TTL);
+										}
+										else
+										{
+											q.setTriggerTime(q.getTriggerTime() + SUBSEQUENT_ATTEMPTS_TTL);
+										}
+										queueProv.updateQueueRecord(q);
+										continue;
+									}
+								}
+							}
+							
+							// Otherwise, attempt to complete the send message task
+							if (q.getRecordCount() == 0)
+							{
+								taskController.sendMessage(q, messageToSend, DO_POW, FIRST_ATTEMPT_TTL, FIRST_ATTEMPT_TTL);
+							}
+							else
+							{
+								// Create a new QueueRecord for re-sending this msg in the event that we do not receive an acknowledgment for it
+								// before its time to live expires. If we do receive the acknowledgment before then, this QueueRecord will be deleted
+								queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, (System.currentTimeMillis() / 1000) + SUBSEQUENT_ATTEMPTS_TTL, q.getRecordCount() + 1, messageToSend, null);
+								
+								taskController.sendMessage(q, messageToSend, DO_POW, SUBSEQUENT_ATTEMPTS_TTL, SUBSEQUENT_ATTEMPTS_TTL);
+							}							
 						}
 						catch (RuntimeException e)
 						{
@@ -312,7 +386,14 @@ public class BackgroundService extends IntentService
 					Pubkey toPubkey = pubProv.searchForSingleRecord(q.getObject1Id());
 						 
 					// Attempt to process and send the message
-					taskController.processOutgoingMessage(q, messageToSend, toPubkey, DO_POW);
+					if (q.getRecordCount() == 0)
+					{
+						taskController.processOutgoingMessage(q, messageToSend, toPubkey, DO_POW, FIRST_ATTEMPT_TTL);
+					}
+					else
+					{
+						taskController.processOutgoingMessage(q, messageToSend, toPubkey, DO_POW, SUBSEQUENT_ATTEMPTS_TTL);
+					}
 				}
 				
 				else if (task.equals(TASK_DISSEMINATE_MESSAGE))
@@ -329,17 +410,6 @@ public class BackgroundService extends IntentService
 							 
 						// Attempt to process and send the message
 						taskController.disseminateMessage(q, payloadToSend, toPubkey, DO_POW);
-					}
-				}
-				
-				else if (task.equals(TASK_PROCESS_INCOMING_MSGS_AND_SEND_ACKS))
-				{
-					int newMessagesProcessed = taskController.processIncomingMessages();
-					if (newMessagesProcessed > 0)
-					{
-					    Intent intent = new Intent(getBaseContext(), NotificationsService.class);
-					    intent.putExtra(NotificationsService.EXTRA_DISPLAY_NEW_MESSAGES_NOTIFICATION, newMessagesProcessed);
-					    startService(intent);
 					}
 				}
 				
@@ -462,7 +532,7 @@ public class BackgroundService extends IntentService
 	 * should be run.
 	 */
 	private boolean checkIfDatabaseCleaningIsRequired()
-	{	
+	{
 		Log.i(TAG, "BackgroundService.checkIfDatabaseCleaningIsRequired() called");
 		
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());

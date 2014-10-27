@@ -84,9 +84,9 @@ public final class SHA512
      * 
      * @return A byte[] containing the double SHA-512 hash of the input data 
      */
-    public static byte[] doubleDigest(byte[] input) 
+    public static byte[] doubleHash(byte[] input) 
     {
-        return doubleDigest(input, 0, input.length);
+        return doubleHash(input, 0, input.length);
     }
     
 	/**
@@ -97,9 +97,9 @@ public final class SHA512
 	 * @param offset - An int representing the index in the data byte[] at which to begin
 	 * @param length - An int representing the number of bytes from the data byte[] to process
 	 * 
-	 * @return A byte[] conatining the doubly SHA-512 hashed data
+	 * @return A byte[] containing the doubly SHA-512 hashed data
 	 */
-    public static byte[] doubleDigest(byte[] input, int offset, int length) 
+    public static byte[] doubleHash(byte[] input, int offset, int length) 
     {
         try 
         {

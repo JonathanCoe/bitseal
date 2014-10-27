@@ -24,7 +24,6 @@ public class EncryptedPayload
 	{
 		return IV;
 	}
-
 	public void setIV(byte[] iV)
 	{
 		IV = iV;
@@ -34,7 +33,6 @@ public class EncryptedPayload
 	{
 		return curveType;
 	}
-
 	public void setCurveType(int curveType)
 	{
 		this.curveType = curveType;
@@ -44,7 +42,6 @@ public class EncryptedPayload
 	{
 		return xLength;
 	}
-
 	public void setxLength(int xLength)
 	{
 		this.xLength = xLength;
@@ -54,7 +51,6 @@ public class EncryptedPayload
 	{
 		return x;
 	}
-
 	public void setX(BigInteger x)
 	{
 		this.x = x;
@@ -64,7 +60,6 @@ public class EncryptedPayload
 	{
 		return yLength;
 	}
-
 	public void setyLength(int yLength)
 	{
 		this.yLength = yLength;
@@ -74,7 +69,6 @@ public class EncryptedPayload
 	{
 		return y;
 	}
-
 	public void setY(BigInteger y)
 	{
 		this.y = y;
@@ -84,7 +78,6 @@ public class EncryptedPayload
 	{
 		return cipherText;
 	}
-
 	public void setCipherText(byte[] cipherText)
 	{
 		this.cipherText = cipherText;
@@ -94,7 +87,6 @@ public class EncryptedPayload
 	{
 		return mac;
 	}
-
 	public void setMac(byte[] mac)
 	{
 		this.mac = mac;

@@ -36,9 +36,9 @@ public final class ByteFormatter
 	}
 	
 	/**
-	 * Converts a String conatining hexadecimal data into a byte[]
+	 * Converts a String containing hexadecimal data into a byte[]
 	 * 
-	 * @param string - A String conatining the hex data to be converted
+	 * @param string - A String containing the hex data to be converted
 	 * 
 	 * @return A byte[] containing the converted data
 	 */

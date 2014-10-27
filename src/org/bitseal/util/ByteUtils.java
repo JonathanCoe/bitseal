@@ -121,6 +121,66 @@ public final class ByteUtils
     	return c;	
     }
     
+    /**
+     * Concatenates three byte arrays
+     * 
+     * @param a - The first byte[]
+     * @param b - The second byte[]
+     * @param c - The third byte[]
+     * 
+     * @return A byte[] containing the combined data from a, b, and c, in that order
+     */
+    public static byte[] concatenateByteArrays (byte[] a, byte[] b, byte[] c)
+    {
+    	byte[] d = new byte[a.length + b.length + c.length];
+    	System.arraycopy(a, 0, d, 0, a.length);
+    	System.arraycopy(b, 0, d, a.length, b.length);
+    	System.arraycopy(c, 0, d, a.length + b.length, c.length);
+    	return d;
+    }
+    
+    /**
+     * Concatenates four byte arrays
+     * 
+     * @param a - The first byte[]
+     * @param b - The second byte[]
+     * @param c - The third byte[]
+     * @param d - The fourth byte[]
+     * 
+     * @return A byte[] containing the combined data from a, b, c, and d, in that order
+     */
+    public static byte[] concatenateByteArrays (byte[] a, byte[] b, byte[] c, byte[] d)
+    {
+    	byte[] e = new byte[a.length + b.length + c.length + d.length];
+    	System.arraycopy(a, 0, e, 0, a.length);
+    	System.arraycopy(b, 0, e, a.length, b.length);
+    	System.arraycopy(c, 0, e, a.length + b.length, c.length);
+    	System.arraycopy(d, 0, e, a.length + b.length + c.length, d.length);
+    	return e;
+    }
+    
+    /**
+     * Concatenates five byte arrays
+     * 
+     * @param a - The first byte[]
+     * @param b - The second byte[]
+     * @param c - The third byte[]
+     * @param d - The fourth byte[]
+     * @param e - The fifth byte[]
+     * 
+     * @return A byte[] containing the combined data from a, b, c, d, and e, in that order
+     */
+    public static byte[] concatenateByteArrays (byte[] a, byte[] b, byte[] c, byte[] d, byte[] e)
+    {
+    	byte[] f = new byte[a.length + b.length + c.length + d.length + e.length];
+    	System.arraycopy(a, 0, f, 0, a.length);
+    	System.arraycopy(b, 0, f, a.length, b.length);
+    	System.arraycopy(c, 0, f, a.length + b.length, c.length);
+    	System.arraycopy(d, 0, f, a.length + b.length + c.length, d.length);
+    	System.arraycopy(e, 0, f, a.length + b.length + c.length + d.length, e.length);
+    	return f;
+    }
+    
 	/**
 	 * Returns a positive BigInteger from the given bytes. (Big endian)
 	 * 

@@ -9,9 +9,10 @@ import org.bitseal.crypt.KeyConverter;
 import org.bitseal.crypt.SigProcessor;
 import org.bitseal.data.Address;
 import org.bitseal.data.Message;
-import org.bitseal.data.Msg;
+import org.bitseal.data.Object;
 import org.bitseal.data.Payload;
 import org.bitseal.data.Pubkey;
+import org.bitseal.data.QueueRecord;
 import org.bitseal.data.UnencryptedMsg;
 import org.bitseal.database.AddressProvider;
 import org.bitseal.database.AddressesTable;
@@ -21,6 +22,8 @@ import org.bitseal.database.PayloadProvider;
 import org.bitseal.database.PayloadsTable;
 import org.bitseal.database.PubkeyProvider;
 import org.bitseal.database.PubkeysTable;
+import org.bitseal.database.QueueRecordProvider;
+import org.bitseal.database.QueueRecordsTable;
 import org.bitseal.util.ArrayCopier;
 import org.bitseal.util.ByteFormatter;
 import org.bitseal.util.ByteUtils;
@@ -42,15 +45,15 @@ public class IncomingMessageProcessor
 {
 	private static final int MIN_VALID_ADDRESS_VERSION = 1;
 	private static final int MAX_VALID_ADDRESS_VERSION = 4;
-	
+		
 	private static final int MIN_VALID_STREAM_NUMBER = 1;
 	private static final int MAX_VALID_STREAM_NUMBER = 1;
+		
+	/** In Bitmessage protocol version 3, the network standard value for nonce trials per byte is 1000. */
+	public static final int NETWORK_NONCE_TRIALS_PER_BYTE = 1000;
 	
-	private static final int MIN_VALID_MESSAGE_VERSION = 1;
-	private static final int MAX_VALID_MESSAGE_VERSION = 1;
-	
-	private static final int DEFAULT_NONCE_TRIALS_PER_BYTE = 320; // CONSTANT: See https://bitmessage.org/wiki/Proof_of_work for an explanation of this
-	private static final int DEFAULT_EXTRA_BYTES = 14000; // CONSTANT: See https://bitmessage.org/wiki/Proof_of_work for an explanation of this
+	/** In Bitmessage protocol version 3, the network standard value for extra bytes is 1000. */
+	public static final int NETWORK_EXTRA_BYTES = 1000;
 	
 	private static final int ACK_DATA_LENGTH = 32;
 	
@@ -72,10 +75,10 @@ public class IncomingMessageProcessor
 	public Message processReceivedMsg(Payload msgPayload)
 	{	
 		// Reconstruct the payload into a Msg object
-		Msg msg = reassembleMsg(msgPayload.getPayload());
+		Object msg = new ObjectProcessor().parseObject(msgPayload.getPayload());
 		
 		// Check whether this msg is an acknowledgment
-		byte[] messageData = msg.getMessageData();
+		byte[] messageData = msg.getPayload();
 		if (messageData.length == ACK_DATA_LENGTH)
 		{
 			// If this msg is an acknowledgment, process it (checking if it is one I am awaiting)
@@ -131,7 +134,7 @@ public class IncomingMessageProcessor
 					continue;
 				}
 			}
-			// If we were unable to decrypt the msg with any of our addreses
+			// If we were unable to decrypt the msg with any of our addresses
 			Log.i(TAG, "Processed a msg which we failed to decrypt with any of our addresses");
 			return null;
 		}
@@ -168,7 +171,7 @@ public class IncomingMessageProcessor
 				Pubkey pubkey = new Pubkey();
 				pubkey.setBelongsToMe(false);
 				pubkey.setRipeHash(ripeHash);
-				pubkey.setAddressVersion(unencMsg.getAddressVersion());
+				pubkey.setObjectVersion(unencMsg.getSenderAddressVersion());
 				pubkey.setStreamNumber(unencMsg.getStreamNumber());
 				pubkey.setBehaviourBitfield(unencMsg.getBehaviourBitfield());
 				pubkey.setPublicSigningKey(publicSigningKey);
@@ -192,69 +195,20 @@ public class IncomingMessageProcessor
 	}
 	
 	/**
-	 * Takes a byte[] containing the data for a single received msg and attempts
-	 * to reconstruct it into a Msg object.<br><br>
-	 * 
-	 * @param messageBytes - A byte[] containing the data for a single encrypted message
-	 * 
-	 * @return An UnencryptedMsg object constructed from the decrypted message data
-	 */
-	private Msg reassembleMsg(byte[] messageBytes)
-	{
-		// Parse the data from the byte[] 
-		int readPosition = 0;
-		
-		long powNonce = ByteUtils.bytesToLong((ArrayCopier.copyOfRange(messageBytes, readPosition, readPosition + 8)));
-		readPosition += 8; //The pow nonce should always be 8 bytes in length
-		
-		long time = ByteUtils.bytesToInt((ArrayCopier.copyOfRange(messageBytes, readPosition, readPosition + 4)));
-		if (time == 0) // Need to check whether 4 or 8 byte time has been used
-		{
-			time = ByteUtils.bytesToLong((ArrayCopier.copyOfRange(messageBytes, readPosition, readPosition + 8)));
-			readPosition += 8;
-		}
-		else
-		{
-			readPosition += 4;
-		}
-		
-		long[] decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(messageBytes, readPosition, readPosition + 9)); // Take 9 bytes, the maximum length for an encoded var_int
-		int streamNumber = (int) decoded[0]; // Get the var_int encoded value
-		readPosition += (int) decoded[1]; // Find out how many bytes the var_int was in length and adjust the read position accordingly
-		if (streamNumber < MIN_VALID_STREAM_NUMBER || streamNumber > MAX_VALID_STREAM_NUMBER)
-		{
-			throw new RuntimeException("Decoded stream number was invalid. Aborting msg decoding. The invalid value was " + streamNumber);
-		}
-		
-		// Now deal with the remaining data. This should be either the encrypted payload of a normal msg or the ack data of an acknowledgment msg
-		byte[] payload = ArrayCopier.copyOfRange(messageBytes, readPosition, messageBytes.length);
-		
-		// Create a new Msg object and use the parsed data to populate its fields
-		Msg msg = new Msg();
-		msg.setBelongsToMe(false); // i.e. This message was not written by me
-		msg.setPOWNonce(powNonce);
-		msg.setTime(time);
-		msg.setStreamNumber(streamNumber);
-		msg.setMessageData(payload);
-				
-		return msg;
-	}
-	
-	/**
 	 * Takes a msg that we have determined to be an acknowledgment and
-	 * checks whether it is one which we are awating. If so, the status
+	 * checks whether it is one which we are awaiting. If so, the status
 	 * of the corresponding Message is updated. 
 	 * 
-	 * @param msg - A Msg object conatining the acknowledgment to be processed
+	 * @param msg - A msg object containing the acknowledgment to be processed
 	 */
-	private void processAck(Msg msg)
+	private void processAck(Object msg)
 	{
 		// Get the ack data from the msg
-		byte[] ackData = msg.getMessageData();
+		byte[] ackData = msg.getPayload();
 		
 		// Get all acknowledgments that I am awaiting
 		PayloadProvider payProv = PayloadProvider.get(App.getContext());
-		ArrayList<Payload> ackPayloads = payProv.searchPayloads(PayloadsTable.COLUMN_TYPE, Payload.OBJECT_TYPE_ACK);
+		ArrayList<Payload> ackPayloads = payProv.searchPayloads(PayloadsTable.COLUMN_ACK, "1"); // 1 stands for true in the database
 		ArrayList<Payload> expectedAckPayloads = new ArrayList<Payload>();
 		for (Payload p : ackPayloads)
 		{
@@ -281,13 +235,25 @@ public class IncomingMessageProcessor
 					Log.d(TAG, "Acknowledgment received!\n" +
 							"Message subject:    " + originalMessage.getSubject() + "\n" +
 							"Message to address: " +  originalMessage.getToAddress());
+					
 					// Update the UI
 					Intent intent = new Intent(UI_NOTIFICATION);
 					App.getContext().sendBroadcast(intent);
+					
+					// Delete any QueueRecords for re-sending this message
+					QueueRecordProvider queueProv = QueueRecordProvider.get(App.getContext());
+					ArrayList<QueueRecord> retrievedRecords = queueProv.searchQueueRecords(QueueRecordsTable.COLUMN_OBJECT_0_ID, String.valueOf(originalMessage.getId()));
+					for (QueueRecord q : retrievedRecords)
+					{
+						if (q.getTask().equals(QueueRecordProcessor.TASK_SEND_MESSAGE))
+						{
+							queueProv.deleteQueueRecord(q);
+						}
+					}
 				}
 				else
 				{
-					Log.d(TAG, "We receied an acknowledgment that we were awaiting, but the original message could not be found in the database.");
+					Log.d(TAG, "We received an acknowledgment that we were awaiting, but the original message could not be found in the database.");
 				}
 				
 				// We have now received this acknowledgment, so delete the 'awaiting' ack payload from the database
@@ -305,71 +271,88 @@ public class IncomingMessageProcessor
 	 * 
 	 * <b>NOTE:</b>If decryption of the msg fails, this method will return null 
 	 * 
-	 * @param msg - A Msg object containing the msg to attempt to decrypt
+	 * @param msg - A msg Object containing the msg to attempt to decrypt
 	 * 
-	 * @return If decryption is succesful, returns an UnencryptedMsg object
+	 * @return If decryption is successful, returns an UnencryptedMsg object
 	 * containing the decrypted message data. Otherwise returns null.
 	 */
-	private UnencryptedMsg attemptMsgDecryption(Msg msg, Address address)
+	private UnencryptedMsg attemptMsgDecryption(Object msg, Address address)
 	{
-		byte[] encryptedMsgData = msg.getMessageData();
-		
-		// Create the ECPrivateKey object that we will use to decrypt the message data
-		KeyConverter keyConv = new KeyConverter();
-		ECPrivateKey k = keyConv.decodePrivateKeyFromWIF(address.getPrivateEncryptionKey());
-		
-		// Attempt to decrypt the encrypted message data
-		byte[] decryptedMsgData = null;
 		try
 		{
-			CryptProcessor cryptProc = new CryptProcessor();
-			decryptedMsgData = cryptProc.decrypt(encryptedMsgData, k);
+			byte[] encryptedMsgData = msg.getPayload();
+			
+			// Create the ECPrivateKey object that we will use to decrypt the message data
+			KeyConverter keyConv = new KeyConverter();
+			ECPrivateKey k = keyConv.decodePrivateKeyFromWIF(address.getPrivateEncryptionKey());
+			
+			// Attempt to decrypt the encrypted message data
+			byte[] decryptedMsgData = null;
+			try
+			{
+				CryptProcessor cryptProc = new CryptProcessor();
+				decryptedMsgData = cryptProc.decrypt(encryptedMsgData, k);
+			}
+			catch (RuntimeException e)
+			{
+				// If decryption fails (as is to be expected when we processes msgs not bound for us)
+				return null;
+			}
+			// Use the decrypted message data to construct a new UnencryptedMsg object
+			UnencryptedMsg unencMsg = parseDecryptedMessage(msg, decryptedMsgData, address);
+			
+			return unencMsg;
 		}
-		catch (RuntimeException e)
+		catch (Exception e)
 		{
-			return null;
+			throw new RuntimeException("Exception occurred in IncomingMessageProcessor.attemptMsgDecryption().\n"
+					+ "The exception message was: " + e.getLocalizedMessage().toString());
 		}
-		// Use the decrypted message data to construct a new UnencryptedMsg object
-		UnencryptedMsg unencMsg = parseDecryptedMessage(decryptedMsgData, address);
-		
-		return unencMsg;
 	}
 	
 	/** 
-	 * Parses the data of a decrypted message, using it to construct a new 
+	 * Parses the data of a decrypted msg, using it to construct a new 
 	 * UnencryptedMsg object.<br><br>
 	 *  
-	 * @param plainText - A byte[] containing the decrypted message data
+	 * @param msg - The msg Object which the decrypted data came from
+	 * @param plainText - A byte[] containing the decrypted msg data
 	 * @param toAddress - The Bitmessage address (presumably belonging to me) which the message was sent to
 	 * 
 	 * @return An UnencryptedMsg object containing the decrypted message data
 	 */
-	private UnencryptedMsg parseDecryptedMessage(byte[] plainText, Address toAddress)
+	private UnencryptedMsg parseDecryptedMessage(Object msg, byte[] plainText, Address toAddress)
 	{		
 		// Parse the individual fields from the decrypted msg data
 		int readPosition = 0;
-		long[] decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(plainText, readPosition, readPosition + 9)); // Take 9 bytes, the maximum length for an encoded var_int
-		int msgVersion = (int) decoded[0]; // Get the var_int encoded value
-		readPosition += (int) decoded[1]; // Find out how many bytes the var_int was in length and adjust the read position accordingly
-		if (msgVersion < MIN_VALID_MESSAGE_VERSION || msgVersion > MAX_VALID_MESSAGE_VERSION)
+		
+        // --------------------------------------Upgrade period code---------------------------------------------------------------------
+		long currentTime = System.currentTimeMillis() / 1000;
+		if (currentTime < 1416175200) // Sun, 16 November 2014 22:00:00 GMT
 		{
-			throw new RuntimeException("Decrypted message version number was invalid. Aborting message decryption. The invalid value was " + msgVersion);
+			long[]decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(plainText, readPosition, readPosition + 9)); // Take 9 bytes, the maximum length for an encoded var_int
+			int messageVersion = (int) decoded[0]; // Get the var_int encoded value
+			readPosition += (int) decoded[1]; // Find out how many bytes the var_int was in length and adjust the read position accordingly
+			if (messageVersion != 1)
+			{
+				throw new RuntimeException("Decrypted message version number was invalid. Aborting message decryption. The invalid value was " + messageVersion);
+			}
+		}
+		// -------------------------------------------------------------------------------------------------------------------------------
+		
+		long [] decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(plainText, readPosition, readPosition + 9)); // Take 9 bytes, the maximum length for an encoded var_int
+		int senderAddressVersion = (int) decoded[0]; // Get the var_int encoded value
+		readPosition += (int) decoded[1]; // Find out how many bytes the var_int was in length and adjust the read position accordingly
+		if (senderAddressVersion < MIN_VALID_ADDRESS_VERSION || senderAddressVersion > MAX_VALID_ADDRESS_VERSION)
+		{
+			throw new RuntimeException("Decrypted address version number was invalid. Aborting message decryption. The invalid value was " + senderAddressVersion);
 		}
 		
 		decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(plainText, readPosition, readPosition + 9)); // Take 9 bytes, the maximum length for an encoded var_int
-		int addressVersion = (int) decoded[0]; // Get the var_int encoded value
+		int senderStreamNumber = (int) decoded[0]; // Get the var_int encoded value
 		readPosition += (int) decoded[1]; // Find out how many bytes the var_int was in length and adjust the read position accordingly
-		if (addressVersion < MIN_VALID_ADDRESS_VERSION || addressVersion > MAX_VALID_ADDRESS_VERSION)
+		if (senderStreamNumber < MIN_VALID_STREAM_NUMBER || senderStreamNumber > MAX_VALID_STREAM_NUMBER)
 		{
-			throw new RuntimeException("Decrypted address version number was invalid. Aborting message decryption. The invalid value was " + addressVersion);
-		}
-		
-		decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(plainText, readPosition, readPosition + 9)); // Take 9 bytes, the maximum length for an encoded var_int
-		int streamNumber = (int) decoded[0]; // Get the var_int encoded value
-		readPosition += (int) decoded[1]; // Find out how many bytes the var_int was in length and adjust the read position accordingly
-		if (streamNumber < MIN_VALID_STREAM_NUMBER || streamNumber > MAX_VALID_STREAM_NUMBER)
-		{
-			throw new RuntimeException("Decrypted stream number was invalid. Aborting message decryption. The invalid value was " + streamNumber);
+			throw new RuntimeException("Decrypted stream number was invalid. Aborting message decryption. The invalid value was " + senderStreamNumber);
 		}
 		
 		int behaviourBitfield = ByteUtils.bytesToInt((ArrayCopier.copyOfRange(plainText, readPosition, readPosition + 4)));
@@ -381,13 +364,13 @@ public class IncomingMessageProcessor
 		byte[] publicEncryptionKey = ArrayCopier.copyOfRange(plainText, readPosition, readPosition + 64);
 		readPosition += 64;
 		
-		// Set the nonceTrialsPerByte and extraBytes values to their defaults. If the unencryptedMsg adrress version is 
+		// Set the nonceTrialsPerByte and extraBytes values to the network standard values. If the unencryptedMsg address version is 
 		// 3 or greater, we will then set these two values to those specified in the message. Otherwise they remain at
 		// their default values.
-		int nonceTrialsPerByte = DEFAULT_NONCE_TRIALS_PER_BYTE;
-		int extraBytes = DEFAULT_EXTRA_BYTES;
+		int nonceTrialsPerByte = NETWORK_NONCE_TRIALS_PER_BYTE;
+		int extraBytes = NETWORK_EXTRA_BYTES;
 		
-		if (addressVersion >= 3) // Only unencrypted msgs of address version 3 or greater contain nonceTrialsPerByte and extraBytes values
+		if (senderAddressVersion >= 3) // Only unencrypted msgs of address version 3 or greater contain nonceTrialsPerByte and extraBytes values
 		{
 			decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(plainText, readPosition, readPosition + 9)); // Take 9 bytes, the maximum length for an encoded var_int
 			nonceTrialsPerByte = (int) decoded[0]; // Get the var_int encoded value
@@ -430,8 +413,6 @@ public class IncomingMessageProcessor
 
 		byte[] ackData = (ArrayCopier.copyOfRange(plainText, readPosition, readPosition + ackLength));
 		readPosition += ackLength;
-		// Save this read position so that when we verify the signature we can selected the correct payload (msg_version through to ack_data)
-		int signaturePayloadEndPosition = readPosition;
 		
 		decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(plainText, readPosition, readPosition + 9)); // Take 9 bytes, the maximum length for an encoded var_int
 		int signatureLength = (int) decoded[0]; // Get the var_int encoded value
@@ -440,51 +421,55 @@ public class IncomingMessageProcessor
 		byte[] signature = (ArrayCopier.copyOfRange(plainText, readPosition, readPosition + signatureLength));
 		
 		// Create a new UnencryptedMsg object and populate its fields using the decrypted msg data
-		UnencryptedMsg unencryptedMsg = new UnencryptedMsg();
-		
-		unencryptedMsg.setMsgVersion(msgVersion);
-		unencryptedMsg.setAddressVersion(addressVersion);
-		unencryptedMsg.setStreamNumber(streamNumber);
-		unencryptedMsg.setBehaviourBitfield(behaviourBitfield);
-		unencryptedMsg.setPublicSigningKey(publicSigningKey);
-		unencryptedMsg.setPublicEncryptionKey(publicEncryptionKey);
-		unencryptedMsg.setNonceTrialsPerByte(nonceTrialsPerByte);
-		unencryptedMsg.setExtraBytes(extraBytes);
-		unencryptedMsg.setDestinationRipe(destinationRipe);
-		unencryptedMsg.setEncoding(encoding);
-		unencryptedMsg.setMessageLength(messageLength);
-		unencryptedMsg.setMessage(message);
-		unencryptedMsg.setAckLength(ackLength);
-		unencryptedMsg.setAckMsg(ackData);
-		unencryptedMsg.setSignatureLength(signatureLength);
-		unencryptedMsg.setSignature(signature);
+		UnencryptedMsg unencMsg = new UnencryptedMsg();
+		unencMsg.setBelongsToMe(false);
+		unencMsg.setExpirationTime(msg.getExpirationTime());
+		unencMsg.setObjectType(msg.getObjectType());
+		unencMsg.setObjectVersion(msg.getObjectVersion());
+		unencMsg.setStreamNumber(msg.getStreamNumber());
+		unencMsg.setSenderAddressVersion(senderAddressVersion);
+		unencMsg.setSenderStreamNumber(senderStreamNumber);
+		unencMsg.setBehaviourBitfield(behaviourBitfield);
+		unencMsg.setPublicSigningKey(publicSigningKey);
+		unencMsg.setPublicEncryptionKey(publicEncryptionKey);
+		unencMsg.setNonceTrialsPerByte(nonceTrialsPerByte);
+		unencMsg.setExtraBytes(extraBytes);
+		unencMsg.setDestinationRipe(destinationRipe);
+		unencMsg.setEncoding(encoding);
+		unencMsg.setMessageLength(messageLength);
+		unencMsg.setMessage(message);
+		unencMsg.setAckLength(ackLength);
+		unencMsg.setAckMsg(ackData);
+		unencMsg.setSignatureLength(signatureLength);
+		unencMsg.setSignature(signature);		
 				
 		// Verify the signature of the decrypted message
 		ECPublicKey ecPublicSigningKey = new KeyConverter().reconstructPublicKey(publicSigningKey);
 		SigProcessor sigProc = new SigProcessor();
-		byte[] payloadToVerify = ArrayCopier.copyOfRange(plainText, 0, signaturePayloadEndPosition);
+		byte[] payloadToVerify = sigProc.createUnencryptedMsgSignaturePayload(unencMsg);
 		if (sigProc.verifySignature(payloadToVerify, signature, ecPublicSigningKey) == false)
 		{
 			// The signature of the message is invalid. Abort the process. 
 			throw new RuntimeException("While attempting to parse a decrypted message in IncomingMessageProcessor.parseDecryptedMessage(), the signature was found to be invalid");
 		}
 		
-		// In some rare instances such as PyBitmessage sending a message to one of its own addresses, no ack msg will be included
+		// In some rare instances, such as PyBitmessage sending a message to one of its own addresses, no ack Message will be included
 		if (ackData.length != 0)
 		{
-			// Save the acknowledgment data of this message as a Payload object and save it to 
+			// Save the acknowledgment data of this msg as a Payload object and save it to 
 			// the database so that we can send it later
 			Payload ackPayload = new Payload();
 			ackPayload.setBelongsToMe(true); // i.e This is an acknowledgment that I will send
 			ackPayload.setPOWDone(true);
-			ackPayload.setType(Payload.OBJECT_TYPE_ACK);
+			ackPayload.setAck(true); // This payload is an acknowledgment
+			ackPayload.setType(Payload.OBJECT_TYPE_MSG); // Currently we treat all acks from other people as msgs. Strictly though they can be objects of any type, so this may change
 			ackPayload.setPayload(ackData);
 			
 			PayloadProvider payProv = PayloadProvider.get(App.getContext());
 			payProv.addPayload(ackPayload);
 		}
 
-		return unencryptedMsg;
+		return unencMsg;
 	}
 	
 	/**
@@ -536,7 +521,7 @@ public class IncomingMessageProcessor
 			byte[] fourByte = new byte[]{4};
 			publicEncryptionKey = ByteUtils.concatenateByteArrays(fourByte, publicEncryptionKey); 
 		}
-		String fromAddress = new AddressGenerator().recreateAddressString(unencMsg.getAddressVersion(), unencMsg.getStreamNumber(), 
+		String fromAddress = new AddressGenerator().recreateAddressString(unencMsg.getSenderAddressVersion(), unencMsg.getStreamNumber(), 
 				publicSigningKey, publicEncryptionKey);
 		
 		// Create a new Message object and populate its fields with the extracted data

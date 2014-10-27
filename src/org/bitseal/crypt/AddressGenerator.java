@@ -85,9 +85,6 @@ public class AddressGenerator
 	{		
 		byte[] ripeHash = calculateRipeHash(publicSigningKey, publicEncryptionKey);
 		
-		// Strip off any leading zeros from the ripe hash
-		ripeHash = ByteUtils.stripLeadingZeros(ripeHash);
-				
 		String addressString = calculateAddressString(addressVersion, streamNumber, ripeHash);
 		
 		return addressString;
@@ -107,12 +104,9 @@ public class AddressGenerator
 		
 		byte[] ripeHash = SHA512.sha512hash160(concatenatedPublicKeys);
 		
-		// Remove leading zeros from the resultant address hash
-		while (ripeHash[0] == (byte) 0)
-		{
-			ripeHash = ArrayCopier.copyOfRange(ripeHash, 1, ripeHash.length);
-		}
-
+		// Remove any leading zeros from the ripe hash
+		ripeHash = ByteUtils.stripLeadingZeros(ripeHash);
+		
 		return ripeHash;
 	}
 	
@@ -232,7 +226,6 @@ public class AddressGenerator
 			combinedChecksumData = outputStream.toByteArray();
 			outputStream.close();
 		}
-		
 		catch (IOException e) 
 		{
 			throw new RuntimeException("IOException occurred in AddressGenerator.calculateCombinedChecksumData()", e);
@@ -250,7 +243,7 @@ public class AddressGenerator
 	 */
 	private byte[] calculateChecksum(byte[] combinedChecksumData)
 	{
-		byte[] checksumFullHash = SHA512.doubleDigest(combinedChecksumData);
+		byte[] checksumFullHash = SHA512.doubleHash(combinedChecksumData);
 		
 		byte[] checksum = ArrayCopier.copyOfRange(checksumFullHash, 0, 4);
 		
@@ -325,7 +318,7 @@ public class AddressGenerator
 			throw new RuntimeException("IOException occurred in AddressGenerator.calculateAddressTag()", e);
 		}
 		
-		byte[] doubleHashOfAddressData = SHA512.doubleDigest(combinedAddressData);
+		byte[] doubleHashOfAddressData = SHA512.doubleHash(combinedAddressData);
 		byte[] tag = ArrayCopier.copyOfRange(doubleHashOfAddressData, 32, doubleHashOfAddressData.length);
 		
 		return tag;

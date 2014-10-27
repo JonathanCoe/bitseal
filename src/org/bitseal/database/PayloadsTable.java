@@ -14,6 +14,7 @@ public class PayloadsTable
 	public static final String COLUMN_PROCESSING_COMPLETE = "processing_complete";
 	public static final String COLUMN_TIME = "time";
 	public static final String COLUMN_TYPE = "type";
+	public static final String COLUMN_ACK = "ack";
 	public static final String COLUMN_POW_DONE = "pow_done";
 	public static final String COLUMN_PAYLOAD = "payload";
 
@@ -27,6 +28,7 @@ public class PayloadsTable
 	    + COLUMN_PROCESSING_COMPLETE + " integer, "
 	    + COLUMN_TIME + " integer, "
 	    + COLUMN_TYPE + " text, "
+	    + COLUMN_ACK + " integer, "
 	    + COLUMN_POW_DONE + " integer, "
 	    + COLUMN_PAYLOAD + " text"
 	    + ");";

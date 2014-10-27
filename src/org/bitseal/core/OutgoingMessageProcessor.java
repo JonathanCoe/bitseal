@@ -2,20 +2,16 @@ package org.bitseal.core;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Random;
 
 import org.bitseal.crypt.CryptProcessor;
 import org.bitseal.crypt.KeyConverter;
 import org.bitseal.crypt.PubkeyGenerator;
-import org.bitseal.crypt.SHA512;
 import org.bitseal.crypt.SigProcessor;
 import org.bitseal.data.Address;
 import org.bitseal.data.Message;
-import org.bitseal.data.Msg;
+import org.bitseal.data.Object;
 import org.bitseal.data.Payload;
 import org.bitseal.data.Pubkey;
 import org.bitseal.data.UnencryptedMsg;
@@ -29,6 +25,7 @@ import org.bitseal.pow.POWProcessor;
 import org.bitseal.util.ArrayCopier;
 import org.bitseal.util.ByteFormatter;
 import org.bitseal.util.ByteUtils;
+import org.bitseal.util.TimeUtils;
 import org.bitseal.util.VarintEncoder;
 import org.spongycastle.jce.interfaces.ECPublicKey;
 
@@ -43,23 +40,15 @@ import android.util.Log;
 public class OutgoingMessageProcessor
 {
 	private static final String TAG = "OUTGOING_MESSAGE_PROCESSOR";
-	
-	private static final int MESSAGE_VERSION = 1;
-	
+		
 	/** In the Bitmessage protocol this value corresponds to a normal, text-based message */
 	private static final int MESSAGE_ENCODING_TYPE = 2;
 	
-	/** A magic hexadecimal value used by Bitmessage to identify network packets. See https://bitmessage.org/wiki/Protocol_specification#Message_structure */
-	private static final String BITMESSAGE_MAGIC_IDENTIFIER = "E9BEB4D9";
+	/** The object type number for msgs, as defined by the Bitmessage protocol */
+	private static final int OBJECT_TYPE_MSG = 2;
 	
-	/** Identifies the msg contents. See https://bitmessage.org/wiki/Protocol_specification#Message_structure */
-	private static final String BITMESSAGE_MSG_COMMAND = "msg";
-	
-	/** Padding for the command. See https://bitmessage.org/wiki/Protocol_specification#Message_structure */
-	private static final String BITMESSAGE_MSG_COMMAND_PADDING = "000000000000000000";
-	
-	/** The character encoding used in the Bitmessage command data */
-	private static final String BITMESSAGE_COMMAND_ENCODING = "US-ASCII";
+	/** The current version number for msg objects that we generate */
+	private static final int OBJECT_VERSION_MSG = 1;
 	
 	/** Used when broadcasting Intents to the UI so that it can refresh the data it is displaying */
 	public static final String UI_NOTIFICATION = "uiNotification";
@@ -76,17 +65,19 @@ public class OutgoingMessageProcessor
 	 * @param doPOW - A boolean value indicating whether or not POW should
 	 * be done for this message AND for pubkeys generated during the message
 	 * sending process
+	 * @param timeToLive - The 'time to live' value (in seconds) to be used in
+	 * processing this message
 	 * 
 	 * @return A Payload object containing the encrypted message data ready to
 	 * be sent over the Bitmessage network
 	 */
-	public Payload processOutgoingMessage (Message message, Pubkey toPubkey, boolean doPOW)
+	public Payload processOutgoingMessage (Message message, Pubkey toPubkey, boolean doPOW, long timeToLive)
 	{
 		// Convert the message into a new UnencryptedMsg object
-		UnencryptedMsg unencMsg = constructUnencryptedMsg(message, toPubkey, doPOW);
+		UnencryptedMsg unencMsg = constructUnencryptedMsg(message, toPubkey, doPOW, timeToLive);
 		
 		// Encrypt the message and, if enabled, do POW
-		Msg encMsg = constructMsg(message, unencMsg, toPubkey, doPOW);
+		Object encMsg = constructMsg(message, unencMsg, toPubkey, doPOW, timeToLive);
 
 		// Construct the msg payload that will be sent over the network
 		Payload msgPayload = constructMsgPayloadForDissemination(encMsg, doPOW, toPubkey);
@@ -104,12 +95,14 @@ public class OutgoingMessageProcessor
 	 * requests may take some time to complete!
 	 * 
 	 * @param message - The Message object to convert into an UnencryptedMsg object
-	 * @param toPubkey - A Pubkey obejct containing the public keys of the address the message is being sent to
-	 * @param doPOW - A boolean indicating whether or not POW should be done for pubkeys generated during this process
+	 * @param toPubkey - A Pubkey object containing the public keys of the address the message is being sent to
+	 * @param doPOW - A boolean indicating whether or not POW should be done for msgs generated during this process
+	 * @param timeToLive - The 'time to live' value (in seconds) to be used in
+	 * processing this message
 	 * 
 	 * @return An UnencryptedMsg object based on the supplied Message object. 
 	 */
-	private UnencryptedMsg constructUnencryptedMsg(Message message, Pubkey toPubkey, boolean doPOW)
+	private UnencryptedMsg constructUnencryptedMsg(Message message, Pubkey toPubkey, boolean doPOW, long timeToLive)
 	{
 		String messageSubject = message.getSubject();
 		String messageBody = message.getBody();
@@ -176,14 +169,14 @@ public class OutgoingMessageProcessor
 			publicEncryptionKey = ArrayCopier.copyOfRange(publicEncryptionKey, 1, publicEncryptionKey.length);
 		}
 		
-		// Calculate the ack data (32 random bytes)
+		// Generate the ack data (32 random bytes)
 		byte[] ackData = new byte[32];
 		new SecureRandom().nextBytes(ackData);
 		
 		// Generate the full ack msg that will be included in this unencrypted msg.
 		// NOTE: Calling the generateFullAckMsg() method results in Proof of Work calculations being done for the
 		//       acknowledgement msg. This can take a long time and lots of CPU power!
-		byte[] fullAckMsg = generateFullAckMsg(message, ackData, toPubkey.getStreamNumber());
+		byte[] fullAckMsg = generateFullAckMessage(message, ackData, fromPubkey.getStreamNumber(), doPOW, timeToLive);
 		Log.d(TAG, "Full ack msg: " + ByteFormatter.byteArrayToHexString(fullAckMsg));
 			
 		// Create the single "message" text String which contains both the subject and the body of the message
@@ -194,9 +187,12 @@ public class OutgoingMessageProcessor
 		UnencryptedMsg unencMsg = new UnencryptedMsg();
 		
 		unencMsg.setBelongsToMe(true);
-		unencMsg.setMsgVersion(MESSAGE_VERSION);
-		unencMsg.setAddressVersion(fromPubkey.getAddressVersion());
-		unencMsg.setStreamNumber(fromPubkey.getStreamNumber());
+		unencMsg.setExpirationTime(TimeUtils.getFuzzedExpirationTime(timeToLive));
+		unencMsg.setObjectType(OBJECT_TYPE_MSG);
+		unencMsg.setObjectVersion(OBJECT_VERSION_MSG);
+		unencMsg.setStreamNumber(toPubkey.getStreamNumber());
+		unencMsg.setSenderAddressVersion(fromPubkey.getObjectVersion());
+		unencMsg.setSenderStreamNumber(fromPubkey.getStreamNumber());
 		unencMsg.setBehaviourBitfield(fromPubkey.getBehaviourBitfield());
 		unencMsg.setPublicSigningKey(publicSigningKey);
 		unencMsg.setPublicEncryptionKey(publicEncryptionKey);
@@ -213,7 +209,8 @@ public class OutgoingMessageProcessor
 		Payload ackPayload = new Payload();
 		ackPayload.setBelongsToMe(false); // i.e. This is an acknowledgment that will be sent by someone else (the recipient of this message)
 		ackPayload.setPOWDone(true);
-		ackPayload.setType(Payload.OBJECT_TYPE_ACK);
+		ackPayload.setAck(true); // This payload is an acknowledgment
+		ackPayload.setType(Payload.OBJECT_TYPE_MSG); // Currently we treat all acks from other people as msgs. Strictly though they can be objects of any type, so this may change
 		ackPayload.setPayload(ackData);	
 		PayloadProvider payProv = PayloadProvider.get(App.getContext());
 		long ackPayloadId = payProv.addPayload(ackPayload);
@@ -236,7 +233,7 @@ public class OutgoingMessageProcessor
 	
 	/**
 	 * Takes an UnencryptedMsg object and does all the work necessary to transform it into an EncyrptedMsg
-	 * object that is ready to be serialized and sent out to the Bitmessage network. The two major parts of this
+	 * object that is ready to be serialised and sent out to the Bitmessage network. The two major parts of this
 	 * process are encryption and proof of work. <br><br>
 	 * 
 	 * <b>NOTE!</b> Calling this method results in proof of work calculations being done for the
@@ -246,10 +243,11 @@ public class OutgoingMessageProcessor
 	 * @param unencMsg - The UnencryptedMsg object to be encrypted
 	 * @param toPubkey - The Pubkey object containing the public encryption key of the intended message recipient
 	 * @param doPOW - A boolean value indicating whether or not POW should be done for this message
+	 * @param timeToLive - The 'time to live' value (in seconds) to be used in creating this msg
 	 * 
 	 * @return A Msg object containing the encrypted message data
 	 */
-	private Msg constructMsg (Message message, UnencryptedMsg unencMsg, Pubkey toPubkey, boolean doPOW)
+	private Object constructMsg (Message message, UnencryptedMsg unencMsg, Pubkey toPubkey, boolean doPOW, long timeToLive)
 	{		
 		// Reconstruct the ECPublicKey object from the byte[] found the the relevant PubKey
 		ECPublicKey publicEncryptionKey = new KeyConverter().reconstructPublicKey(toPubkey.getPublicEncryptionKey());
@@ -262,12 +260,15 @@ public class OutgoingMessageProcessor
 		// Encrypt the payload
 		CryptProcessor cryptProc = new CryptProcessor();
 		byte[] encryptedPayload = cryptProc.encrypt(msgDataForEncryption, publicEncryptionKey);
-		
+				
 		// Create a new Msg object and populate its fields
-		Msg msg = new Msg();
+		Object msg = new Object();
 		msg.setBelongsToMe(true); // NOTE: This method assumes that any message I am encrypting 'belongs to me' (i.e. The user of the application is the author of the message)
+		msg.setExpirationTime(unencMsg.getExpirationTime());
+		msg.setObjectType(unencMsg.getObjectType());
+		msg.setObjectVersion(unencMsg.getObjectVersion());
 		msg.setStreamNumber(toPubkey.getStreamNumber());
-		msg.setMessageData(encryptedPayload);
+		msg.setPayload(encryptedPayload);
 		
 		if (doPOW == true)
 		{
@@ -276,7 +277,7 @@ public class OutgoingMessageProcessor
 			// Do proof of work for the Msg object
 			Log.i(TAG, "About to do POW calculations for a msg that we are sending");
 			byte[] powPayload = constructMsgPayloadForPOW(msg);
-			long powNonce = new POWProcessor().doPOW(powPayload, toPubkey.getNonceTrialsPerByte(), toPubkey.getExtraBytes());
+			long powNonce = new POWProcessor().doPOW(powPayload, unencMsg.getExpirationTime(), toPubkey.getNonceTrialsPerByte(), toPubkey.getExtraBytes());
 			msg.setPOWNonce(powNonce);
 		}
 		else
@@ -307,18 +308,27 @@ public class OutgoingMessageProcessor
 	/**
 	 * Takes a Msg and constructs the payload needed to do POW for it. 
 	 * 
-	 * @param msg - The Msg to construct the POW payload for
+	 * @param msg - The msg Object to construct the POW payload for
 	 * 
 	 * @return The POW payload
 	 */
-	private byte[] constructMsgPayloadForPOW (Msg msg)
+	private byte[] constructMsgPayloadForPOW (Object msg)
 	{
 		try
 		{
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			outputStream.write(ByteUtils.longToBytes(msg.getTime())); // This conversion results in a byte[] of length 8, which is what we want
-			outputStream.write(VarintEncoder.encode(msg.getStreamNumber())); 
-			outputStream.write(msg.getMessageData());
+			outputStream.write(ByteUtils.longToBytes(msg.getExpirationTime())); // This conversion results in a byte[] of length 8, which is what we want
+			outputStream.write(ByteUtils.intToBytes(OBJECT_TYPE_MSG));	
+			
+			// --------------------------------------Upgrade period code---------------------------------------------------------------------
+			long currentTime = System.currentTimeMillis() / 1000;
+			if (currentTime > 1416175200) // Sun, 16 November 2014 22:00:00 GMT
+			{
+				outputStream.write(VarintEncoder.encode(OBJECT_VERSION_MSG)); // Message version
+			}
+			// -------------------------------------------------------------------------------------------------------------------------------
+			outputStream.write(VarintEncoder.encode(msg.getStreamNumber()));
+			outputStream.write(msg.getPayload());
 			
 			return outputStream.toByteArray();
 		}
@@ -342,10 +352,17 @@ public class OutgoingMessageProcessor
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		try 
 		{
-			outputStream.write(VarintEncoder.encode(unencMsg.getMsgVersion())); 
-			outputStream.write(VarintEncoder.encode(unencMsg.getAddressVersion())); 
-			outputStream.write(VarintEncoder.encode(unencMsg.getStreamNumber())); 
-			outputStream.write(ByteBuffer.allocate(4).putInt(unencMsg.getBehaviourBitfield()).array()); //The behaviour bitfield should always be 4 bytes in length
+			// --------------------------------------Upgrade period code---------------------------------------------------------------------
+			long currentTime = System.currentTimeMillis() / 1000;
+			if (currentTime < 1416175200) // Sun, 16 November 2014 22:00:00 GMT
+			{
+				outputStream.write(VarintEncoder.encode(1)); // Message version
+			}
+			// -------------------------------------------------------------------------------------------------------------------------------
+			
+			outputStream.write(VarintEncoder.encode(unencMsg.getSenderAddressVersion())); 
+			outputStream.write(VarintEncoder.encode(unencMsg.getSenderStreamNumber())); 
+			outputStream.write(ByteUtils.intToBytes(unencMsg.getBehaviourBitfield()));
 			
 			// If the public signing and public encryption keys have their leading 0x04 byte in place then we need to remove them
 			byte[] publicSigningKey = unencMsg.getPublicSigningKey();
@@ -362,7 +379,7 @@ public class OutgoingMessageProcessor
 			}
 			outputStream.write(publicEncryptionKey);
 			
-			if (unencMsg.getAddressVersion() >= 3) // The nonceTrialsPerByte and extraBytes fields are only included when the address version is >= 3
+			if (unencMsg.getSenderAddressVersion() >= 3) // The nonceTrialsPerByte and extraBytes fields are only included when the address version is >= 3
 			{
 				outputStream.write(VarintEncoder.encode(unencMsg.getNonceTrialsPerByte())); 
 				outputStream.write(VarintEncoder.encode(unencMsg.getExtraBytes())); 
@@ -389,7 +406,7 @@ public class OutgoingMessageProcessor
 	}
 
 	/**
-	 * Calculates the acknowledgement msg for a message. <br><br>
+	 * Calculates the acknowledgement Message for a given message. <br><br>
 	 * 
 	 * The process for this is as follows:<br><br>
 	 * 1) initialPayload = time || stream number || 32 bytes of random data<br><br>
@@ -399,90 +416,63 @@ public class OutgoingMessageProcessor
 	 * @param message - The original plain text Message object, provided so that its status can be updated during the process
 	 * @param ackData - A byte[] containing the 32 bytes of random data which is the acknowledgment data
 	 * @param toStreamNumber - An int representing the stream number of the destination address of the message to be sent
+	 * @param doPOW - A boolean indicating whether or not POW should be done for ack msgs generated during this process
+	 * @param timeToLive - The 'time to live' value (in seconds) to be used in
+	 * processing this message
 	 * 
 	 * @return A byte[] containing the acknowledgement data for the message we wish to send
 	 */
-	private byte[] generateFullAckMsg (Message message, byte[] ackData, int toStreamNumber)
-	{	
-		// Get the current time + or - 5 minutes and encode it into byte form
-		long time = System.currentTimeMillis() / 1000L; // Gets the current time in seconds
-    	int timeModifier = (new Random().nextInt(600)) - 300;
-    	time = time + timeModifier; // Gives us the current time plus or minus 300 seconds (five minutes). This is also done by PyBitmessage. 
-		byte[] timeBytes = ByteBuffer.allocate(8).putLong(time).array();
+	private byte[] generateFullAckMessage (Message message, byte[] ackData, int toStreamNumber, boolean doPOW, long timeToLive)
+	{
+		// Get the fuzzed expiration time
+		long expirationTime = TimeUtils.getFuzzedExpirationTime(timeToLive);		
 		
-		// Encode the 'to' stream number into byte form
-		byte[] streamBytes = VarintEncoder.encode((long) toStreamNumber); 
+		// Encode the expiration time, object type, object version, and stream number values into byte form
+		byte[] expirationTimeBytes = ByteUtils.longToBytes((expirationTime)); 
+		byte[] objectTypeBytes = ByteUtils.intToBytes(OBJECT_TYPE_MSG);		
+		byte[] objectVersionBytes = VarintEncoder.encode(OBJECT_VERSION_MSG);
+		byte[] streamNumberBytes = VarintEncoder.encode((long) toStreamNumber);
 		
-		// Combine the time, stream number, and random data bytes to create the acknowledgment message payload
-		byte[] initialPayload = ByteUtils.concatenateByteArrays(timeBytes, streamBytes);
-		initialPayload = ByteUtils.concatenateByteArrays(initialPayload, ackData);
+		// Combine the time, object type, object version, stream number, and ack data values into a single byte[]
+		byte[] initialPayload = null;
+		// --------------------------------------Upgrade period code---------------------------------------------------------------------
+		long currentTime = System.currentTimeMillis() / 1000;
+		if (currentTime < 1416175200) // Sun, 16 November 2014 22:00:00 GMT
+		{
+			initialPayload = ByteUtils.concatenateByteArrays(expirationTimeBytes, objectTypeBytes, streamNumberBytes, ackData);
+		}
+		// -------------------------------------------------------------------------------------------------------------------------------
 		
-		updateMessageStatus(message, Message.STATUS_DOING_ACK_POW);
-				
-		// Do proof of work for the acknowledgement payload
-		Log.i(TAG, "About to do POW calculations for the acknowledgment payload of a msg that we are sending");
-		long powNonce = new POWProcessor().doPOW(initialPayload, POWProcessor.NETWORK_NONCE_TRIALS_PER_BYTE, POWProcessor.NETWORK_EXTRA_BYTES);
 		
-		byte[] powNonceBytes = ByteUtils.longToBytes(powNonce);
+		// --------------------------------------Protocol version 3 code------------------------------------------------------------------
+		else
+		{
+			initialPayload = ByteUtils.concatenateByteArrays(expirationTimeBytes, objectTypeBytes, objectVersionBytes, streamNumberBytes, ackData);
+		}
+		// -------------------------------------------------------------------------------------------------------------------------------
 		
-		byte[] payload = ByteUtils.concatenateByteArrays(powNonceBytes, initialPayload);
+		byte[] payload = new byte[0];
+		if (doPOW == true)
+		{
+			updateMessageStatus(message, Message.STATUS_DOING_ACK_POW);
+			
+			// Do proof of work for the acknowledgement payload
+			Log.i(TAG, "About to do POW calculations for the acknowledgment payload of a msg that we are sending");
+			long powNonce = new POWProcessor().doPOW(initialPayload, expirationTime, POWProcessor.NETWORK_NONCE_TRIALS_PER_BYTE, POWProcessor.NETWORK_EXTRA_BYTES);
 		
-		byte[] headerData = constructMsgHeader(payload);
+			byte[] powNonceBytes = ByteUtils.longToBytes(powNonce);
+			
+			payload = ByteUtils.concatenateByteArrays(powNonceBytes, initialPayload);
+		}
+		else
+		{
+			payload = initialPayload;
+		}
 		
+		byte[] headerData = new MessageProcessor().generateObjectHeader(payload);
 		byte[] fullAckMsg = ByteUtils.concatenateByteArrays(headerData, payload);
 		
 		return fullAckMsg;
-	}
-	
-	/**
-	 * Creates the header for a message to be sent between Bitmessage nodes. For a specification of the header see
-	 * https://bitmessage.org/wiki/Protocol_specification#Message_structure
-	 * 
-	 * @param - payload - A byte[] containing the message to construct a header for
-	 * 
-	 * @return A byte[] containing the message header
-	 */
-	private byte[] constructMsgHeader (byte[] payload)
-	{
-		// Get the byte values of all the data that needs to go in the message header
-		byte[] magicBytes = ByteFormatter.hexStringToByteArray(BITMESSAGE_MAGIC_IDENTIFIER);
-		byte[] command = null;
-		try
-		{
-			command = BITMESSAGE_MSG_COMMAND.getBytes(BITMESSAGE_COMMAND_ENCODING);
-			byte[] commandPadding = ByteFormatter.hexStringToByteArray(BITMESSAGE_MSG_COMMAND_PADDING);
-			command = ByteUtils.concatenateByteArrays(command, commandPadding);
-		} 
-		catch (UnsupportedEncodingException e)
-		{
-			throw new RuntimeException("UnsupportedEncodingException occurred in OutgoingMessageProcessor.constructMsgHeader()", e);
-		}
-		
-		int payloadLength = payload.length;
-		byte[] payloadLengthBytes = ByteBuffer.allocate(4).putInt(payloadLength).array();
-		
-		byte[] checksumFullHash = SHA512.sha512(payload);
-		byte[] checksum = ArrayCopier.copyOfRange(checksumFullHash, 0, 4);
-		
-		// Now combine all the assembled data into a single byte[]. This is the message header. 
-		byte[] msgHeader = null;
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		try
-		{		
-			outputStream.write(magicBytes);
-			outputStream.write(command);
-			outputStream.write(payloadLengthBytes);
-			outputStream.write(checksum);
-			
-			msgHeader = outputStream.toByteArray();
-			outputStream.close();
-		}
-		catch (IOException e) 
-		{
-			throw new RuntimeException("IOException occurred in DataProcessor.constructMsgHeader()", e);
-		}		
-		
-		return msgHeader;
 	}
 	
 	/**
@@ -490,7 +480,7 @@ public class OutgoingMessageProcessor
 	 * with the way that PyBitmessage does. This payload can then be sent to a server
 	 * to be disseminated across the network. The payload is stored as a Payload object.
 	 * 
-	 * @param encMsg - A Msg object containing the message data used to create
+	 * @param encMsg - A msg Object containing the message data used to create
 	 * the payload.
 	 * @param powDone - A boolean value indicating whether or not POW has been done for this message
 	 * @param toPubkey - A Pubkey object containing the data for the Pubkey of the address that this 
@@ -498,7 +488,7 @@ public class OutgoingMessageProcessor
 	 * 
 	 * @return A Payload object containing the message payload
 	 */
-	private Payload constructMsgPayloadForDissemination (Msg encMsg, boolean powDone, Pubkey toPubkey)
+	private Payload constructMsgPayloadForDissemination (Object encMsg, boolean powDone, Pubkey toPubkey)
 	{
 		// Create a new Payload object to hold the payload data
 		Payload msgPayload = new Payload();
@@ -506,9 +496,12 @@ public class OutgoingMessageProcessor
 		msgPayload.setPOWDone(powDone);
 		msgPayload.setType(Payload.OBJECT_TYPE_MSG);
 		
-		byte[] powNonceBytes = ByteBuffer.allocate(8).putLong(encMsg.getPOWNonce()).array();
-		byte[] timeBytes = ByteBuffer.allocate(8).putLong(encMsg.getTime()).array();
-		byte streamNumberByte = (byte) encMsg.getStreamNumber();
+		// Encode the POW nonce, expiration time, object type, object version, and stream number values into byte form
+		byte[] powNonceBytes = ByteUtils.longToBytes(encMsg.getPOWNonce());
+		byte[] expirationTimeBytes = ByteUtils.longToBytes(encMsg.getExpirationTime());
+		byte[] objectTypeBytes = ByteUtils.intToBytes(OBJECT_TYPE_MSG);
+		byte[] objectVersionBytes = VarintEncoder.encode(OBJECT_VERSION_MSG);
+		byte[] streamNumberBytes = VarintEncoder.encode(encMsg.getStreamNumber());
 		
 		byte[] payload = null;
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -517,10 +510,18 @@ public class OutgoingMessageProcessor
 			if (powDone == true)
 			{
 				outputStream.write(powNonceBytes);
-			}		
-			outputStream.write(timeBytes);
-			outputStream.write(streamNumberByte);
-			outputStream.write(encMsg.getMessageData());
+			}
+			outputStream.write(expirationTimeBytes);
+			outputStream.write(objectTypeBytes);
+			
+			// Upgrade period code
+			long currentTime = System.currentTimeMillis() / 1000;
+			if (currentTime >= 1416175200) // Sun, 16 November 2014 22:00:00 GMT
+			{
+				outputStream.write(objectVersionBytes);
+			}
+			outputStream.write(streamNumberBytes);
+			outputStream.write(encMsg.getPayload());
 		
 			payload = outputStream.toByteArray();
 			outputStream.close();

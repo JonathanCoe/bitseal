@@ -36,7 +36,7 @@ public class TaskController
 	/**
 	 * Creates a new set of identity data and attempts to disseminate the public part
 	 * of that data to the rest of the Bitmessage network. The identity data consists of
-	 * a pubkey for a given Bitmessage address and a paylod for that pubkey which
+	 * a pubkey for a given Bitmessage address and a payload for that pubkey which
 	 * can be sent around the network. 
 	 * 
 	 * @param queueRecord0 - A QueueRecord object for the task of creating and disseminating
@@ -85,9 +85,9 @@ public class TaskController
 		}
 		
 		// If we successfully generated the identity data, delete the QueueRecord for that task and
-		// create a new QueueRecord to dissemiante the pubkey of that identity
+		// create a new QueueRecord to disseminate the pubkey of that identity
 		queueProc.deleteQueueRecord(queueRecord0);
-		QueueRecord queueRecord1 = queueProc.createAndSaveQueueRecord(BackgroundService.TASK_DISSEMINATE_PUBKEY, pubkeyPayload, null);
+		QueueRecord queueRecord1 = queueProc.createAndSaveQueueRecord(BackgroundService.TASK_DISSEMINATE_PUBKEY, 0, 0, pubkeyPayload, null);
 		
 		// First check whether an Internet connection is available. If not, the QueueRecord for the
 		// 'disseminate pubkey' task will be saved (as above) and processed later
@@ -110,7 +110,7 @@ public class TaskController
 	 * @param POWDone - A boolean indicating whether or not POW has been done for this pubkey
 	 * 
 	 * @return A boolean indicating whether or not the pubkey payload was successfully
-	 * dissemianted to the rest of the network
+	 * disseminated to the rest of the network
 	 */
 	public boolean disseminatePubkey(QueueRecord queueRecord0, Payload pubkeyPayload, boolean POWDone)
 	{
@@ -153,18 +153,21 @@ public class TaskController
 	
 	/**
 	 * This method takes a scheduled 'send message' task and does all the work
-	 * necessary to send the message. If the process cannot be completed succesfully,
+	 * necessary to send the message. If the process cannot be completed successfully,
 	 * then a QueueRecord will be saved to the database so that it can be completed 
 	 * later.  
 	 * 
 	 * @param queueRecord0 - A QueueRecord for the task of sending this message
 	 * @param messageToSend - A Message object containing the message to send
 	 * @param doPOW - A boolean indicating whether or not to do POW for this message
+	 * @param msgTimeToLive - The 'time to live' value (in seconds) to be used in sending this message
+	 * @param getpubkeyTimeToLive - The 'time to live' value (in seconds) to be used if we need to create
+	 * a getpubkey object in order to retrieve the destination pubkey for this message
 	 * 
 	 * @return A boolean indicating whether or not the entire process of creating and 
 	 * sending the message was completed successfully. 
 	 */
-	public boolean sendMessage(QueueRecord queueRecord0, Message messageToSend, boolean doPOW)
+	public boolean sendMessage(QueueRecord queueRecord0, Message messageToSend, boolean doPOW, long msgTimeToLive, long getpubkeyTimeToLive)
 	{
 		Log.i(TAG, "TaskController.sendMessage() called");
 		
@@ -183,11 +186,25 @@ public class TaskController
 			{
 				PayloadProvider payProv = PayloadProvider.get(App.getContext());
 				Payload getpubkeyPayload = payProv.searchForSingleRecord(queueRecord0.getObject1Id());
-				retrievalResult = controller.retrieveToPubkey(toAddress, getpubkeyPayload);
+				// If the getpubkey's time to live has not yet expired
+				if ((getpubkeyPayload.getTime() + getpubkeyTimeToLive) > (System.currentTimeMillis() / 1000))
+				{
+					// Attempt to retrieve the pubkey using the existing getpubkey object
+					retrievalResult = controller.retrieveToPubkey(toAddress, getpubkeyPayload, getpubkeyTimeToLive);
+				}
+				else
+				{
+					// Delete the old (and no longer valid) getpubkey from the database
+					payProv.deletePayload(getpubkeyPayload);
+					
+					// Attempt to retrieve the pubkey by creating and disseminating a new getpubkey object
+					retrievalResult = controller.retrieveToPubkey(toAddress, null, getpubkeyTimeToLive);
+				}
 			}
 			else
 			{
-				retrievalResult = controller.retrieveToPubkey(toAddress, null);
+				// Attempt to retrieve the pubkey by creating and disseminating a new getpubkey object
+				retrievalResult = controller.retrieveToPubkey(toAddress, null, getpubkeyTimeToLive);
 			}
 			
 			if (retrievalResult instanceof Payload)
@@ -219,9 +236,9 @@ public class TaskController
 		// If we successfully retrieved the pubkey, delete the 'retrieve pubkey' QueueRecord and create a new one for the 
 		// next stage of this task
 		queueProc.deleteQueueRecord(queueRecord0);
-		QueueRecord queueRecord1 = queueProc.createAndSaveQueueRecord(BackgroundService.TASK_PROCESS_OUTGOING_MESSAGE, messageToSend, toPubkey);
+		QueueRecord queueRecord1 = queueProc.createAndSaveQueueRecord(BackgroundService.TASK_PROCESS_OUTGOING_MESSAGE, 0, queueRecord0.getRecordCount(), messageToSend, toPubkey);
 		
-		return processOutgoingMessage(queueRecord1, messageToSend, toPubkey, doPOW);
+		return processOutgoingMessage(queueRecord1, messageToSend, toPubkey, doPOW, msgTimeToLive);
 	}
 	
 	/**
@@ -232,10 +249,11 @@ public class TaskController
 	 * @param messageToSend - A Message object containing the data of the message that is to be sent
 	 * @param toPubkey - A Pubkey object containing the pubkey data of the destination address
 	 * @param doPOW - A boolean indicating whether or not to do POW for this message
+	 * @param timeToLive - The 'time to live' value (in seconds) to be used in sending this message
 	 * 
 	 * @return A boolean indicating whether or not the Message was successfully processed
 	 */
-	public boolean processOutgoingMessage (QueueRecord queueRecord0, Message messageToSend, Pubkey toPubkey, boolean doPOW)
+	public boolean processOutgoingMessage (QueueRecord queueRecord0, Message messageToSend, Pubkey toPubkey, boolean doPOW, long timeToLive)
 	{
 		Log.i(TAG, "TaskController.processOutgoingMessage() called");
 		
@@ -253,7 +271,7 @@ public class TaskController
 		Payload msgPayload = null;
 		try
 		{
-			msgPayload = controller.processOutgoingMessage(messageToSend, toPubkey, doPOW);
+			msgPayload = controller.processOutgoingMessage(messageToSend, toPubkey, doPOW, timeToLive);
 		}
 		catch (Exception e)
 		{
@@ -267,7 +285,7 @@ public class TaskController
 		// If we successfully created the message payload, delete the 'process outgoing message' QueueRecord and create a new one for the 
 		// next stage of this task
 		queueProc.deleteQueueRecord(queueRecord0);
-		QueueRecord queueRecord1 = queueProc.createAndSaveQueueRecord(BackgroundService.TASK_DISSEMINATE_MESSAGE, msgPayload, toPubkey);	
+		QueueRecord queueRecord1 = queueProc.createAndSaveQueueRecord(BackgroundService.TASK_DISSEMINATE_MESSAGE, 0, 0, msgPayload, toPubkey);
 		
 		// Update the "status" and "correspondingPayloadId" fields of the Message and 
 		// then prompt the UI to update the list of sent messages it is displaying
@@ -379,9 +397,6 @@ public class TaskController
 		
 		// Run the new message downloading thread.
 	    MessageDownloadThread.getInstance().startThread();
-	    
-	    // Run the new message processing thread.
-	    MessageProcessingThread.getInstance().startThread();
 	}
 	
 	/**
@@ -449,10 +464,10 @@ public class TaskController
 		Log.i(TAG, "TaskController.checkIfPubkeyDisseminationIsDue() called");
 						
 		ReDisseminatePubkeysController controller = new ReDisseminatePubkeysController();
-		ArrayList<Pubkey> pubkeysToReDisseminate = new ArrayList<Pubkey>();
+		ArrayList<Address> addressesWithExpiredPubkeys = new ArrayList<Address>();
 		try
 		{
-			pubkeysToReDisseminate = controller.checkIfPubkeyDisseminationIsDue();
+			addressesWithExpiredPubkeys = controller.checkIfPubkeyDisseminationIsDue();
 		}
 		catch (RuntimeException runEx)
 		{
@@ -460,9 +475,9 @@ public class TaskController
 					"The exception message was: " + runEx.getMessage());
 		}
 		
-		if (pubkeysToReDisseminate.size() > 0)
+		if (addressesWithExpiredPubkeys.size() > 0)
 		{
-			reDisseminatePubkeys(pubkeysToReDisseminate, doPOW);
+			reDisseminatePubkeys(addressesWithExpiredPubkeys, doPOW);
 		}
 		else
 		{
@@ -473,28 +488,30 @@ public class TaskController
 	/**
 	 * Re-disseminates any supplied Pubkeys. 
 	 * 
-	 * @param pubkeysToReDisseminate - The Pubkeys to be re-disseminated
+	 * @param addressesWithExpiredPubkeys - The Addresses which require their pubkeys to
+	 * be regenerated and re-disseminated
 	 * @param doPOW - A boolean indicating whether or not to do POW for the updated
 	 * pubkey payload
 	 */
-	public void reDisseminatePubkeys(ArrayList<Pubkey> pubkeysToReDisseminate, boolean doPOW)
+	public void reDisseminatePubkeys(ArrayList<Address> addressesWithExpiredPubkeys, boolean doPOW)
 	{
 		ReDisseminatePubkeysController controller = new ReDisseminatePubkeysController();
 		try
 		{
-			for (Pubkey p : pubkeysToReDisseminate)
+			for (Address a : addressesWithExpiredPubkeys)
 			{
-				Payload updatedPayload = controller.reDisseminatePubkeys(p, doPOW);
+				Payload updatedPayload = controller.regeneratePubkey(a, doPOW);
 				
-				// Create a new QueueRecord to re-dissemiante the pubkey
+				// Create a new QueueRecord to re-disseminate the pubkey
 				QueueRecordProcessor queueProc = new QueueRecordProcessor();
-				QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(BackgroundService.TASK_DISSEMINATE_PUBKEY, updatedPayload, null);
+				QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(BackgroundService.TASK_DISSEMINATE_PUBKEY, 0, 0, updatedPayload, null);
 				
 				// First check whether an Internet connection is available. If not, the QueueRecord for the
 				// 'disseminate pubkey' task will be saved (as above) and processed later
 				if (NetworkHelper.checkInternetAvailability() == true)
 				{
 					// Attempt to disseminate the pubkey for the newly generated identity
+					Log.d(TAG, "Re-disseminating the pubkey for address " + a.getAddress());
 					disseminatePubkey(queueRecord, updatedPayload, doPOW);
 				}
 			}

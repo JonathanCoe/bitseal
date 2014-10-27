@@ -104,6 +104,13 @@ public class ComposeActivity extends Activity
 	
 	private boolean mInternetAvailable;
 	
+	/**
+	 * The maximum permissible size for a message's text (subject + body), in bytes. The maximum size
+	 * of an object in Bitmessage protocol version 3 is 256kB. We allow some extra room for the rest of 
+	 * the msg object which this message which eventually be transformed into. 
+	 */
+	private static final int MAXIMUM_MESSAGE_TEXT_SIZE = 250000;
+	
 	private static final String TAG = "COMPOSE_ACTIVITY";
 	
 	@Override
@@ -320,7 +327,7 @@ public class ComposeActivity extends Activity
 		}
 		catch (Exception e)
 		{
-			Log.e(TAG, "Exception occurred in IdentitiesActivity while validating the to address. \n" +
+			Log.e(TAG, "Exception occurred in ComposeActivity.sendMessage(). \n" +
 					"The exception messsage was: " + e.getMessage());
 			Toast.makeText(getApplicationContext(), "An error occurred while validating the 'To address'", Toast.LENGTH_LONG).show();
 			return;
@@ -354,9 +361,22 @@ public class ComposeActivity extends Activity
 		}
 		catch (Exception e)
 		{
-			Log.e(TAG, "Exception occurred in IdentitiesActivity while validating the to address. \n" +
+			Log.e(TAG, "Exception occurred in ComposeActivity.sendMessage(). \n" +
 					"The exception messsage was: " + e.getMessage());
 			Toast.makeText(getApplicationContext(), "An error occurred while validating the 'From address'", Toast.LENGTH_LONG).show();
+			return;
+		}
+		
+		// Check that the size of the message text is below the maximum permissible value
+		String subject = mSubjectEditText.getText().toString();
+		String body = mBodyEditText.getText().toString();
+		String combinedMessageText = subject.concat(body);
+		int messageTextSize = combinedMessageText.getBytes().length;
+		if (messageTextSize > MAXIMUM_MESSAGE_TEXT_SIZE)
+		{
+			Log.e(TAG, "The user attempted to send a message with a combined text (subject + body) size greater than the maximum value allowed. \n" +
+					"The size of the combined message text was " + messageTextSize + " bytes.");
+			Toast.makeText(getApplicationContext(), "The message is too long. Bitmessage does not allow messages greater than 256kB in size.", Toast.LENGTH_LONG).show();
 			return;
 		}
 		
@@ -378,8 +398,8 @@ public class ComposeActivity extends Activity
 				messageToSend.setTime(System.currentTimeMillis() / 1000);
 				messageToSend.setToAddress(toAddress);
 				messageToSend.setFromAddress(fromAddress);
-				messageToSend.setSubject(mSubjectEditText.getText().toString());
-				messageToSend.setBody(mBodyEditText.getText().toString());
+				messageToSend.setSubject(subject);
+				messageToSend.setBody(body);
 				messageToSend.setStatus(Message.STATUS_REQUESTING_PUBKEY);
 				
 				// Save the Message to the database

@@ -46,7 +46,7 @@ public class POWCalculator implements POWListener
 	 * @param maxTime - An int representing the maximum amount of time in seconds that will be
 	 * allowed for the POW calculation to be completed
 	 * 
-	 * @return A long containing a nonce that fulfills the collision quality condition.
+	 * @return A long containing a nonce that fulfils the collision quality condition.
 	 */
 	public synchronized long execute(long maxTime) 
 	{

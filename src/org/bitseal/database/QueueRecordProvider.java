@@ -63,6 +63,8 @@ public class QueueRecordProvider
     {	
     	ContentValues values = new ContentValues();
     	values.put(QueueRecordsTable.COLUMN_TASK, q.getTask());
+    	values.put(QueueRecordsTable.COLUMN_TRIGGER_TIME, q.getTriggerTime());
+    	values.put(QueueRecordsTable.COLUMN_RECORD_COUNT, q.getRecordCount());
     	values.put(QueueRecordsTable.COLUMN_LAST_ATTEMPT_TIME, q.getLastAttemptTime());
     	values.put(QueueRecordsTable.COLUMN_ATTEMPTS, q.getAttempts());
     	values.put(QueueRecordsTable.COLUMN_OBJECT_0_ID, q.getObject0Id());
@@ -73,7 +75,7 @@ public class QueueRecordProvider
 		Uri insertionUri = mContentResolver.insert(DatabaseContentProvider.CONTENT_URI_QUEUE_RECORDS, values);	
     	Log.i(TAG, "QueueRecord with task " + q.getTask() + " and number of attempts " + q.getAttempts() + " saved to database");
     	
-		// Parse the ID of the newly created record from the insertion Uri
+		// Parse the ID of the newly created record from the insertion URI
 		String uriString = insertionUri.toString();
 		String idString = uriString.substring(uriString.indexOf("/") + 1);
 		long id = Long.parseLong(idString);
@@ -107,10 +109,12 @@ public class QueueRecordProvider
     {
     	ArrayList<QueueRecord> matchingRecords = new ArrayList<QueueRecord>();
 
-    	// Specify which colums from the table we are interested in
+    	// Specify which columns from the table we are interested in
 		String[] projection = {
 				QueueRecordsTable.COLUMN_ID, 
 				QueueRecordsTable.COLUMN_TASK,
+				QueueRecordsTable.COLUMN_TRIGGER_TIME,
+				QueueRecordsTable.COLUMN_RECORD_COUNT,
 				QueueRecordsTable.COLUMN_LAST_ATTEMPT_TIME,
 				QueueRecordsTable.COLUMN_ATTEMPTS,
 				QueueRecordsTable.COLUMN_OBJECT_0_ID,
@@ -132,16 +136,20 @@ public class QueueRecordProvider
     	    {
     	        long id = cursor.getLong(0);
     	        String task = cursor.getString(1);
-    	        long lastAttemptTime = cursor.getLong(2);
-    	        int attempts = cursor.getInt(3);
-    	        long object0Id = cursor.getLong(4);
-    	        String object0Type = cursor.getString(5);
-    	        long object1Id = cursor.getLong(6);
-    	        String object1Type = cursor.getString(7);
+    	        long triggerTime = cursor.getLong(2);
+    	        int completionCount = cursor.getInt(3);
+    	        long lastAttemptTime = cursor.getLong(4);
+    	        int attempts = cursor.getInt(5);
+    	        long object0Id = cursor.getLong(6);
+    	        String object0Type = cursor.getString(7);
+    	        long object1Id = cursor.getLong(8);
+    	        String object1Type = cursor.getString(9);
     	      
     	        QueueRecord q = new QueueRecord();
     	        q.setId(id);
     	        q.setTask(task);
+    	        q.setTriggerTime(triggerTime);
+    	        q.setRecordCount(completionCount);
     	        q.setLastAttemptTime(lastAttemptTime);
     	        q.setAttempts(attempts);
     	        q.setObject0Id(object0Id);
@@ -199,10 +207,12 @@ public class QueueRecordProvider
     {
     	ArrayList<QueueRecord> queueRecords = new ArrayList<QueueRecord>();
     	
-        // Specify which colums from the table we are interested in
+        // Specify which columns from the table we are interested in
 		String[] projection = {
 				QueueRecordsTable.COLUMN_ID, 
 				QueueRecordsTable.COLUMN_TASK,
+				QueueRecordsTable.COLUMN_TRIGGER_TIME,
+				QueueRecordsTable.COLUMN_RECORD_COUNT,
 				QueueRecordsTable.COLUMN_LAST_ATTEMPT_TIME,
 				QueueRecordsTable.COLUMN_ATTEMPTS,
 				QueueRecordsTable.COLUMN_OBJECT_0_ID,
@@ -220,30 +230,34 @@ public class QueueRecordProvider
     	
     	if (cursor.moveToFirst())
     	{
-    	   do 
-    	   {
-	   	        long id = cursor.getLong(0);
-	   	        String task = cursor.getString(1);
-	   	        long lastAttemptTime = cursor.getLong(2);
-	   	        int attempts = cursor.getInt(3);
-	   	        long object0Id = cursor.getLong(4);
-	   	        String object0Type = cursor.getString(5);
-	   	        long object1Id = cursor.getLong(6);
-	   	        String object1Type = cursor.getString(7);
-	   	      
-	   	        QueueRecord q = new QueueRecord();
-	   	        q.setId(id);
-	   	        q.setTask(task);
-	   	        q.setLastAttemptTime(lastAttemptTime);
-	   	        q.setAttempts(attempts);
-	   	        q.setObject0Id(object0Id);
-	   	        q.setObject0Type(object0Type);
-	   	        q.setObject1Id(object1Id);
-	   	        q.setObject1Type(object1Type);
+    	    do 
+    	    {
+    	        long id = cursor.getLong(0);
+    	        String task = cursor.getString(1);
+    	        long triggerTime = cursor.getLong(2);
+    	        int completionCount = cursor.getInt(3);
+    	        long lastAttemptTime = cursor.getLong(4);
+    	        int attempts = cursor.getInt(5);
+    	        long object0Id = cursor.getLong(6);
+    	        String object0Type = cursor.getString(7);
+    	        long object1Id = cursor.getLong(8);
+    	        String object1Type = cursor.getString(9);
     	      
-   	        	queueRecords.add(q);
-    	   } 
-    	   while (cursor.moveToNext());
+    	        QueueRecord q = new QueueRecord();
+    	        q.setId(id);
+    	        q.setTask(task);
+    	        q.setTriggerTime(triggerTime);
+    	        q.setRecordCount(completionCount);
+    	        q.setLastAttemptTime(lastAttemptTime);
+    	        q.setAttempts(attempts);
+    	        q.setObject0Id(object0Id);
+    	        q.setObject0Type(object0Type);
+    	        q.setObject1Id(object1Id);
+    	        q.setObject1Type(object1Type);
+    	      
+    	        queueRecords.add(q);
+    	    } 
+    	    while (cursor.moveToNext());
     	}
     	
     	return queueRecords;
@@ -261,6 +275,8 @@ public class QueueRecordProvider
     {
     	ContentValues values = new ContentValues();
     	values.put(QueueRecordsTable.COLUMN_TASK, q.getTask());
+    	values.put(QueueRecordsTable.COLUMN_TRIGGER_TIME, q.getTriggerTime());
+    	values.put(QueueRecordsTable.COLUMN_RECORD_COUNT, q.getRecordCount());
     	values.put(QueueRecordsTable.COLUMN_LAST_ATTEMPT_TIME, q.getLastAttemptTime());
     	values.put(QueueRecordsTable.COLUMN_ATTEMPTS, q.getAttempts());
     	values.put(QueueRecordsTable.COLUMN_OBJECT_0_ID, q.getObject0Id());

@@ -2,14 +2,13 @@ package org.bitseal.core;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Random;
 
 import org.bitseal.data.Payload;
 import org.bitseal.database.PayloadProvider;
 import org.bitseal.network.ServerCommunicator;
 import org.bitseal.pow.POWProcessor;
 import org.bitseal.util.ByteUtils;
+import org.bitseal.util.TimeUtils;
 import org.bitseal.util.VarintEncoder;
 
 import android.util.Log;
@@ -22,6 +21,9 @@ import android.util.Log;
  */
 public class OutgoingGetpubkeyProcessor
 {
+	/** The object type number for getpubkeys, as defined by the Bitmessage protocol */
+	private static final int OBJECT_TYPE_GETPUBKEY = 0;
+	
 	private static final String TAG = "OUTGOING_GETPUBKEY_PROCESSOR";
 	
 	/**
@@ -53,14 +55,16 @@ public class OutgoingGetpubkeyProcessor
 	 * 
 	 * @param addressString - A String containing the Bitmessage address to create
 	 * a getpubkey object for
+	 * @param timeToLive - The 'time to live' value (in seconds) to be used in creating 
+	 * this getpubkey
 	 * 
 	 * @return - A Payload object containing the newly created getpubkey object
 	 */
-	public Payload constructAndDisseminateGetpubkeyRequst(String addressString)
+	public Payload constructAndDisseminateGetpubkeyRequst(String addressString, long timeToLive)
 	{
 		// We were unable to retrieve the pubkey after trying all servers. Now we must create a getpubkey 
 		// object which can be sent out to servers. We should then be able to retrieve the required pubkey.
-		Payload getpubkeyPayload = constructGetpubkeyPayload(addressString);
+		Payload getpubkeyPayload = constructGetpubkeyPayload(addressString, timeToLive);
 		
 		// Save the getpubkey object to the database
 		PayloadProvider payProv = PayloadProvider.get(App.getContext());
@@ -94,17 +98,18 @@ public class OutgoingGetpubkeyProcessor
 	 * 
 	 * @param addressString - A String containing the address of the pubkey which the
 	 * getpubkey object will be used to retrieve
+	 * @param timeToLive - The 'time to live' value (in seconds) to be used in creating 
+	 * this getpubkey
 	 * 
 	 * @return A Payload object containing the getpubkey object
 	 */
-	private Payload constructGetpubkeyPayload(String addressString)
+	private Payload constructGetpubkeyPayload(String addressString, long timeToLive)
 	{
 		Log.i(TAG, "Constructing a new getpubkey Payload to request the pubkey of address " + addressString);
 		
-		// Get the current time + or - 5 minutes and encode it into byte form
-		long time = System.currentTimeMillis() / 1000L; // Gets the current time in seconds
-    	int timeModifier = (new Random().nextInt(600)) - 300;
-    	time = time + timeModifier; // Gives us the current time plus or minus 300 seconds (five minutes). This is also done by PyBitmessage. 
+		// Get the fuzzed expiration time and encoded it into byte[] form
+		long expirationTime = TimeUtils.getFuzzedExpirationTime(timeToLive);
+		byte[] expirationTimeBytes = ByteUtils.longToBytes(expirationTime);
 		
 		// Get the address version and stream number
 		AddressProcessor addProc = new AddressProcessor();
@@ -126,7 +131,8 @@ public class OutgoingGetpubkeyProcessor
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		try 
 		{
-			outputStream.write((ByteBuffer.allocate(8).putLong(time).array())); 
+			outputStream.write(expirationTimeBytes);
+			outputStream.write(ByteUtils.intToBytes(OBJECT_TYPE_GETPUBKEY));
 			outputStream.write(VarintEncoder.encode(addressVersion)); 
 			outputStream.write(VarintEncoder.encode(streamNumber)); 
 			outputStream.write(pubkeyIdentifier);
@@ -141,8 +147,8 @@ public class OutgoingGetpubkeyProcessor
 		
 		// Do the POW for the payload we have constructed
 		POWProcessor powProc = new POWProcessor();
-		long powNonce = powProc.doPOW(payload, POWProcessor.NETWORK_NONCE_TRIALS_PER_BYTE, POWProcessor.NETWORK_EXTRA_BYTES);
-		byte[] powNonceBytes = ByteBuffer.allocate(8).putLong(powNonce).array();
+		long powNonce = powProc.doPOW(payload, expirationTime, POWProcessor.NETWORK_NONCE_TRIALS_PER_BYTE, POWProcessor.NETWORK_EXTRA_BYTES);
+		byte[] powNonceBytes = ByteUtils.longToBytes(powNonce);
 		
 		// Add the POW nonce to the payload
 		payload = ByteUtils.concatenateByteArrays(powNonceBytes, payload);

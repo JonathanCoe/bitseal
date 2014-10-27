@@ -16,7 +16,7 @@ public class ColourCalculator
 	 * 
 	 * @param address - The input address
 	 * 
-	 * @return An int[] of length 3 containing the calculated color values
+	 * @return An int[] of length 3 containing the calculated colour values
 	 * 
 	 */
 	public static int[] calculateColoursFromAddress(String address)

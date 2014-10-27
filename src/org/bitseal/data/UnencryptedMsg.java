@@ -6,228 +6,161 @@ package org.bitseal.data;
  * values for nonceTrialsPerByte or extraBytes. In these instances those two
  * fields are left empty. <br><br>
  * 
- * For more information see https://bitmessage.org/wiki/Protocol_specification#Unencrypted_Message_Data
+ * See https://bitmessage.org/wiki/Protocol_specification#Unencrypted_Message_Data
  * 
  * @author Jonathan Coe
  */
-public class UnencryptedMsg
-{
-	// These first three fields are for internal use by Bitseal, and are not part of the Bitmessage protocol
-	private long mId;
-	private boolean mBelongsToMe;
-	private long mTime; // If the message belongs to me, this is the time at which it was created. If the messages does not belong to me, this is the time at which it was received.
-	
+public class UnencryptedMsg extends Object
+{	
 	// All fields below this are part of the data to be encrypted
-	private int mMsgVersion;
-	private int mAddressVersion; // The sender's address version
-	private int mStreamNumber; // The sender's stream number
-	private int mBehaviourBitfield; //A bitfield of optional behaviors and features that can be expected from the node with this pubkey. 4 bytes in length, e.g. '\x00\x00\x00\x01'
-	private byte[] mPublicSigningKey; // Belongs to the sender of the message (see line 708 of class_singleWorker.py)
-	private byte[] mPublicEncryptionKey; // Belongs to the sender of the message (see line 708 of class_singleWorker.py)
-	private int mNonceTrialsPerByte;
-	private int mExtraBytes;
-	private byte[] mDestinationRipe;
-	private int mEncoding;
-	private int mMessageLength;
-	private byte[] mMessage;
-	private int mAckLength;
-	private byte[] mAckMsg;
-	private int mSignatureLength;
-	private byte[] mSignature;
-	
-    public UnencryptedMsg()
-    {
-    	mTime = System.currentTimeMillis() / 1000; // Gets the current time in seconds
-    }
-	
-	public long getId() 
-	{
+	private int senderAddressVersion; // The sender's address version
+	private int senderStreamNumber; // The sender's stream number
+	private int behaviourBitfield; //A bitfield of optional behaviours and features that can be expected from the node with this pubkey. 4 bytes in length, e.g. '\x00\x00\x00\x01'
+	private byte[] publicSigningKey; // Belongs to the sender of the message
+	private byte[] publicEncryptionKey; // Belongs to the sender of the message
+	private int nonceTrialsPerByte;
+	private int extraBytes;
+	private byte[] destinationRipe;
+	private int encoding;
+	private int messageLength;
+	private byte[] message;
+	private int ackLength;
+	private byte[] ackMsg;
+	private int signatureLength;
+	private byte[] signature;
 		
-		return mId;
+	public int getSenderAddressVersion() 
+	{
+		return senderAddressVersion;
+	}
+	public void setSenderAddressVersion(int addressVersion) 
+	{
+		this.senderAddressVersion = addressVersion;
 	}
 	
-	public void setId(long id) 
+	public int getSenderStreamNumber() 
 	{
-		mId = id;
+		return senderStreamNumber;
 	}
-	
-	public boolean belongsToMe() 
+	public void setSenderStreamNumber(int streamNumber) 
 	{
-		return mBelongsToMe;
-	}
-	
-	public void setBelongsToMe(boolean belongsToMe) 
-	{
-		mBelongsToMe = belongsToMe;
-	}
-	
-	public long getTime()
-	{
-		return mTime;
-	}
-
-	public void setTime(long time)
-	{
-		this.mTime = time;
-	}
-
-	public int getMsgVersion() 
-	{
-		return mMsgVersion;
-	}
-	
-	public void setMsgVersion(int msgVersion) 
-	{
-		mMsgVersion = msgVersion;
-	}
-	
-	public int getAddressVersion() 
-	{
-		return mAddressVersion;
-	}
-	
-	public void setAddressVersion(int addressVersion) 
-	{
-		mAddressVersion = addressVersion;
-	}
-	
-	public int getStreamNumber() 
-	{
-		return mStreamNumber;
-	}
-	
-	public void setStreamNumber(int streamNumber) 
-	{
-		mStreamNumber = streamNumber;
+		this.senderStreamNumber = streamNumber;
 	}
 	
 	public int getBehaviourBitfield() 
 	{
-		return mBehaviourBitfield;
+		return behaviourBitfield;
 	}
-	
 	public void setBehaviourBitfield(int behaviourBitfield) 
 	{
-		mBehaviourBitfield = behaviourBitfield;
+		this.behaviourBitfield = behaviourBitfield;
 	}
 	
 	public byte[] getPublicSigningKey() 
 	{
-		return mPublicSigningKey;
+		return publicSigningKey;
 	}
-	
 	public void setPublicSigningKey(byte[] publicSigningKey) 
 	{
-		mPublicSigningKey = publicSigningKey;
+		this.publicSigningKey = publicSigningKey;
 	}
 	
 	public byte[] getPublicEncryptionKey() 
 	{
-		return mPublicEncryptionKey;
+		return publicEncryptionKey;
 	}
-	
 	public void setPublicEncryptionKey(byte[] publicEncryptionKey) 
 	{
-		mPublicEncryptionKey = publicEncryptionKey;
+		this.publicEncryptionKey = publicEncryptionKey;
 	}
 	
 	public int getNonceTrialsPerByte() 
 	{
-		return mNonceTrialsPerByte;
+		return nonceTrialsPerByte;
 	}
-	
 	public void setNonceTrialsPerByte(int nonceTrialsPerByte) 
 	{
-		mNonceTrialsPerByte = nonceTrialsPerByte;
+		this.nonceTrialsPerByte = nonceTrialsPerByte;
 	}
 	
 	public int getExtraBytes() 
 	{
-		return mExtraBytes;
+		return extraBytes;
 	}
-	
 	public void setExtraBytes(int extraBytes) 
 	{
-		mExtraBytes = extraBytes;
+		this.extraBytes = extraBytes;
 	}
 	
 	public byte[] getDestinationRipe() 
 	{
-		return mDestinationRipe;
+		return destinationRipe;
 	}
-	
 	public void setDestinationRipe(byte[] destinationRipe) 
 	{
-		mDestinationRipe = destinationRipe;
+		this.destinationRipe = destinationRipe;
 	}
 	
 	public int getEncoding() 
 	{
-		return mEncoding;
+		return encoding;
 	}
-	
 	public void setEncoding(int encoding) 
 	{
-		mEncoding = encoding;
+		this.encoding = encoding;
 	}
 	
 	public int getMessageLength() 
 	{
-		return mMessageLength;
+		return messageLength;
 	}
-	
 	public void setMessageLength(int messageLength) 
 	{
-		mMessageLength = messageLength;
+		this.messageLength = messageLength;
 	}
 	
 	public byte[] getMessage() 
 	{
-		return mMessage;
+		return message;
 	}
-	
 	public void setMessage(byte[] message) 
 	{
-		mMessage = message;
+		this.message = message;
 	}
 	
 	public int getAckLength() 
 	{
-		return mAckLength;
+		return ackLength;
 	}
-	
 	public void setAckLength(int ackLength) 
 	{
-		mAckLength = ackLength;
+		this.ackLength = ackLength;
 	}
 	
 	public byte[] getAckMsg() 
 	{
-		return mAckMsg;
+		return ackMsg;
 	}
-	
 	public void setAckMsg(byte[] ackMsg) 
 	{
-		mAckMsg = ackMsg;
+		this.ackMsg = ackMsg;
 	}
 	
 	public int getSignatureLength() 
 	{
-		return mSignatureLength;
+		return signatureLength;
 	}
-	
 	public void setSignatureLength(int signatureLength) 
 	{
-		mSignatureLength = signatureLength;
+		this.signatureLength = signatureLength;
 	}
 	
 	public byte[] getSignature() 
 	{
-		return mSignature;
+		return signature;
 	}
-	
 	public void setSignature(byte[] signature) 
 	{
-		mSignature = signature;
+		this.signature = signature;
 	}
 }

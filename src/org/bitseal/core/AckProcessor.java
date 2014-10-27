@@ -22,9 +22,11 @@ public class AckProcessor
 {	
 	private static final long THREE_HOURS_IN_SECONDS = 10800;
 	
-	/** See https://bitmessage.org/wiki/Proof_of_work for an explanation of these values **/
-	private static final long DEFAULT_NONCE_TRIALS_PER_BYTE = 320;
-	private static final long DEFAULT_EXTRA_BYTES = 14000;
+	/** In Bitmessage protocol version 3, the network standard value for nonce trials per byte is 1000. */
+	public static final int NETWORK_NONCE_TRIALS_PER_BYTE = 1000;
+	
+	/** In Bitmessage protocol version 3, the network standard value for extra bytes is 1000. */
+	public static final int NETWORK_EXTRA_BYTES = 1000;
 	
 	private static final String TAG = "ACK_PROCESSOR";
 	
@@ -105,9 +107,10 @@ public class AckProcessor
 				
 		// Check the proof of work
 		long powNonce = ByteUtils.bytesToLong(ArrayCopier.copyOf(ackPayload, 8));
+		long expirationTime = ByteUtils.bytesToLong(ArrayCopier.copyOfRange(ackPayload, 8, 16));
 		byte[] payloadToCheck = ArrayCopier.copyOfRange(ackPayload, 8, ackPayload.length);
 		POWProcessor powProc = new POWProcessor();
-		boolean powValid = powProc.checkPOW(payloadToCheck, powNonce, DEFAULT_NONCE_TRIALS_PER_BYTE, DEFAULT_EXTRA_BYTES);
+		boolean powValid = powProc.checkPOW(payloadToCheck, powNonce, NETWORK_NONCE_TRIALS_PER_BYTE, NETWORK_EXTRA_BYTES, expirationTime);
 		PayloadProvider payProv = PayloadProvider.get(App.getContext());
 		if (powValid == false)
 		{

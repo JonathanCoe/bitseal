@@ -10,6 +10,8 @@ public class QueueRecordsTable
 	  
 	  public static final String COLUMN_ID = "_id";
 	  public static final String COLUMN_TASK = "task";
+	  public static final String COLUMN_TRIGGER_TIME = "trigger_time";
+	  public static final String COLUMN_RECORD_COUNT = "record_count";
 	  public static final String COLUMN_LAST_ATTEMPT_TIME = "last_attempt_time";
 	  public static final String COLUMN_ATTEMPTS = "attempts";
 	  public static final String COLUMN_OBJECT_0_ID = "object_0_id";
@@ -23,6 +25,8 @@ public class QueueRecordsTable
 	      + "(" 
 	      + COLUMN_ID + " integer primary key autoincrement, " 
 	      + COLUMN_TASK + " text, "
+	      + COLUMN_TRIGGER_TIME + " integer, "
+	      + COLUMN_RECORD_COUNT + " integer, "
 	      + COLUMN_LAST_ATTEMPT_TIME + " integer, "
 	      + COLUMN_ATTEMPTS + " integer, "
 	      + COLUMN_OBJECT_0_ID + " integer, "

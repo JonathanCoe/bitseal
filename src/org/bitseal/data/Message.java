@@ -1,24 +1,29 @@
 package org.bitseal.data;
 
 /**
- * An object representing a plaintext message. 
+ * An object representing a plain-text message.<br><br>
+ * 
+ * <b>NOTE:</b> This class should not be confused with the 'Message' data
+ * structure defined in the Bitmessage protocol. This class is for internal
+ * use only and is NOT part of the Bitmessage protocol. 
  * 
  * @author Jonathan Coe
  */
 public class Message implements Comparable<Message>
 {
-	private long mId;
-	private long mMsgPayloadId; // The ID of the msg payload for this Message
-	private long mAckPayloadId; // The ID of the ack payload for this Message
-	private boolean mBelongsToMe;
-	private boolean mRead; // Indicates whether or not the user of the app has read (opened) the message
-	private String mStatus;
-	private long mTime; // If the message belongs to me, this is the time at which it was created. If the messages does not belong to me, this is the time at which it was received.
-	private String mToAddress;
-	private String mFromAddress;
-	private String mSubject;
-	private String mBody;
+	private long id;
+	private long msgPayloadId; // The ID of the msg payload for this Message
+	private long ackPayloadId; // The ID of the ack payload for this Message
+	private boolean belongsToMe;
+	private boolean read; // Indicates whether or not the user of the app has read (opened) the message
+	private String status;
+	private long time; // The time at which this Message object was created
+	private String toAddress;
+	private String fromAddress;
+	private String subject;
+	private String body;
 	
+	// Status messages
 	public static final String STATUS_REQUESTING_PUBKEY = "Retrieving encryption keys";
 	public static final String STATUS_CONSTRUCTING_PAYLOAD = "Constructing message payload";
 	public static final String STATUS_DOING_ACK_POW = "Doing proof of work for the acknowledgement";
@@ -32,8 +37,8 @@ public class Message implements Comparable<Message>
 	
 	public Message()
 	{
-		mRead = false; // The default value for the "read" field should be false
-		mTime = System.currentTimeMillis() / 1000; // Gets the current time in seconds
+		read = false; // The default value for the "read" field should be false
+		time = System.currentTimeMillis() / 1000; // Gets the current time in seconds
 	}
 	
 	/**
@@ -42,116 +47,105 @@ public class Message implements Comparable<Message>
 	@Override
 	public int compareTo(Message m)
 	{
-	     return (int) (m.getTime() - mTime);
+	     return (int) (m.getTime() - time);
 	}
 	
 	public long getId() 
 	{
-		return mId;
+		return id;
 	}
-	
 	public void setId(long id) 
 	{
-		mId = id;
+		this.id = id;
 	}
 	
 	public long getMsgPayloadId()
 	{
-		return mMsgPayloadId;
+		return msgPayloadId;
 	}
-	
 	public void setMsgPayloadId(long msgPayloadId) 
 	{
-		mMsgPayloadId = msgPayloadId;
+		this.msgPayloadId = msgPayloadId;
 	}
 	
 	public long getAckPayloadId()
 	{
-		return mAckPayloadId;
+		return ackPayloadId;
 	}
-
 	public void setAckPayloadId(long ackPayloadId)
 	{
-		mAckPayloadId = ackPayloadId;
+		this.ackPayloadId = ackPayloadId;
 	}
 
 	public boolean belongsToMe() 
 	{
-		return mBelongsToMe;
+		return belongsToMe;
 	}
-	
 	public void setBelongsToMe(boolean belongsToMe) 
 	{
-		mBelongsToMe = belongsToMe;
+		this.belongsToMe = belongsToMe;
 	}
 	
 	public boolean hasBeenRead()
 	{
-		return mRead;
+		return read;
 	}
-
 	public void setRead(boolean read)
 	{
-		mRead = read;
+		this.read = read;
 	}
 
 	public String getStatus()
 	{
-		return mStatus;
+		return status;
 	}
-	
 	public void setStatus(String status)
 	{
-		mStatus = status;
+		this.status = status;
 	}
 
 	public long getTime()
 	{
-		return mTime;
+		return time;
 	}
-
 	public void setTime(long time)
 	{
-		mTime = time;
+		this.time = time;
 	}
 
 	public String getToAddress()
 	{
-		return mToAddress;
+		return toAddress;
 	}
-
 	public void setToAddress(String toAddress)
 	{
-		mToAddress = toAddress;
+		this.toAddress = toAddress;
 	}
 
 	public String getFromAddress()
 	{
-		return mFromAddress;
+		return fromAddress;
 	}
-
 	public void setFromAddress(String fromAddress)
 	{
-		mFromAddress = fromAddress;
+		this.fromAddress = fromAddress;
 	}
 
 	public String getSubject()
 	{
-		return mSubject;
+		return subject;
 	}
-
 	public void setSubject(String subject)
 	{
-		mSubject = subject;
+		this.subject = subject;
 	}
 
 	public String getBody()
 	{
-		return mBody;
+		return body;
 	}
-
 	public void setBody(String body)
 	{
-		mBody = body;
+		this.body = body;
 	}
 }
