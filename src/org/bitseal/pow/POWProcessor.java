@@ -1,10 +1,11 @@
 package org.bitseal.pow;
 
 import java.math.BigInteger;
-import java.security.SecureRandom;
 
 import org.bitseal.crypt.SHA512;
 import org.bitseal.util.ByteUtils;
+
+import android.util.Log;
 
 /**
  * Offers various methods relating to Proof of Work calculations.<br><br>
@@ -29,58 +30,58 @@ public class POWProcessor
 	/** The minimum 'time to live' value to use when checking if a given payload's POW is sufficient */
 	private static final int MINIMUM_TIME_TO_LIVE_VALUE = 300;
 	
-	/**
-	 * For testing, use this version of the doPOW method to avoid waiting for POW
-	 * to be calculated.
-	 * 
-	 * @param payload - A byte[] containing the payload to do the POW for.
-	 * @param expirationTime - The expiration time for this payload
-	 * @param nonceTrialsPerByte - The nonceTrialsPerByte value to use
-	 * @param extraBytes - The extraBytes value to use
-	 * 
-	 * @return A random long that can act as a placeholder for a POW nonce
-	 */
-	public long doPOW(byte[] payload, long expirationTime, long nonceTrialsPerByte, long extraBytes)
-	{	
-		SecureRandom secRand = new SecureRandom();
-		byte[] POWNonce = new byte[8];
-		secRand.nextBytes(POWNonce);
-		return ByteUtils.bytesToLong(POWNonce);
-	}
-	
 //	/**
-//	 * Does the POW for the given payload.<br />
-//	 * <b>WARNING: Takes a long time!!!</b>
+//	 * For testing, use this version of the doPOW method to avoid waiting for POW
+//	 * to be calculated.
 //	 * 
 //	 * @param payload - A byte[] containing the payload to do the POW for.
 //	 * @param expirationTime - The expiration time for this payload
 //	 * @param nonceTrialsPerByte - The nonceTrialsPerByte value to use
 //	 * @param extraBytes - The extraBytes value to use
 //	 * 
-//	 * @return A long containing the calculated POW nonce. 
+//	 * @return A random long that can act as a placeholder for a POW nonce
 //	 */
-//	public long doPOW(byte[] payload, long expirationTime, long nonceTrialsPerByte, long extraBytes) 
-//	{
-//		long timeToLive = calculateTimeToLiveValue(expirationTime);
-//		
-//		Log.d(TAG, "Doing POW calculations for a payload " + payload.length + " bytes in length.\n" +
-//				"Nonce trials per byte: " + nonceTrialsPerByte + "\n" +
-//				"Extra bytes          : " + extraBytes + "\n" +
-//				"Time to live         : " + timeToLive);
-//		
-//		POWCalculator powCalc = new POWCalculator();
-//		long powTarget = calculatePOWTarget(payload.length, nonceTrialsPerByte, extraBytes, timeToLive);
-//		powCalc.setTarget(powTarget);
-//		powCalc.setInitialHash(SHA512.sha512(payload));
-//		powCalc.setTargetLoad(1);
-//		
-//		long powNonce = powCalc.execute(MAX_TIME_ALLOWED);
-//		
-//		Log.d(TAG, "POW target:    " + powTarget);
-//		Log.d(TAG, "POW nonce:     " + powNonce);
-//		
-//		return powNonce;
+//	public long doPOW(byte[] payload, long expirationTime, long nonceTrialsPerByte, long extraBytes)
+//	{	
+//		SecureRandom secRand = new SecureRandom();
+//		byte[] POWNonce = new byte[8];
+//		secRand.nextBytes(POWNonce);
+//		return ByteUtils.bytesToLong(POWNonce);
 //	}
+	
+	/**
+	 * Does the POW for the given payload.<br />
+	 * <b>WARNING: Takes a long time!!!</b>
+	 * 
+	 * @param payload - A byte[] containing the payload to do the POW for.
+	 * @param expirationTime - The expiration time for this payload
+	 * @param nonceTrialsPerByte - The nonceTrialsPerByte value to use
+	 * @param extraBytes - The extraBytes value to use
+	 * 
+	 * @return A long containing the calculated POW nonce. 
+	 */
+	public long doPOW(byte[] payload, long expirationTime, long nonceTrialsPerByte, long extraBytes) 
+	{
+		long timeToLive = calculateTimeToLiveValue(expirationTime);
+		
+		Log.d(TAG, "Doing POW calculations for a payload " + payload.length + " bytes in length.\n" +
+				"Nonce trials per byte: " + nonceTrialsPerByte + "\n" +
+				"Extra bytes          : " + extraBytes + "\n" +
+				"Time to live         : " + timeToLive);
+		
+		POWCalculator powCalc = new POWCalculator();
+		long powTarget = calculatePOWTarget(payload.length, nonceTrialsPerByte, extraBytes, timeToLive);
+		powCalc.setTarget(powTarget);
+		powCalc.setInitialHash(SHA512.sha512(payload));
+		powCalc.setTargetLoad(1);
+		
+		long powNonce = powCalc.execute(MAX_TIME_ALLOWED);
+		
+		Log.d(TAG, "POW target:    " + powTarget);
+		Log.d(TAG, "POW nonce:     " + powNonce);
+		
+		return powNonce;
+	}
 	
 	/**
 	 * Checks whether the proof of work done for a given payload is sufficient.

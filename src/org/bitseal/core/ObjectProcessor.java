@@ -1,6 +1,7 @@
 package org.bitseal.core;
 
 import org.bitseal.data.Object;
+import org.bitseal.pow.POWProcessor;
 import org.bitseal.util.ArrayCopier;
 import org.bitseal.util.ByteUtils;
 import org.bitseal.util.VarintEncoder;
@@ -73,13 +74,13 @@ public class ObjectProcessor
 		// Now deal with the remaining data.
 		byte[] payload = ArrayCopier.copyOfRange(objectBytes, readPosition, objectBytes.length);
 		
-//		// Check whether the POW for this Object is valid
-//		byte[] powPayload = ArrayCopier.copyOfRange(objectBytes, 8, objectBytes.length);
-//		boolean powValid = new POWProcessor().checkPOW(powPayload, powNonce, expirationTime, NETWORK_NONCE_TRIALS_PER_BYTE, NETWORK_EXTRA_BYTES);
-//		if (powValid == false)
-//		{
-//			throw new RuntimeException("While running ObjectProcessor.parseObject(), the POW nonce was found to be invalid. The invalid value was " + powNonce);
-//		}
+		// Check whether the POW for this Object is valid
+		byte[] powPayload = ArrayCopier.copyOfRange(objectBytes, 8, objectBytes.length);
+		boolean powValid = new POWProcessor().checkPOW(powPayload, powNonce, expirationTime, NETWORK_NONCE_TRIALS_PER_BYTE, NETWORK_EXTRA_BYTES);
+		if (powValid == false)
+		{
+			throw new RuntimeException("While running ObjectProcessor.parseObject(), the POW nonce was found to be invalid. The invalid value was " + powNonce);
+		}
 		
 		// Create a new Object and use the parsed data to populate its fields
 		Object object = new Object();
