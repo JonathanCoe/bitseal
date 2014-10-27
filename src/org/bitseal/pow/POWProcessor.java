@@ -4,6 +4,7 @@ import java.math.BigInteger;
 
 import org.bitseal.crypt.SHA512;
 import org.bitseal.util.ByteUtils;
+import org.bitseal.util.TimeUtils;
 
 import android.util.Log;
 
@@ -25,7 +26,7 @@ public class POWProcessor
 	public static final long NETWORK_EXTRA_BYTES = 1000;
 	
 	/** The maximum time in seconds that will be allowed for the app to attempt to complete a POW calculation */
-	private static final long MAX_TIME_ALLOWED = 1800;
+	private static final long MAX_TIME_ALLOWED = 3600; // Currently set to 1 hour
 	
 	/** The minimum 'time to live' value to use when checking if a given payload's POW is sufficient */
 	private static final int MINIMUM_TIME_TO_LIVE_VALUE = 300;
@@ -64,23 +65,19 @@ public class POWProcessor
 	{
 		long timeToLive = calculateTimeToLiveValue(expirationTime);
 		
-		Log.d(TAG, "Doing POW calculations for a payload " + payload.length + " bytes in length.\n" +
-				"Nonce trials per byte: " + nonceTrialsPerByte + "\n" +
-				"Extra bytes          : " + extraBytes + "\n" +
-				"Time to live         : " + timeToLive);
-		
 		POWCalculator powCalc = new POWCalculator();
 		long powTarget = calculatePOWTarget(payload.length, nonceTrialsPerByte, extraBytes, timeToLive);
 		powCalc.setTarget(powTarget);
 		powCalc.setInitialHash(SHA512.sha512(payload));
 		powCalc.setTargetLoad(1);
 		
-		long powNonce = powCalc.execute(MAX_TIME_ALLOWED);
+		Log.d(TAG, "Doing POW calculations for a payload " + payload.length + " bytes in length.\n" +
+				"Nonce trials per byte: " + nonceTrialsPerByte + "\n" +
+				"Extra bytes          : " + extraBytes + "\n" +
+				"Time to live         : " + TimeUtils.getTimeMessage(timeToLive) + "\n" +
+				"Target               : " + powTarget);
 		
-		Log.d(TAG, "POW target:    " + powTarget);
-		Log.d(TAG, "POW nonce:     " + powNonce);
-		
-		return powNonce;
+		return powCalc.execute(MAX_TIME_ALLOWED);
 	}
 	
 	/**

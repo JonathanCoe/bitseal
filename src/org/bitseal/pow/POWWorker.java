@@ -161,7 +161,7 @@ public class POWWorker implements Runnable
 
 				if (result <= target && result >= 0)
 				{
-					Log.i(TAG, "Found a valid nonce!");
+					Log.d(TAG, "Found a valid nonce! : " + nonce);
 					stop();
 					this.nonce = nonce;
 					POWSuccessful = true;
@@ -172,7 +172,7 @@ public class POWWorker implements Runnable
 				if ((startTime + (maxTime * 1000)) < System.currentTimeMillis())
 				{
 					// Throwing exceptions in this instance has proven to be very problematic, with the exceptions
-					// causing the worker threads to crash instead of propogating up the call hierarchy correctly. 
+					// causing the worker threads to crash instead of propagating up the call hierarchy correctly. 
 					// Therefore we return 0 to convey that the POW calculations were not successful within the time allowed.
 					stop();
 					this.nonce = 0;
