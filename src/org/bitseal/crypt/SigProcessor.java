@@ -115,8 +115,6 @@ public class SigProcessor
 		{
 			throw new RuntimeException("IOException occurred in SigProcessor.createPubkeySignaturePayload()", e);
 		}
-		
-		Log.i(TAG, "Pubkey signature payload: " + ByteFormatter.byteArrayToHexString(payload));
 
 		return payload;
 	}
