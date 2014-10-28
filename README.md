@@ -27,7 +27,6 @@ Working features
 
 Roadmap for development (subject to change)
 ---------------
-+ Update for Bitmessage Protocol Version 3
 + Lite client message retrieval using prefix filters (credit to Peter Todd for suggesting this)
 + Local encryption of the database, using SQLCipher
 + SSL for connections between clients and servers
