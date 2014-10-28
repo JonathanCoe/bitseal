@@ -78,7 +78,6 @@ public class PubkeyProvider
     	values.put(PubkeysTable.COLUMN_STREAM_NUMBER, p.getStreamNumber());
     	values.put(PubkeysTable.COLUMN_CORRESPONDING_ADDRESS_ID, p.getCorrespondingAddressId());
     	values.put(PubkeysTable.COLUMN_RIPE_HASH, Base64.encodeToString(p.getRipeHash(), Base64.DEFAULT));
-    	values.put(PubkeysTable.COLUMN_LAST_DISSEMINATION_TIME, p.getLastDisseminationTime());
     	values.put(PubkeysTable.COLUMN_BEHAVIOUR_BITFIELD, p.getBehaviourBitfield());
     	values.put(PubkeysTable.COLUMN_PUBLIC_SIGNING_KEY, Base64.encodeToString(p.getPublicSigningKey(), Base64.DEFAULT));
     	values.put(PubkeysTable.COLUMN_PUBLIC_ENCRYPTION_KEY, Base64.encodeToString(p.getPublicEncryptionKey(), Base64.DEFAULT));
@@ -137,7 +136,6 @@ public class PubkeyProvider
 				PubkeysTable.COLUMN_STREAM_NUMBER,
 				PubkeysTable.COLUMN_CORRESPONDING_ADDRESS_ID,
 				PubkeysTable.COLUMN_RIPE_HASH,
-				PubkeysTable.COLUMN_LAST_DISSEMINATION_TIME,
 				PubkeysTable.COLUMN_BEHAVIOUR_BITFIELD,
 				PubkeysTable.COLUMN_PUBLIC_SIGNING_KEY,
 				PubkeysTable.COLUMN_PUBLIC_ENCRYPTION_KEY,
@@ -174,14 +172,13 @@ public class PubkeyProvider
     	        int streamNumber = cursor.getInt(6);
     	        long correspondingAddressId = cursor.getLong(7);
     	        byte[] ripeHash = Base64.decode(cursor.getString(8), Base64.DEFAULT);
-    	        long lastDisseminationTime = cursor.getLong(9);
-    	        int behaviourBitfield = cursor.getInt(10);
-    	        byte[] publicSigningKey = Base64.decode(cursor.getString(11), Base64.DEFAULT);
-    	        byte[] publicEncryptionKey = Base64.decode(cursor.getString(12), Base64.DEFAULT);
-    	        int nonceTrialsPerByte = cursor.getInt(13);
-    	        int extraBytes = cursor.getInt(14);
-    	        int signatureLength = cursor.getInt(15);
-    	        byte[] signature = Base64.decode(cursor.getString(16), Base64.DEFAULT);
+    	        int behaviourBitfield = cursor.getInt(9);
+    	        byte[] publicSigningKey = Base64.decode(cursor.getString(10), Base64.DEFAULT);
+    	        byte[] publicEncryptionKey = Base64.decode(cursor.getString(11), Base64.DEFAULT);
+    	        int nonceTrialsPerByte = cursor.getInt(12);
+    	        int extraBytes = cursor.getInt(13);
+    	        int signatureLength = cursor.getInt(14);
+    	        byte[] signature = Base64.decode(cursor.getString(15), Base64.DEFAULT);
     	      
     	        Pubkey p = new Pubkey();
     	        p.setId(id);
@@ -193,7 +190,6 @@ public class PubkeyProvider
     	        p.setStreamNumber(streamNumber);
     	        p.setCorrespondingAddressId(correspondingAddressId);
     	        p.setRipeHash(ripeHash);
-    	        p.setLastDisseminationTime(lastDisseminationTime);
     	        p.setBehaviourBitfield(behaviourBitfield);
     	        p.setPublicSigningKey(publicSigningKey);
     	        p.setPublicEncryptionKey(publicEncryptionKey);
@@ -263,7 +259,6 @@ public class PubkeyProvider
 				PubkeysTable.COLUMN_STREAM_NUMBER,
 				PubkeysTable.COLUMN_CORRESPONDING_ADDRESS_ID,
 				PubkeysTable.COLUMN_RIPE_HASH,
-				PubkeysTable.COLUMN_LAST_DISSEMINATION_TIME,
 				PubkeysTable.COLUMN_BEHAVIOUR_BITFIELD,
 				PubkeysTable.COLUMN_PUBLIC_SIGNING_KEY,
 				PubkeysTable.COLUMN_PUBLIC_ENCRYPTION_KEY,
@@ -301,14 +296,13 @@ public class PubkeyProvider
     	        int streamNumber = cursor.getInt(6);
     	        long correspondingAddressId = cursor.getLong(7);
     	        byte[] ripeHash = Base64.decode(cursor.getString(8), Base64.DEFAULT);
-    	        long lastDisseminationTime = cursor.getLong(9);
-    	        int behaviourBitfield = cursor.getInt(10);
-    	        byte[] publicSigningKey = Base64.decode(cursor.getString(11), Base64.DEFAULT);
-    	        byte[] publicEncryptionKey = Base64.decode(cursor.getString(12), Base64.DEFAULT);
-    	        int nonceTrialsPerByte = cursor.getInt(13);
-    	        int extraBytes = cursor.getInt(14);
-    	        int signatureLength = cursor.getInt(15);
-    	        byte[] signature = Base64.decode(cursor.getString(16), Base64.DEFAULT);
+    	        int behaviourBitfield = cursor.getInt(9);
+    	        byte[] publicSigningKey = Base64.decode(cursor.getString(10), Base64.DEFAULT);
+    	        byte[] publicEncryptionKey = Base64.decode(cursor.getString(11), Base64.DEFAULT);
+    	        int nonceTrialsPerByte = cursor.getInt(12);
+    	        int extraBytes = cursor.getInt(13);
+    	        int signatureLength = cursor.getInt(14);
+    	        byte[] signature = Base64.decode(cursor.getString(15), Base64.DEFAULT);
     	      
     	        Pubkey p = new Pubkey();
     	        p.setId(id);
@@ -320,7 +314,6 @@ public class PubkeyProvider
     	        p.setStreamNumber(streamNumber);
     	        p.setCorrespondingAddressId(correspondingAddressId);
     	        p.setRipeHash(ripeHash);
-    	        p.setLastDisseminationTime(lastDisseminationTime);
     	        p.setBehaviourBitfield(behaviourBitfield);
     	        p.setPublicSigningKey(publicSigningKey);
     	        p.setPublicEncryptionKey(publicEncryptionKey);
@@ -362,7 +355,6 @@ public class PubkeyProvider
     	values.put(PubkeysTable.COLUMN_STREAM_NUMBER, p.getStreamNumber());
     	values.put(PubkeysTable.COLUMN_CORRESPONDING_ADDRESS_ID, p.getCorrespondingAddressId());
     	values.put(PubkeysTable.COLUMN_RIPE_HASH, Base64.encodeToString(p.getRipeHash(), Base64.DEFAULT));
-    	values.put(PubkeysTable.COLUMN_LAST_DISSEMINATION_TIME, p.getLastDisseminationTime());
     	values.put(PubkeysTable.COLUMN_BEHAVIOUR_BITFIELD, p.getBehaviourBitfield());
     	values.put(PubkeysTable.COLUMN_PUBLIC_SIGNING_KEY, Base64.encodeToString(p.getPublicSigningKey(), Base64.DEFAULT));
     	values.put(PubkeysTable.COLUMN_PUBLIC_ENCRYPTION_KEY, Base64.encodeToString(p.getPublicEncryptionKey(), Base64.DEFAULT));

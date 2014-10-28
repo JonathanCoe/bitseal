@@ -17,7 +17,6 @@ public class PubkeysTable
   public static final String COLUMN_STREAM_NUMBER = "stream_number";
   public static final String COLUMN_CORRESPONDING_ADDRESS_ID = "corresponding_address_id";
   public static final String COLUMN_RIPE_HASH = "ripe_hash";
-  public static final String COLUMN_LAST_DISSEMINATION_TIME = "last_dissemination_time";
   public static final String COLUMN_BEHAVIOUR_BITFIELD = "behaviour_bitfield";
   public static final String COLUMN_PUBLIC_SIGNING_KEY = "public_signing_key";
   public static final String COLUMN_PUBLIC_ENCRYPTION_KEY = "public_encryption_key";
@@ -39,7 +38,6 @@ public class PubkeysTable
       + COLUMN_STREAM_NUMBER + " integer, "
       + COLUMN_CORRESPONDING_ADDRESS_ID + " integer references addresses(_id), "      
       + COLUMN_RIPE_HASH + " text, "
-      + COLUMN_LAST_DISSEMINATION_TIME + " integer, "
       + COLUMN_BEHAVIOUR_BITFIELD + " integer, "
       + COLUMN_PUBLIC_SIGNING_KEY + " text, "
       + COLUMN_PUBLIC_ENCRYPTION_KEY + " text, "

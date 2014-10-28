@@ -1,13 +1,10 @@
 package org.bitseal.controllers;
 
-import org.bitseal.core.App;
 import org.bitseal.core.PubkeyProcessor;
 import org.bitseal.crypt.PubkeyGenerator;
 import org.bitseal.data.Address;
 import org.bitseal.data.Payload;
 import org.bitseal.data.Pubkey;
-import org.bitseal.database.AddressProvider;
-import org.bitseal.database.PubkeyProvider;
 import org.bitseal.network.ServerCommunicator;
 
 /**
@@ -69,16 +66,6 @@ public class CreateIdentityController
 		else
 		{
 			disseminationSuccessful = servCom.disseminatePubkeyNoPOW(payload);
-		}
-		if (disseminationSuccessful == true)
-		{
-			// Update the 'last dissemination time' of the Pubkey in our database
-			AddressProvider addProv = AddressProvider.get(App.getContext());
-			Address address = addProv.searchForSingleRecord(pubkeyPayload.getRelatedAddressId());
-			PubkeyProvider pubProv = PubkeyProvider.get(App.getContext());
-			Pubkey pubkey = pubProv.searchForSingleRecord(address.getCorrespondingPubkeyId());
-			pubkey.setLastDisseminationTime(System.currentTimeMillis() / 1000);
-			pubProv.updatePubkey(pubkey);
 		}
 		
 		return disseminationSuccessful;

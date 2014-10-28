@@ -8,7 +8,7 @@ import android.util.Log;
 public class DatabaseHelper extends SQLiteOpenHelper
 {
 	private static final String DATABASE_NAME = "bitseal_database.db";
-	private static final int DATABASE_VERSION = 4;
+	private static final int DATABASE_VERSION = 5;
 	
 	private static final String TAG = "DATABASE_HELPER";
 	
@@ -72,6 +72,15 @@ public class DatabaseHelper extends SQLiteOpenHelper
 			Log.w(TAG, "Adding 'record count' column to QueueRecords table");
 			database.execSQL("ALTER TABLE " + QueueRecordsTable.TABLE_QUEUE_RECORDS + " ADD COLUMN "
 					+ QueueRecordsTable.COLUMN_RECORD_COUNT + " integer INT AFTER " + QueueRecordsTable.COLUMN_TRIGGER_TIME);
+		}
+		
+		if (newVersion == 5)
+		{
+			// Remove 'last dissemination time' column from Pubkeys table
+			Log.w(TAG, "Dropping Pubkeys table");
+			database.execSQL("DROP TABLE IF EXISTS " + PubkeysTable.TABLE_PUBKEYS);
+			Log.w(TAG, "Re-creating Pubkeys table");
+			PubkeysTable.onCreate(database);
 		}
 	}
 }

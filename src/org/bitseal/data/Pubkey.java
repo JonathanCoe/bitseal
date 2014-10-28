@@ -15,7 +15,6 @@ public class Pubkey extends Object
 	// The first three fields of this class are for internal use by the Bitseal app and are not part of the data to be sent over the wire
 	private long correspondingAddressId;
 	private byte[] ripeHash; // The ripe hash calculated from the two public keys of this pubkey
-	private long lastDisseminationTime; // The last time at which this pubkey was successfully disseminated to the Bitmessage network
 	
 	private int behaviourBitfield; //A bitfield of optional behaviours and features that can be expected from the node with this pubkey. 4 bytes in length, e.g. '\x00\x00\x00\x01'
 	private byte[] publicSigningKey;
@@ -104,14 +103,5 @@ public class Pubkey extends Object
 	public void setSignature(byte[] signature) 
 	{
 		this.signature = signature;
-	}
-
-	public long getLastDisseminationTime()
-	{
-		return lastDisseminationTime;
-	}
-	public void setLastDisseminationTime(long lastDisseminationTime)
-	{
-		this.lastDisseminationTime = lastDisseminationTime;
 	}
 }

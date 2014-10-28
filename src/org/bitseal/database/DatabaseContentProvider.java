@@ -524,9 +524,8 @@ public class DatabaseContentProvider extends ContentProvider
 	    	{
 		    	String[] available = {PubkeysTable.COLUMN_ID, PubkeysTable.COLUMN_BELONGS_TO_ME, PubkeysTable.COLUMN_POW_NONCE, PubkeysTable.COLUMN_EXPIRATION_TIME, 
 		    			PubkeysTable.COLUMN_OBJECT_TYPE, PubkeysTable.COLUMN_OBJECT_VERSION, PubkeysTable.COLUMN_STREAM_NUMBER, PubkeysTable.COLUMN_CORRESPONDING_ADDRESS_ID,
-		    			PubkeysTable.COLUMN_RIPE_HASH, PubkeysTable.COLUMN_LAST_DISSEMINATION_TIME,PubkeysTable.COLUMN_BEHAVIOUR_BITFIELD,	PubkeysTable.COLUMN_PUBLIC_SIGNING_KEY,
-		    			PubkeysTable.COLUMN_PUBLIC_ENCRYPTION_KEY, PubkeysTable.COLUMN_NONCE_TRIALS_PER_BYTE, PubkeysTable.COLUMN_EXTRA_BYTES, PubkeysTable.COLUMN_SIGNATURE_LENGTH,
-		    			PubkeysTable.COLUMN_SIGNATURE};
+		    			PubkeysTable.COLUMN_RIPE_HASH, PubkeysTable.COLUMN_BEHAVIOUR_BITFIELD, PubkeysTable.COLUMN_PUBLIC_SIGNING_KEY,	PubkeysTable.COLUMN_PUBLIC_ENCRYPTION_KEY,
+		    			PubkeysTable.COLUMN_NONCE_TRIALS_PER_BYTE, PubkeysTable.COLUMN_EXTRA_BYTES, PubkeysTable.COLUMN_SIGNATURE_LENGTH, PubkeysTable.COLUMN_SIGNATURE};
 		    	return available;
 	    	}
 		    
