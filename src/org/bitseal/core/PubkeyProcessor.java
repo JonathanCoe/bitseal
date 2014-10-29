@@ -130,7 +130,7 @@ public class PubkeyProcessor
 		byte[] ripeHash = new AddressProcessor().extractRipeHashFromAddress(addressString);
 		
 		// Now search the application's database to see if the pubkey we need is stored there
-		// Note that when ripe hashes in the database have their leading zeros removed
+		// Note that ripe hashes in the database have their leading zeros removed
 		PubkeyProvider pubProv = PubkeyProvider.get(App.getContext());
 		ArrayList<Pubkey> retrievedPubkeys = pubProv.searchPubkeys(PubkeysTable.COLUMN_RIPE_HASH, Base64.encodeToString(ByteUtils.stripLeadingZeros(ripeHash), Base64.DEFAULT));
 		if (retrievedPubkeys.size() > 1)
