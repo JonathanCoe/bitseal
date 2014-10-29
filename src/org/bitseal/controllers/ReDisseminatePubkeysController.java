@@ -41,16 +41,14 @@ public class ReDisseminatePubkeysController
 		PubkeyProvider pubProv = PubkeyProvider.get(App.getContext());
 		ArrayList<Pubkey> myPubkeys = pubProv.searchPubkeys(PubkeysTable.COLUMN_BELONGS_TO_ME, String.valueOf(1)); // 1 stands for true in the database
 		
-		long currentTime = System.currentTimeMillis() / 1000;
-		
-		ArrayList<Address> addressesWithExpiredPubkeys = new ArrayList<Address>();
-		
 		// Check whether any of our pubkeys need to be disseminated again
+		ArrayList<Address> addressesWithExpiredPubkeys = new ArrayList<Address>();
 		for (Pubkey p : myPubkeys)
 		{
 			AddressProvider addProv = AddressProvider.get(App.getContext());
 			Address address = addProv.searchForSingleRecord(p.getCorrespondingAddressId());
 			
+			long currentTime = System.currentTimeMillis() / 1000;
 			long expirationTime = p.getExpirationTime();
 			if (expirationTime < currentTime)
 			{
