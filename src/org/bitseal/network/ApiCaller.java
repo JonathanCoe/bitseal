@@ -218,7 +218,7 @@ public class ApiCaller
 		{
 			Log.i(TAG, "Running doConnectionTest() with server at " + url.toString());
 			
-			int result = -1; // Explicity set this value to ensure a meaningful test. The testInt values will always be >=0, so the test should never give a false positive result.
+			int result = -1; // Explicitly set this value to ensure a meaningful test. The testInt values will always be >=0, so the test should never give a false positive result.
 			
 			Random rand = new Random();
 			int testInt1 = rand.nextInt(5000);
