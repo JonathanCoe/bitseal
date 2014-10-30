@@ -95,7 +95,7 @@ public class DatabaseContentProvider extends ContentProvider
 	  @Override
 	  public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) 
 	  {
-	    // Uisng SQLiteQueryBuilder instead of query() method
+	    // Using SQLiteQueryBuilder instead of query() method
 	    SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
 	    
 	    int uriType = sURIMatcher.match(uri);
@@ -508,7 +508,7 @@ public class DatabaseContentProvider extends ContentProvider
 		    	String[] available = {QueueRecordsTable.COLUMN_ID, QueueRecordsTable.COLUMN_TASK, QueueRecordsTable.COLUMN_TRIGGER_TIME, 
 		    			QueueRecordsTable.COLUMN_RECORD_COUNT, QueueRecordsTable.COLUMN_LAST_ATTEMPT_TIME, QueueRecordsTable.COLUMN_ATTEMPTS, 
 		    			QueueRecordsTable.COLUMN_OBJECT_0_ID, QueueRecordsTable.COLUMN_OBJECT_0_TYPE, QueueRecordsTable.COLUMN_OBJECT_1_ID,
-		    			QueueRecordsTable.COLUMN_OBJECT_1_TYPE};
+		    			QueueRecordsTable.COLUMN_OBJECT_1_TYPE, QueueRecordsTable.COLUMN_OBJECT_2_ID, QueueRecordsTable.COLUMN_OBJECT_2_TYPE};
 		    	return available;
 	    	}
 		    

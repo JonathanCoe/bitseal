@@ -45,6 +45,11 @@ public class QueueRecord implements Comparable<QueueRecord>
 	/** The type of the second object that this record refers to - e.g. "Pubkey" or "UnencryptedsMsg" */
 	private String object1Type;
 	
+	/** The id number of the third object that is to be processed, if any */
+	private long object2Id;
+	/** The type of the third object that this record refers to - e.g. "Pubkey" or "UnencryptedsMsg" */
+	private String object2Type;
+	
 	// Constant values for the "Object Type" Strings in QueueRecords
 	public static final String QUEUE_RECORD_OBJECT_TYPE_ADDRESS = "Address";
 	public static final String QUEUE_RECORD_OBJECT_TYPE_MESSAGE = "Message";
@@ -149,5 +154,23 @@ public class QueueRecord implements Comparable<QueueRecord>
 	public void setObject1Type(String type)
 	{
 		this.object1Type = type;
+	}
+	
+	public long getObject2Id()
+	{
+		return object2Id;
+	}
+	public void setObject2Id(long id)
+	{
+		this.object2Id = id;
+	}
+
+	public String getObject2Type()
+	{
+		return object2Type;
+	}
+	public void setObject2Type(String type)
+	{
+		this.object2Type = type;
 	}
 }

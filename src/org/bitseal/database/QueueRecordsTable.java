@@ -18,6 +18,8 @@ public class QueueRecordsTable
 	  public static final String COLUMN_OBJECT_0_TYPE = "object_0_type";
 	  public static final String COLUMN_OBJECT_1_ID = "object_1_id";
 	  public static final String COLUMN_OBJECT_1_TYPE = "object_1_type";
+	  public static final String COLUMN_OBJECT_2_ID = "object_2_id";
+	  public static final String COLUMN_OBJECT_2_TYPE = "object_2_type";
 
 	  // Database creation SQL statement
 	  private static final String DATABASE_CREATE = "create table " 
@@ -32,7 +34,9 @@ public class QueueRecordsTable
 	      + COLUMN_OBJECT_0_ID + " integer, "
 	      + COLUMN_OBJECT_0_TYPE + " text, "
 	      + COLUMN_OBJECT_1_ID + " integer, "
-	      + COLUMN_OBJECT_1_TYPE + " text"
+	      + COLUMN_OBJECT_1_TYPE + " text,"
+	      + COLUMN_OBJECT_2_ID + " integer, "
+	      + COLUMN_OBJECT_2_TYPE + " text"
 	      + ");";
 
 	  public static void onCreate(SQLiteDatabase database) 

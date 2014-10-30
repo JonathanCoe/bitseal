@@ -208,15 +208,10 @@ public class IncomingMessageProcessor
 		
 		// Get all acknowledgments that I am awaiting
 		PayloadProvider payProv = PayloadProvider.get(App.getContext());
-		ArrayList<Payload> ackPayloads = payProv.searchPayloads(PayloadsTable.COLUMN_ACK, "1"); // 1 stands for true in the database
-		ArrayList<Payload> expectedAckPayloads = new ArrayList<Payload>();
-		for (Payload p : ackPayloads)
-		{
-			if (p.belongsToMe() == true) // i.e. The acknowledgment was created by me
-			{
-				expectedAckPayloads.add(p);
-			}
-		}
+		
+		String[] columnNames = new String[]{PayloadsTable.COLUMN_ACK, PayloadsTable.COLUMN_BELONGS_TO_ME};
+		String[] searchTerms = new String[]{"1", "1"}; // 1 stands for true in the database
+		ArrayList<Payload> expectedAckPayloads = payProv.searchPayloads(columnNames, searchTerms);
 		
 		// Check if this is an acknowledgment bound for me
 		for (Payload p : expectedAckPayloads)

@@ -2,7 +2,6 @@ package org.bitseal.services;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Iterator;
 
 import org.bitseal.controllers.TaskController;
 import org.bitseal.core.App;
@@ -171,12 +170,12 @@ public class BackgroundService extends IntentService
 								
 				// Create a new QueueRecord for the 'send message' task and save it to the database
 				QueueRecordProcessor queueProc = new QueueRecordProcessor();
-				QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, 0, 0, messageToSend, null);
+				QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, 0, 0, messageToSend, null, null);
 				
 				// Also create a new QueueRecord for re-sending this msg in the event that we do not receive an acknowledgment for it
 				// before its time to live expires. If we do receive the acknowledgment before then, this QueueRecord will be deleted
 				long currentTime = System.currentTimeMillis() / 1000;
-				queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, currentTime + FIRST_ATTEMPT_TTL, 1, messageToSend, null);
+				queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, currentTime + FIRST_ATTEMPT_TTL, 1, messageToSend, null, null);
 				
 				// First check whether an Internet connection is available. If not, the QueueRecord which records the 
 				// need to send the message will be stored (as above) and processed later
@@ -184,6 +183,10 @@ public class BackgroundService extends IntentService
 				{
 					// Attempt to send the message
 					taskController.sendMessage(queueRecord, messageToSend, DO_POW, FIRST_ATTEMPT_TTL, FIRST_ATTEMPT_TTL);
+				}
+				else
+				{
+					MessageStatusHandler.updateMessageStatus(messageToSend, Message.STATUS_WAITING_FOR_CONNECTION);
 				}
 			}
 			
@@ -213,7 +216,7 @@ public class BackgroundService extends IntentService
 				
 				// Create a new QueueRecord for the create identity task and save it to the database
 				QueueRecordProcessor queueProc = new QueueRecordProcessor();
-				QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(TASK_CREATE_IDENTITY, 0, 0, address, null);
+				QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(TASK_CREATE_IDENTITY, 0, 0, address, null, null);
 				
 				// Attempt to complete the create identity task
 				taskController.createIdentity(queueRecord, DO_POW);
@@ -261,20 +264,6 @@ public class BackgroundService extends IntentService
 		ArrayList<QueueRecord> queueRecords = queueProv.getAllQueueRecords();
 		Log.i(TAG, "Number of QueueRecords found: " + queueRecords.size());
 		
-		// Ignore any QueueRecords that have a 'trigger time' in the future
-		long currentTime = System.currentTimeMillis() / 1000;
-		Iterator<QueueRecord> iterator = queueRecords.iterator();
-		while (iterator.hasNext())
-		{
-		    QueueRecord q = iterator.next();
-			if (q.getTriggerTime() > currentTime)
-			{
-				Log.i(TAG, "Ignoring a QueueRecord for a " + q.getTask() + " task because its trigger time has not been reached yet.\n"
-						+ "Its trigger time will be reached in roughly " + TimeUtils.getTimeMessage((q.getTriggerTime() - currentTime)));
-				iterator.remove();;
-			}
-		}
-		
 		if (queueRecords.size() > 0)
 		{
 			// Sort the queue records so that we will process the records with the earliest 'last attempt time' first
@@ -292,6 +281,8 @@ public class BackgroundService extends IntentService
 				String task = q.getTask();
 				if (attempts > MAXIMUM_ATTEMPTS)
 				{
+					Log.d(TAG, "Deleting a QueueRecord for a task of type " + task + " because it has been attempted " + attempts + " times without success.");
+					
 					if (task.equals(TASK_SEND_MESSAGE))
 					{
 						MessageProvider msgProv = MessageProvider.get(getApplicationContext());
@@ -305,44 +296,31 @@ public class BackgroundService extends IntentService
 				
 				if (task.equals(TASK_SEND_MESSAGE))
 				{
-					// Check whether an Internet connection is available. If not, move on to the next QueueRecord
-					if (NetworkHelper.checkInternetAvailability() == true)
+					// Attempt to retrieve the Message from the database. If it has been deleted by the user
+					// then we should abort the sending process. 
+					try
 					{
-						// Attempt to retrieve the Message from the database. If it has been deleted by the user
-						// then we should abort the sending process. 
-						try
+						MessageProvider msgProv = MessageProvider.get(getApplicationContext());
+						Message messageToSend = msgProv.searchForSingleRecord(q.getObject0Id());
+						
+						// Check whether there are any existing QueueRecords which should be processed before this one
+						if (checkForEarlierSendMsgQueueRecords(q))
 						{
-							MessageProvider msgProv = MessageProvider.get(getApplicationContext());
-							Message messageToSend = msgProv.searchForSingleRecord(q.getObject0Id());
-							
-							// First we need to check whether there is already an existing QueueRecord for sending this msg 
-							// with a lower trigger time than this QueueRecord. If there is, push the trigger time of this QueueRecord
-							// further into the future. This is required because sometimes the task of a QueueRecord may not be completed
-							// for a long time, for example when there is no internet connection available. 
-							ArrayList<QueueRecord> matchingRecords = queueProv.searchQueueRecords(QueueRecordsTable.COLUMN_OBJECT_0_ID, String.valueOf(q.getObject0Id()));
-							for (QueueRecord match : matchingRecords)
-							{
-								if (match.getTask().equals(TASK_SEND_MESSAGE) || match.getTask().equals(TASK_PROCESS_OUTGOING_MESSAGE))
-								{
-									if (match.getTriggerTime() < q.getTriggerTime())
-									{
-										currentTime = System.currentTimeMillis() / 1000;
-										
-										if (match.getRecordCount() == 0)
-										{
-											q.setTriggerTime(currentTime + FIRST_ATTEMPT_TTL);
-										}
-										else
-										{
-											q.setTriggerTime(currentTime + SUBSEQUENT_ATTEMPTS_TTL);
-										}
-										queueProv.updateQueueRecord(q);
-										continue;
-									}
-								}
-							}
-							
-							// Otherwise, attempt to send the message
+							continue;
+						}
+						
+						// Ignore any QueueRecords that have a 'trigger time' in the future
+						long currentTime = System.currentTimeMillis() / 1000;
+						if (q.getTriggerTime() > currentTime)
+						{
+							Log.i(TAG, "Ignoring a QueueRecord for a " + q.getTask() + " task because its trigger time has not been reached yet.\n"
+									+ "Its trigger time will be reached in roughly " + TimeUtils.getTimeMessage(q.getTriggerTime() - currentTime));
+							continue;
+						}
+						
+						// Otherwise, if there is an internet connection available, attempt to send the message
+						if (NetworkHelper.checkInternetAvailability() == true)
+						{
 							if (q.getRecordCount() == 0)
 							{
 								taskController.sendMessage(q, messageToSend, DO_POW, FIRST_ATTEMPT_TTL, FIRST_ATTEMPT_TTL);
@@ -352,19 +330,23 @@ public class BackgroundService extends IntentService
 								// Create a new QueueRecord for re-sending this msg in the event that we do not receive an acknowledgment for it
 								// before its time to live expires. If we do receive the acknowledgment before then, this QueueRecord will be deleted
 								currentTime = System.currentTimeMillis() / 1000;
-								queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, currentTime + SUBSEQUENT_ATTEMPTS_TTL, q.getRecordCount() + 1, messageToSend, null);
+								queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, currentTime + SUBSEQUENT_ATTEMPTS_TTL, q.getRecordCount() + 1, messageToSend, null, null);
 								
 								taskController.sendMessage(q, messageToSend, DO_POW, SUBSEQUENT_ATTEMPTS_TTL, SUBSEQUENT_ATTEMPTS_TTL);
-							}							
+							}
 						}
-						catch (RuntimeException e)
+						else
 						{
-							Log.i(TAG, "While running BackgroundService.processTasks() and attempting to process a task of type\n"
-									+ TASK_SEND_MESSAGE + ", the attempt to retrieve the Message object from the database failed.\n"
-									+ "The message sending process will therefore be aborted.");
-							queueProv.deleteQueueRecord(q);
-							continue;
+							MessageStatusHandler.updateMessageStatus(messageToSend, Message.STATUS_WAITING_FOR_CONNECTION);
 						}
+					}
+					catch (RuntimeException e)
+					{
+						Log.i(TAG, "While running BackgroundService.processTasks() and attempting to process a task of type\n"
+								+ TASK_SEND_MESSAGE + ", the attempt to retrieve the Message object from the database failed.\n"
+								+ "The message sending process will therefore be aborted.");
+						queueProv.deleteQueueRecord(q);
+						continue;
 					}
 				}
 				
@@ -408,14 +390,20 @@ public class BackgroundService extends IntentService
 					if (NetworkHelper.checkInternetAvailability() == true)
 					{
 						PayloadProvider payProv = PayloadProvider.get(getApplicationContext());
-						Payload payloadToSend = payProv.searchForSingleRecord(q.getObject0Id());
+						Payload payloadToSend = payProv.searchForSingleRecord(q.getObject1Id());
 						 
 						// Now retrieve the pubkey for the address we are sending the message to
 						PubkeyProvider pubProv = PubkeyProvider.get(App.getContext());
-						Pubkey toPubkey = pubProv.searchForSingleRecord(q.getObject1Id());
+						Pubkey toPubkey = pubProv.searchForSingleRecord(q.getObject2Id());
 							 
 						// Attempt to process and send the message
 						taskController.disseminateMessage(q, payloadToSend, toPubkey, DO_POW);
+					}
+					else
+					{
+						MessageProvider messageProv = MessageProvider.get(getApplicationContext());
+						Message messageToSend = messageProv.searchForSingleRecord(q.getObject0Id());
+						MessageStatusHandler.updateMessageStatus(messageToSend, Message.STATUS_WAITING_FOR_CONNECTION);
 					}
 				}
 				
@@ -456,6 +444,50 @@ public class BackgroundService extends IntentService
 			    startService(intent);
 			}
 		}
+	}
+	
+	/**
+	 * Checks whether there is already an existing QueueRecord for sending this msg
+	 * with a lower trigger time than this QueueRecord. If there is, we will push the trigger time of this QueueRecord
+	 * further into the future. This is required because sometimes the task of a QueueRecord may not be completed
+	 * for a long time, for example when there is no internet connection available. 
+	 * 
+	 * @param q - The QueueRecord to be checked
+	 * 
+	 * @return A boolean indicating whether a QueueRecord of greater precedence was found
+	 */
+	private boolean checkForEarlierSendMsgQueueRecords(QueueRecord q)
+	{
+		// First we need to 
+		QueueRecordProvider queueProv = QueueRecordProvider.get(getApplicationContext());
+		ArrayList<QueueRecord> matchingRecords = queueProv.searchQueueRecords(QueueRecordsTable.COLUMN_OBJECT_0_ID, String.valueOf(q.getObject0Id()));
+		for (QueueRecord match : matchingRecords)
+		{
+			if (match.getTask().equals(TASK_SEND_MESSAGE) || match.getTask().equals(TASK_PROCESS_OUTGOING_MESSAGE) || match.getTask().equals(TASK_DISSEMINATE_MESSAGE))
+			{
+				if (match.getTriggerTime() < q.getTriggerTime())
+				{
+					long currentTime = System.currentTimeMillis() / 1000;
+					
+					if (match.getRecordCount() == 0)
+					{
+						q.setTriggerTime(currentTime + FIRST_ATTEMPT_TTL);
+					}
+					else
+					{
+						q.setTriggerTime(currentTime + SUBSEQUENT_ATTEMPTS_TTL);
+					}
+					
+					long timeTillTriggerTime =  q.getTriggerTime() - currentTime;
+					Log.i(TAG, "Updating the trigger time of a QueueRecord for a " + q.getTask() + " task because there is another QueueRecord for sending the same "
+							+ "message which has an earlier trigger time. The updated trigger time of this QueueRecord is " + TimeUtils.getTimeMessage(timeTillTriggerTime) + " from now.");;
+					
+					queueProv.updateQueueRecord(q);
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 	
 	/**
@@ -559,7 +591,8 @@ public class BackgroundService extends IntentService
 			else
 			{
 				long timeTillNextDatabaseClean = TIME_BETWEEN_DATABASE_CLEANING - timeSinceLastDataClean;
-				Log.i(TAG, "The database cleaning service was last run " + timeSinceLastDataClean + " seconds ago. It will be run again in " + timeTillNextDatabaseClean + " seconds.");
+				Log.i(TAG, "The database cleaning service was last run " + TimeUtils.getTimeMessage(timeSinceLastDataClean) + " ago\n" + 
+						   "The database cleaning service will be run again in " + TimeUtils.getTimeMessage(timeTillNextDatabaseClean));
 				return false;
 			}
 		}

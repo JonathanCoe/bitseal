@@ -22,6 +22,7 @@ import org.bitseal.database.PayloadProvider;
 import org.bitseal.database.PubkeyProvider;
 import org.bitseal.database.PubkeysTable;
 import org.bitseal.pow.POWProcessor;
+import org.bitseal.services.MessageStatusHandler;
 import org.bitseal.util.ArrayCopier;
 import org.bitseal.util.ByteFormatter;
 import org.bitseal.util.ByteUtils;
@@ -29,7 +30,6 @@ import org.bitseal.util.TimeUtils;
 import org.bitseal.util.VarintEncoder;
 import org.spongycastle.jce.interfaces.ECPublicKey;
 
-import android.content.Intent;
 import android.util.Log;
 
 /**
@@ -49,9 +49,6 @@ public class OutgoingMessageProcessor
 	
 	/** The current version number for msg objects that we generate */
 	private static final int OBJECT_VERSION_MSG = 1;
-	
-	/** Used when broadcasting Intents to the UI so that it can refresh the data it is displaying */
-	public static final String UI_NOTIFICATION = "uiNotification";
 	
 	/**
 	 * Takes a Message object and does all the work necessary to 
@@ -255,7 +252,7 @@ public class OutgoingMessageProcessor
 		// Construct the payload to be encrypted
 		byte[] msgDataForEncryption = constructMsgPayloadForEncryption(unencMsg);
 		
-		updateMessageStatus(message, Message.STATUS_ENCRYPTING_MESSAGE);
+		MessageStatusHandler.updateMessageStatus(message, Message.STATUS_ENCRYPTING_MESSAGE);
 		
 		// Encrypt the payload
 		CryptProcessor cryptProc = new CryptProcessor();
@@ -272,7 +269,7 @@ public class OutgoingMessageProcessor
 		
 		if (doPOW == true)
 		{
-			updateMessageStatus(message, Message.STATUS_DOING_POW);
+			MessageStatusHandler.updateMessageStatus(message, Message.STATUS_DOING_POW);
 			
 			// Do proof of work for the Msg object
 			Log.i(TAG, "About to do POW calculations for a msg that we are sending");
@@ -286,23 +283,6 @@ public class OutgoingMessageProcessor
 		}
 		
 		return msg;
-	}
-	
-	/**
-	 * Updates the status of a Message object in the database and prompts the
-	 * UI to refresh itself so that the new status will be displayed
-	 * 
-	 * @param message - The Message object to update the status of
-	 * @param status - The status String to use
-	 */
-	private void updateMessageStatus(Message message, String status)
-	{
-		// Update the status of the Message and then prompt the UI to update the list of sent messages it is displaying
-		message.setStatus(status);
-		MessageProvider msgProv = MessageProvider.get(App.getContext());
-		msgProv.updateMessage(message);	
-		Intent intent = new Intent(UI_NOTIFICATION);
-		App.getContext().sendBroadcast(intent);
 	}
 	
 	/**
@@ -454,7 +434,7 @@ public class OutgoingMessageProcessor
 		byte[] payload = new byte[0];
 		if (doPOW == true)
 		{
-			updateMessageStatus(message, Message.STATUS_DOING_ACK_POW);
+			MessageStatusHandler.updateMessageStatus(message, Message.STATUS_DOING_ACK_POW);
 			
 			// Do proof of work for the acknowledgement payload
 			Log.i(TAG, "About to do POW calculations for the acknowledgment payload of a msg that we are sending");

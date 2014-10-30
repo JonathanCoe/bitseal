@@ -17,7 +17,6 @@ import android.util.Log;
  * 
  * @author Jonathan Coe
  */
-
 public class QueueRecordProvider
 {
     private static final String TAG = "QUEUE_RECORD_PROVIDER"; 
@@ -71,6 +70,8 @@ public class QueueRecordProvider
     	values.put(QueueRecordsTable.COLUMN_OBJECT_0_TYPE, q.getObject0Type());
     	values.put(QueueRecordsTable.COLUMN_OBJECT_1_ID, q.getObject1Id());
     	values.put(QueueRecordsTable.COLUMN_OBJECT_1_TYPE, q.getObject1Type());
+    	values.put(QueueRecordsTable.COLUMN_OBJECT_2_ID, q.getObject2Id());
+    	values.put(QueueRecordsTable.COLUMN_OBJECT_2_TYPE, q.getObject2Type());
 			
 		Uri insertionUri = mContentResolver.insert(DatabaseContentProvider.CONTENT_URI_QUEUE_RECORDS, values);	
     	Log.i(TAG, "QueueRecord with task " + q.getTask() + " and number of attempts " + q.getAttempts() + " saved to database");
@@ -120,7 +121,9 @@ public class QueueRecordProvider
 				QueueRecordsTable.COLUMN_OBJECT_0_ID,
 				QueueRecordsTable.COLUMN_OBJECT_0_TYPE, 
 				QueueRecordsTable.COLUMN_OBJECT_1_ID,
-				QueueRecordsTable.COLUMN_OBJECT_1_TYPE};
+				QueueRecordsTable.COLUMN_OBJECT_1_TYPE,
+				QueueRecordsTable.COLUMN_OBJECT_2_ID,
+				QueueRecordsTable.COLUMN_OBJECT_2_TYPE};
 		
 		// Query the database via the ContentProvider
 		Cursor cursor = mContentResolver.query(
@@ -144,6 +147,8 @@ public class QueueRecordProvider
     	        String object0Type = cursor.getString(7);
     	        long object1Id = cursor.getLong(8);
     	        String object1Type = cursor.getString(9);
+    	        long object2Id = cursor.getLong(10);
+    	        String object2Type = cursor.getString(11);
     	      
     	        QueueRecord q = new QueueRecord();
     	        q.setId(id);
@@ -156,6 +161,8 @@ public class QueueRecordProvider
     	        q.setObject0Type(object0Type);
     	        q.setObject1Id(object1Id);
     	        q.setObject1Type(object1Type);
+    	        q.setObject2Id(object2Id);
+    	        q.setObject2Type(object2Type);
     	      
     	        matchingRecords.add(q);
     	    } 
@@ -218,7 +225,9 @@ public class QueueRecordProvider
 				QueueRecordsTable.COLUMN_OBJECT_0_ID,
 				QueueRecordsTable.COLUMN_OBJECT_0_TYPE, 
 				QueueRecordsTable.COLUMN_OBJECT_1_ID,
-				QueueRecordsTable.COLUMN_OBJECT_1_TYPE};
+				QueueRecordsTable.COLUMN_OBJECT_1_TYPE,
+				QueueRecordsTable.COLUMN_OBJECT_2_ID,
+				QueueRecordsTable.COLUMN_OBJECT_2_TYPE};
 		
 		// Query the database via the ContentProvider
 		Cursor cursor = mContentResolver.query(
@@ -242,6 +251,8 @@ public class QueueRecordProvider
     	        String object0Type = cursor.getString(7);
     	        long object1Id = cursor.getLong(8);
     	        String object1Type = cursor.getString(9);
+    	        long object2Id = cursor.getLong(10);
+    	        String object2Type = cursor.getString(11);
     	      
     	        QueueRecord q = new QueueRecord();
     	        q.setId(id);
@@ -254,6 +265,8 @@ public class QueueRecordProvider
     	        q.setObject0Type(object0Type);
     	        q.setObject1Id(object1Id);
     	        q.setObject1Type(object1Type);
+    	        q.setObject2Id(object2Id);
+    	        q.setObject2Type(object2Type);
     	      
     	        queueRecords.add(q);
     	    } 
@@ -283,6 +296,8 @@ public class QueueRecordProvider
     	values.put(QueueRecordsTable.COLUMN_OBJECT_0_TYPE, q.getObject0Type());
     	values.put(QueueRecordsTable.COLUMN_OBJECT_1_ID, q.getObject1Id());
     	values.put(QueueRecordsTable.COLUMN_OBJECT_1_TYPE, q.getObject1Type());
+    	values.put(QueueRecordsTable.COLUMN_OBJECT_2_ID, q.getObject2Id());
+    	values.put(QueueRecordsTable.COLUMN_OBJECT_2_TYPE, q.getObject2Type());
 		
 		long id = q.getId();
 		String task = q.getTask();
@@ -333,5 +348,3 @@ public class QueueRecordProvider
     	Log.i(TAG, "All QueueRecords deleted deleted from the database. Total number deleted: " + recordsDeleted);
     }
 }
-
-

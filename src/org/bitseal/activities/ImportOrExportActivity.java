@@ -25,13 +25,12 @@ import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
 /**
- * The Activity class for the app's Import or Export screen. 
+ * The Activity class for the app's 'Import or Export' screen. 
  * 
  * @author Jonathan Coe
  */
-
 public class ImportOrExportActivity extends Activity
-{	 
+{
     private Button mImportAddressButton;
     private Button mExportAddressButton;
     

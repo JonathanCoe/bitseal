@@ -36,10 +36,12 @@ public class QueueRecordProcessor
 	 * to, if any
 	 * @param object1 - The second Object which this QueueRecord should have a reference
 	 * to, if any
+	 * @param object2 - The third Object which this QueueRecord should have a reference
+	 * to, if any
 	 * 
 	 * @return A QueueRecord object for the given task and data
 	 */
-	public QueueRecord createAndSaveQueueRecord(String task, long triggerTime, int recordCount, Object object0, Object object1)
+	public QueueRecord createAndSaveQueueRecord(String task, long triggerTime, int recordCount, Object object0, Object object1, Object object2)
 	{
 		QueueRecord q = new QueueRecord();
 		q.setTask(task);
@@ -73,14 +75,19 @@ public class QueueRecordProcessor
 		else if (task == TASK_DISSEMINATE_MESSAGE)
 		{
 			// Set object 0 ID and Type
-			Payload payloadToSend = (Payload) object0;
-			q.setObject0Id(payloadToSend.getId());
-			q.setObject0Type(QueueRecord.QUEUE_RECORD_OBJECT_TYPE_PAYLOAD);
+			Message sentMessage = (Message) object0;
+			q.setObject0Id(sentMessage.getId());
+			q.setObject0Type(QueueRecord.QUEUE_RECORD_OBJECT_TYPE_MESSAGE);
 			
 			// Set object 1 ID and Type
-			Pubkey toPubkey = (Pubkey) object1;
-			q.setObject1Id(toPubkey.getId());
-			q.setObject1Type(QueueRecord.QUEUE_RECORD_OBJECT_TYPE_PUBKEY);
+			Payload payloadToSend = (Payload) object1;
+			q.setObject1Id(payloadToSend.getId());
+			q.setObject1Type(QueueRecord.QUEUE_RECORD_OBJECT_TYPE_PAYLOAD);
+			
+			// Set object 2 ID and Type
+			Pubkey toPubkey = (Pubkey) object2;
+			q.setObject2Id(toPubkey.getId());
+			q.setObject2Type(QueueRecord.QUEUE_RECORD_OBJECT_TYPE_PUBKEY);
 		}
 				
 		else if (task == TASK_CREATE_IDENTITY)

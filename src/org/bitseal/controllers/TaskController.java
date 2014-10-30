@@ -16,6 +16,7 @@ import org.bitseal.database.MessagesTable;
 import org.bitseal.database.PayloadProvider;
 import org.bitseal.network.NetworkHelper;
 import org.bitseal.services.BackgroundService;
+import org.bitseal.services.MessageStatusHandler;
 
 import android.content.Intent;
 import android.util.Log;
@@ -87,7 +88,7 @@ public class TaskController
 		// If we successfully generated the identity data, delete the QueueRecord for that task and
 		// create a new QueueRecord to disseminate the pubkey of that identity
 		queueProc.deleteQueueRecord(queueRecord0);
-		QueueRecord queueRecord1 = queueProc.createAndSaveQueueRecord(BackgroundService.TASK_DISSEMINATE_PUBKEY, 0, 0, pubkeyPayload, null);
+		QueueRecord queueRecord1 = queueProc.createAndSaveQueueRecord(BackgroundService.TASK_DISSEMINATE_PUBKEY, 0, 0, pubkeyPayload, null, null);
 		
 		// First check whether an Internet connection is available. If not, the QueueRecord for the
 		// 'disseminate pubkey' task will be saved (as above) and processed later
@@ -236,7 +237,7 @@ public class TaskController
 		// If we successfully retrieved the pubkey, delete the 'retrieve pubkey' QueueRecord and create a new one for the 
 		// next stage of this task
 		queueProc.deleteQueueRecord(queueRecord0);
-		QueueRecord queueRecord1 = queueProc.createAndSaveQueueRecord(BackgroundService.TASK_PROCESS_OUTGOING_MESSAGE, 0, queueRecord0.getRecordCount(), messageToSend, toPubkey);
+		QueueRecord queueRecord1 = queueProc.createAndSaveQueueRecord(BackgroundService.TASK_PROCESS_OUTGOING_MESSAGE, 0, queueRecord0.getRecordCount(), messageToSend, toPubkey, null);
 		
 		return processOutgoingMessage(queueRecord1, messageToSend, toPubkey, doPOW, msgTimeToLive);
 	}
@@ -285,7 +286,7 @@ public class TaskController
 		// If we successfully created the message payload, delete the 'process outgoing message' QueueRecord and create a new one for the 
 		// next stage of this task
 		queueProc.deleteQueueRecord(queueRecord0);
-		QueueRecord queueRecord1 = queueProc.createAndSaveQueueRecord(BackgroundService.TASK_DISSEMINATE_MESSAGE, 0, 0, msgPayload, toPubkey);
+		QueueRecord queueRecord1 = queueProc.createAndSaveQueueRecord(BackgroundService.TASK_DISSEMINATE_MESSAGE, 0, 0, messageToSend, msgPayload, toPubkey);
 		
 		// Update the "status" and "correspondingPayloadId" fields of the Message and 
 		// then prompt the UI to update the list of sent messages it is displaying
@@ -296,13 +297,14 @@ public class TaskController
 		App.getContext().sendBroadcast(intent);
 		
 		// First check whether an Internet connection is available. If not, the QueueRecord for the
-		// 'disseminate message' task will be saved (as above) and processed later
+		// 'disseminate message' task will be processed later
 		if (NetworkHelper.checkInternetAvailability() == true)
 		{
 			return disseminateMessage(queueRecord1, msgPayload, toPubkey, doPOW);
 		}
 		else
 		{
+			MessageStatusHandler.updateMessageStatus(messageToSend, Message.STATUS_WAITING_FOR_CONNECTION);
 			return false;
 		}
 	}
@@ -481,7 +483,7 @@ public class TaskController
 		}
 		else
 		{
-			Log.d(TAG, "None of our pubkeys are due to be re-disseminated");
+			Log.i(TAG, "None of our pubkeys are due to be re-disseminated");
 		}
 	}
 	
@@ -504,7 +506,7 @@ public class TaskController
 				
 				// Create a new QueueRecord to re-disseminate the pubkey
 				QueueRecordProcessor queueProc = new QueueRecordProcessor();
-				QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(BackgroundService.TASK_DISSEMINATE_PUBKEY, 0, 0, updatedPayload, null);
+				QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(BackgroundService.TASK_DISSEMINATE_PUBKEY, 0, 0, updatedPayload, null, null);
 				
 				// First check whether an Internet connection is available. If not, the QueueRecord for the
 				// 'disseminate pubkey' task will be saved (as above) and processed later

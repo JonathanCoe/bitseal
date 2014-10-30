@@ -8,7 +8,7 @@ import android.util.Log;
 public class DatabaseHelper extends SQLiteOpenHelper
 {
 	private static final String DATABASE_NAME = "bitseal_database.db";
-	private static final int DATABASE_VERSION = 5;
+	private static final int DATABASE_VERSION = 6;
 	
 	private static final String TAG = "DATABASE_HELPER";
 	
@@ -81,6 +81,19 @@ public class DatabaseHelper extends SQLiteOpenHelper
 			database.execSQL("DROP TABLE IF EXISTS " + PubkeysTable.TABLE_PUBKEYS);
 			Log.w(TAG, "Re-creating Pubkeys table");
 			PubkeysTable.onCreate(database);
+		}
+		
+		if (newVersion == 6)
+		{
+			// Add 'Object2ID' column to QueueRecords table
+			Log.w(TAG, "Adding 'Object2ID' column to QueueRecords table");
+			database.execSQL("ALTER TABLE " + QueueRecordsTable.TABLE_QUEUE_RECORDS + " ADD COLUMN "
+					+ QueueRecordsTable.COLUMN_OBJECT_2_ID + " integer INT AFTER " + QueueRecordsTable.COLUMN_OBJECT_1_TYPE);
+			
+			// Add 'Object2Type' column to QueueRecords table
+			Log.w(TAG, "Adding 'Object2Type' column to QueueRecords table");
+			database.execSQL("ALTER TABLE " + QueueRecordsTable.TABLE_QUEUE_RECORDS + " ADD COLUMN "
+					+ QueueRecordsTable.COLUMN_OBJECT_2_TYPE + " integer INT AFTER " + QueueRecordsTable.COLUMN_OBJECT_2_ID);
 		}
 	}
 }
