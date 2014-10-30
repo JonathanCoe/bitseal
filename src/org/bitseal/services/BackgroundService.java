@@ -19,6 +19,7 @@ import org.bitseal.database.PubkeyProvider;
 import org.bitseal.database.QueueRecordProvider;
 import org.bitseal.database.QueueRecordsTable;
 import org.bitseal.network.NetworkHelper;
+import org.bitseal.util.TimeUtils;
 
 import android.app.AlarmManager;
 import android.app.IntentService;
@@ -269,7 +270,7 @@ public class BackgroundService extends IntentService
 			if (q.getTriggerTime() > currentTime)
 			{
 				Log.i(TAG, "Ignoring a QueueRecord for a " + q.getTask() + " task because its trigger time has not been reached yet.\n"
-						+ "Its trigger time will be reached in roughly " + (q.getTriggerTime() - currentTime) + " seconds");
+						+ "Its trigger time will be reached in roughly " + TimeUtils.getTimeMessage((q.getTriggerTime() - currentTime)));
 				iterator.remove();;
 			}
 		}

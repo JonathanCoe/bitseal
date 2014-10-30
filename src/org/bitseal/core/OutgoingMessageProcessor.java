@@ -173,11 +173,11 @@ public class OutgoingMessageProcessor
 		byte[] ackData = new byte[32];
 		new SecureRandom().nextBytes(ackData);
 		
-		// Generate the full ack msg that will be included in this unencrypted msg.
-		// NOTE: Calling the generateFullAckMsg() method results in Proof of Work calculations being done for the
-		//       acknowledgement msg. This can take a long time and lots of CPU power!
-		byte[] fullAckMsg = generateFullAckMessage(message, ackData, fromPubkey.getStreamNumber(), doPOW, timeToLive);
-		Log.d(TAG, "Full ack msg: " + ByteFormatter.byteArrayToHexString(fullAckMsg));
+		// Generate the full ack Message that will be included in this unencrypted msg.
+		// NOTE: Calling generateFullAckMessage() results in Proof of Work calculations being done for the
+		//       acknowledgement Message. This can take a long time and lots of CPU power!
+		byte[] fullAckMessage = generateFullAckMessage(message, ackData, fromPubkey.getStreamNumber(), doPOW, timeToLive);
+		Log.d(TAG, "Full ack Message: " + ByteFormatter.byteArrayToHexString(fullAckMessage));
 			
 		// Create the single "message" text String which contains both the subject and the body of the message
 		// See https://bitmessage.org/wiki/Protocol_specification#Message_Encodings
@@ -202,8 +202,8 @@ public class OutgoingMessageProcessor
 		unencMsg.setEncoding(MESSAGE_ENCODING_TYPE);
 		unencMsg.setMessageLength(messsageText.getBytes().length); // We have to use the byte length rather than the string length - some characters take more bytes than others
 		unencMsg.setMessage(messsageText.getBytes()); // PyBitmessage also uses UTF-8 as its character set, so this ought to be adequate
-		unencMsg.setAckLength(fullAckMsg.length);
-		unencMsg.setAckMsg(fullAckMsg);
+		unencMsg.setAckLength(fullAckMessage.length);
+		unencMsg.setAckMsg(fullAckMessage);
 		
 		// Save the acknowledgment data to the database so that when we receive the acknowledgment for this message we will recognise it
 		Payload ackPayload = new Payload();
