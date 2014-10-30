@@ -174,7 +174,8 @@ public class BackgroundService extends IntentService
 				
 				// Also create a new QueueRecord for re-sending this msg in the event that we do not receive an acknowledgment for it
 				// before its time to live expires. If we do receive the acknowledgment before then, this QueueRecord will be deleted
-				queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, (System.currentTimeMillis() / 1000) + FIRST_ATTEMPT_TTL, 1, messageToSend, null);
+				long currentTime = System.currentTimeMillis() / 1000;
+				queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, currentTime + FIRST_ATTEMPT_TTL, 1, messageToSend, null);
 				
 				// First check whether an Internet connection is available. If not, the QueueRecord which records the 
 				// need to send the message will be stored (as above) and processed later
@@ -315,7 +316,8 @@ public class BackgroundService extends IntentService
 							
 							// First we need to check whether there is already an existing QueueRecord for sending this msg 
 							// with a lower trigger time than this QueueRecord. If there is, push the trigger time of this QueueRecord
-							// further into the future
+							// further into the future. This is required because sometimes the task of a QueueRecord may not be completed
+							// for a long time, for example when there is no internet connection available. 
 							ArrayList<QueueRecord> matchingRecords = queueProv.searchQueueRecords(QueueRecordsTable.COLUMN_OBJECT_0_ID, String.valueOf(q.getObject0Id()));
 							for (QueueRecord match : matchingRecords)
 							{
@@ -323,13 +325,15 @@ public class BackgroundService extends IntentService
 								{
 									if (match.getTriggerTime() < q.getTriggerTime())
 									{
+										currentTime = System.currentTimeMillis() / 1000;
+										
 										if (match.getRecordCount() == 0)
 										{
-											q.setTriggerTime(q.getTriggerTime() + FIRST_ATTEMPT_TTL);
+											q.setTriggerTime(currentTime + FIRST_ATTEMPT_TTL);
 										}
 										else
 										{
-											q.setTriggerTime(q.getTriggerTime() + SUBSEQUENT_ATTEMPTS_TTL);
+											q.setTriggerTime(currentTime + SUBSEQUENT_ATTEMPTS_TTL);
 										}
 										queueProv.updateQueueRecord(q);
 										continue;
@@ -337,7 +341,7 @@ public class BackgroundService extends IntentService
 								}
 							}
 							
-							// Otherwise, attempt to complete the send message task
+							// Otherwise, attempt to send the message
 							if (q.getRecordCount() == 0)
 							{
 								taskController.sendMessage(q, messageToSend, DO_POW, FIRST_ATTEMPT_TTL, FIRST_ATTEMPT_TTL);
@@ -346,7 +350,8 @@ public class BackgroundService extends IntentService
 							{
 								// Create a new QueueRecord for re-sending this msg in the event that we do not receive an acknowledgment for it
 								// before its time to live expires. If we do receive the acknowledgment before then, this QueueRecord will be deleted
-								queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, (System.currentTimeMillis() / 1000) + SUBSEQUENT_ATTEMPTS_TTL, q.getRecordCount() + 1, messageToSend, null);
+								currentTime = System.currentTimeMillis() / 1000;
+								queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, currentTime + SUBSEQUENT_ATTEMPTS_TTL, q.getRecordCount() + 1, messageToSend, null);
 								
 								taskController.sendMessage(q, messageToSend, DO_POW, SUBSEQUENT_ATTEMPTS_TTL, SUBSEQUENT_ATTEMPTS_TTL);
 							}							
