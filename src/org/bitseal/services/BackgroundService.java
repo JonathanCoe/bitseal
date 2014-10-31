@@ -58,7 +58,7 @@ public class BackgroundService extends IntentService
 	 * msg and the recipient is online and therefore able to receive and acknowledge
 	 * it immediately. 
 	 */
-	public static final long FIRST_ATTEMPT_TTL = 480; // Currently set to 8 minutes TODO: Change back to 1 hour!!!
+	public static final long FIRST_ATTEMPT_TTL = 3600; // Currently set to 1 hour
 	
 	/**
 	 * The 'time to live' value (in seconds) that we use in all attempts after the
@@ -454,12 +454,40 @@ public class BackgroundService extends IntentService
 				
 				else if (task.equals(TASK_DISSEMINATE_PUBKEY))
 				{
-					// First check whether an Internet connection is available. If not, move on to the next QueueRecord
+					// Check whether the pubkey payload has expired or is close to expiration.
+					PayloadProvider payProv = PayloadProvider.get(getApplicationContext());
+					Payload pubkeyPayload = payProv.searchForSingleRecord(q.getObject0Id());
+					Object pubkeyObject = new ObjectProcessor().parseObject(pubkeyPayload.getPayload());
+					long currentTime = System.currentTimeMillis() / 1000;
+					long objectDiscardTime = currentTime + MINIMUM_TIME_TO_LIVE;
+					if (pubkeyObject.getExpirationTime() < objectDiscardTime)
+					{
+						Log.d(TAG, "Found a QueueRecord for a 'disseminate pubkey' task with a pubkey payload which is due to expire soon.\n"
+								+ "We will now delete this QueueRecord and pubkey and create a new 'create identity' QueueRecord.");
+						
+						// Delete the pubkey Payload from the database
+						payProv.deletePayload(pubkeyPayload);
+						
+						// Delete this QueueRecord from the database
+						queueProv.deleteQueueRecord(q);
+						
+						// Retrieve the original address for which we are trying to create and disseminate a pubkey
+						AddressProvider addProv = AddressProvider.get(getApplicationContext());
+						Address address = addProv.searchForSingleRecord(pubkeyPayload.getRelatedAddressId());
+						
+						// Create a new QueueRecord for the 'create identity' task. This will give us a new
+						// pubkey with an updated expiration time and proof of work
+						queueProc.createAndSaveQueueRecord(TASK_CREATE_IDENTITY, 0, q.getRecordCount(), address, null, null);
+						
+						// Move on to the next QueueRecord
+						continue;
+					}
+					
+					// Check whether an Internet connection is available. If not, move on to the next QueueRecord
 					if (NetworkHelper.checkInternetAvailability() == true)
 					{
-						PayloadProvider payProv = PayloadProvider.get(getApplicationContext());
-						Payload payloadToSend = payProv.searchForSingleRecord(q.getObject0Id());
-						taskController.disseminatePubkey(q, payloadToSend, DO_POW);
+						// Attempt to disseminate the pubkey payload
+						taskController.disseminatePubkey(q, pubkeyPayload, DO_POW);
 					}
 				}
 				
