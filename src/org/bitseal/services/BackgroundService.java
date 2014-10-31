@@ -5,9 +5,11 @@ import java.util.Collections;
 
 import org.bitseal.controllers.TaskController;
 import org.bitseal.core.App;
+import org.bitseal.core.ObjectProcessor;
 import org.bitseal.core.QueueRecordProcessor;
 import org.bitseal.data.Address;
 import org.bitseal.data.Message;
+import org.bitseal.data.Object;
 import org.bitseal.data.Payload;
 import org.bitseal.data.Pubkey;
 import org.bitseal.data.QueueRecord;
@@ -56,7 +58,7 @@ public class BackgroundService extends IntentService
 	 * msg and the recipient is online and therefore able to receive and acknowledge
 	 * it immediately. 
 	 */
-	public static final long FIRST_ATTEMPT_TTL = 3600; // Currently set to 1 hour
+	public static final long FIRST_ATTEMPT_TTL = 480; // Currently set to 8 minutes TODO: Change back to 1 hour!!!
 	
 	/**
 	 * The 'time to live' value (in seconds) that we use in all attempts after the
@@ -70,6 +72,14 @@ public class BackgroundService extends IntentService
 	 */
 	public static final long SUBSEQUENT_ATTEMPTS_TTL = 86400; // Currently set to 1 day
 		
+	/**
+	 * The minimum amount of time (in seconds) which a Bitmessage Object we are going to send out
+	 * must have until its expiration time. If there is less than this much time between now and
+	 * the Object's expiration time, we will discard it and create a new Object with an updated
+	 * time to live and new proof of work. 
+	 */
+	public static final long MINIMUM_TIME_TO_LIVE = 120; // Currently set to 2 minutes
+	
 	/**
 	 * This 'maximum attempts' constant determines the number of times
 	 * that a task will be attempted before it is abandoned and deleted
@@ -235,7 +245,7 @@ public class BackgroundService extends IntentService
 	    // Get the current time and add the number of seconds specified by BACKGROUND_SERVICE_START_INTERVAL_SECONDS to it
 	    Calendar cal = Calendar.getInstance();
     	cal.add(Calendar.SECOND, BACKGROUND_SERVICE_NORMAL_START_INTERVAL);
-    	Log.i(TAG, "The BackgroundService will be restarted in " + BACKGROUND_SERVICE_NORMAL_START_INTERVAL + " seconds");
+    	Log.i(TAG, "The BackgroundService will be restarted in " + TimeUtils.getTimeMessage(BACKGROUND_SERVICE_NORMAL_START_INTERVAL));
 	    
 	    // Register the pending intent with AlarmManager
 	    AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
@@ -386,18 +396,48 @@ public class BackgroundService extends IntentService
 				
 				else if (task.equals(TASK_DISSEMINATE_MESSAGE))
 				{
-					// First check whether an Internet connection is available. If not, move on to the next QueueRecord
+					// Check whether the msg payload has expired or is close to expiration.
+					PayloadProvider payProv = PayloadProvider.get(getApplicationContext());
+					Payload msgPayload = payProv.searchForSingleRecord(q.getObject1Id());
+					Object msgObject = new ObjectProcessor().parseObject(msgPayload.getPayload());
+					long currentTime = System.currentTimeMillis() / 1000;
+					long objectDiscardTime = currentTime + MINIMUM_TIME_TO_LIVE;
+					if (msgObject.getExpirationTime() < objectDiscardTime)
+					{
+						Log.d(TAG, "Found a QueueRecord for a 'disseminate message' task with a msg payload which is due to expire soon.\n"
+								+ "We will now delete this QueueRecord and msg and create a new 'process outgoing message' QueueRecord.");
+						
+						// Delete the msg Payload from the database
+						payProv.deletePayload(msgPayload);
+						
+						// Delete this QueueRecord from the database
+						queueProv.deleteQueueRecord(q);
+						
+						// Retrieve the original Message that we are sending
+						MessageProvider msgProv = MessageProvider.get(getApplicationContext());
+						Message messageToSend = msgProv.searchForSingleRecord(q.getObject0Id());
+						
+						// Retrieve the pubkey for the address we are sending the message to
+						PubkeyProvider pubProv = PubkeyProvider.get(App.getContext());
+						Pubkey toPubkey = pubProv.searchForSingleRecord(q.getObject2Id());
+						
+						// Create a new QueueRecord for the 'process outgoing message' task. This will give us a new
+						// msg with an updated expiration time and proof of work
+						queueProc.createAndSaveQueueRecord(BackgroundService.TASK_PROCESS_OUTGOING_MESSAGE, 0, q.getRecordCount(), messageToSend, toPubkey, null);
+						
+						// Move on to the next QueueRecord
+						continue;
+					}
+					
+					// Check whether an Internet connection is available. If not, move on to the next QueueRecord
 					if (NetworkHelper.checkInternetAvailability() == true)
 					{
-						PayloadProvider payProv = PayloadProvider.get(getApplicationContext());
-						Payload payloadToSend = payProv.searchForSingleRecord(q.getObject1Id());
-						 
-						// Now retrieve the pubkey for the address we are sending the message to
+						// Retrieve the pubkey for the address we are sending the message to
 						PubkeyProvider pubProv = PubkeyProvider.get(App.getContext());
 						Pubkey toPubkey = pubProv.searchForSingleRecord(q.getObject2Id());
 							 
-						// Attempt to process and send the message
-						taskController.disseminateMessage(q, payloadToSend, toPubkey, DO_POW);
+						// Attempt to send the msg
+						taskController.disseminateMessage(q, msgPayload, toPubkey, DO_POW);
 					}
 					else
 					{
@@ -448,9 +488,10 @@ public class BackgroundService extends IntentService
 	
 	/**
 	 * Checks whether there is already an existing QueueRecord for sending this msg
-	 * with a lower trigger time than this QueueRecord. If there is, we will push the trigger time of this QueueRecord
-	 * further into the future. This is required because sometimes the task of a QueueRecord may not be completed
-	 * for a long time, for example when there is no internet connection available. 
+	 * with a lower trigger time than this QueueRecord. If there is, we will push the
+	 * trigger time of this QueueRecord further into the future. This is required because
+	 * sometimes the task of a QueueRecord may not be completed for a long time, for
+	 * example when there is no internet connection available. 
 	 * 
 	 * @param q - The QueueRecord to be checked
 	 * 
