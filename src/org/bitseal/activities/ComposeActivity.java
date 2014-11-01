@@ -49,7 +49,6 @@ import com.google.zxing.integration.android.IntentResult;
  * 
  * @author Jonathan Coe
  */
-
 public class ComposeActivity extends Activity
 {	
 	public static final String EXTRA_TO_ADDRESS = "composeActivity.TO_ADDRESS";

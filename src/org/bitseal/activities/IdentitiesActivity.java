@@ -48,7 +48,6 @@ import com.google.zxing.integration.android.IntentIntegrator;
  * 
  * @author Jonathan Coe
  */
-
 public class IdentitiesActivity extends ListActivity 
 {
 	private ArrayList<Address> mAddresses;

@@ -27,7 +27,6 @@ import android.widget.Toast;
  * 
  * @author Jonathan Coe
  */
-
 public class SettingsActivity extends Activity
 {	   
     private Button mServerSettingsButton;

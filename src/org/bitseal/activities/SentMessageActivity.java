@@ -39,7 +39,6 @@ import android.widget.Toast;
  * 
  * @author Jonathan Coe
  */
-
 public class SentMessageActivity extends Activity 
 {	
 	public static final String EXTRA_MESSAGE_ID = "BITSEAL_MESSAGE_ID";

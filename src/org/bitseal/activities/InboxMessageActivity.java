@@ -277,7 +277,7 @@ public class InboxMessageActivity extends Activity
 			mFromAddressTextView.setText(fromAddressString);
 		}
 		
-		// Set the colors inherited from the inbox list view
+		// Set the colours inherited from the inbox list view
 		int color = Color.argb(0, mColourR, mColourG, mColourB);
 		mToAddressTextView.setBackgroundColor(color);
 		mFromAddressTextView.setBackgroundColor(color);

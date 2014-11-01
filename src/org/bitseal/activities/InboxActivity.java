@@ -46,7 +46,6 @@ import android.widget.TextView;
  * 
  * @author Jonathan Coe
  */
-
 public class InboxActivity extends ListActivity
 {
     private ArrayList<Message> mMessages;

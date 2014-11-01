@@ -42,7 +42,6 @@ import android.widget.TextView;
  * 
  * @author Jonathan Coe
  */
-
 public class SentActivity extends ListActivity
 {
 	private ArrayList<Message> mMessages;

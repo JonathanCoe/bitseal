@@ -36,7 +36,6 @@ import android.widget.Toast;
  * 
  * @author Jonathan Coe
  */
-
 public class ServersActivity extends ListActivity
 {	
 	private ArrayList<ServerRecord> mServerRecords;
@@ -569,7 +568,7 @@ public class ServersActivity extends ListActivity
             // If we weren't given a view, inflate one
             if (null == convertView) 
             {
-            	convertView = getLayoutInflater().inflate(R.layout.list_item_servers, null);
+            	convertView = getLayoutInflater().inflate(R.layout.list_item_servers, parent, false);
             }
 
             // Configure the view for this Server Record

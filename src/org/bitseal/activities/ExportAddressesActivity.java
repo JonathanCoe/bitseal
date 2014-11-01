@@ -39,7 +39,6 @@ import com.google.zxing.integration.android.IntentIntegrator;
  * 
  * @author Jonathan Coe
  */
-
 public class ExportAddressesActivity extends ListActivity 
 {
 	private ArrayList<Address> mAddresses;
