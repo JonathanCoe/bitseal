@@ -191,7 +191,7 @@ public class TaskController
 				if ((getpubkeyPayload.getTime() + getpubkeyTimeToLive) > (System.currentTimeMillis() / 1000))
 				{
 					// Attempt to retrieve the pubkey using the existing getpubkey object
-					retrievalResult = controller.retrieveToPubkey(toAddress, getpubkeyPayload, getpubkeyTimeToLive);
+					retrievalResult = controller.retrievePubkey(toAddress, getpubkeyPayload, getpubkeyTimeToLive);
 				}
 				else
 				{
@@ -199,13 +199,13 @@ public class TaskController
 					payProv.deletePayload(getpubkeyPayload);
 					
 					// Attempt to retrieve the pubkey by creating and disseminating a new getpubkey object
-					retrievalResult = controller.retrieveToPubkey(toAddress, null, getpubkeyTimeToLive);
+					retrievalResult = controller.retrievePubkey(toAddress, null, getpubkeyTimeToLive);
 				}
 			}
 			else
 			{
 				// Attempt to retrieve the pubkey by creating and disseminating a new getpubkey object
-				retrievalResult = controller.retrieveToPubkey(toAddress, null, getpubkeyTimeToLive);
+				retrievalResult = controller.retrievePubkey(toAddress, null, getpubkeyTimeToLive);
 			}
 			
 			if (retrievalResult instanceof Payload)

@@ -40,7 +40,7 @@ public class SendMessageController
 	 * retrieved) or a Payload (if we could not retrieve the pubkey and had to send a 
 	 * getpubkey request). 
 	 */
-	public Object retrieveToPubkey(String toAddress, Payload getpubkeyPayload, long timeToLive)
+	public Object retrievePubkey(String toAddress, Payload getpubkeyPayload, long timeToLive)
 	{
 		PubkeyProcessor pubProc = new PubkeyProcessor();
 		Pubkey toPubkey = null;
