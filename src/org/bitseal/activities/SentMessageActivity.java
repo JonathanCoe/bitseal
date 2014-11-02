@@ -3,15 +3,21 @@ package org.bitseal.activities;
 import java.util.ArrayList;
 
 import org.bitseal.R;
+import org.bitseal.core.QueueRecordProcessor;
 import org.bitseal.data.Address;
 import org.bitseal.data.AddressBookRecord;
 import org.bitseal.data.Message;
+import org.bitseal.data.Payload;
+import org.bitseal.data.QueueRecord;
 import org.bitseal.database.AddressBookRecordProvider;
 import org.bitseal.database.AddressBookRecordsTable;
 import org.bitseal.database.AddressProvider;
 import org.bitseal.database.AddressesTable;
 import org.bitseal.database.MessageProvider;
 import org.bitseal.database.MessagesTable;
+import org.bitseal.database.PayloadProvider;
+import org.bitseal.database.QueueRecordProvider;
+import org.bitseal.database.QueueRecordsTable;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -205,6 +211,35 @@ public class SentMessageActivity extends Activity
 						mMessages = msgProv.getAllMessages();
 						mMessages.remove(mMessage);
 						msgProv.deleteMessage(mMessage);
+						
+						// Find any QueueRecords and Payloads associated with this Message and delete them from the database
+						try
+						{
+							QueueRecordProvider queueProv = QueueRecordProvider.get(getApplicationContext());
+							ArrayList<QueueRecord> correspondingQueueRecords = queueProv.searchQueueRecords(QueueRecordsTable.COLUMN_OBJECT_0_ID, String.valueOf(mMessage.getId()));
+							for (QueueRecord q : correspondingQueueRecords)
+							{
+	
+								// If this is a 'disseminate msg' QueueRecord, delete the msg and ack payloads						
+								if (q.getTask().equals(QueueRecordProcessor.TASK_DISSEMINATE_MESSAGE))
+								{
+									PayloadProvider payProv = PayloadProvider.get(getApplicationContext());
+									Payload msgPayload = payProv.searchForSingleRecord(q.getObject1Id());
+									payProv.deletePayload(msgPayload);
+									
+									// If there is an ack Payload stored for this msg, delete it as well
+									Payload ackPayload = payProv.searchForSingleRecord(mMessage.getAckPayloadId());
+									payProv.deletePayload(ackPayload);
+								}
+								
+								// Delete this QueueRecord from the database
+								queueProv.deleteQueueRecord(q);
+							}
+						}
+						catch (Exception e)
+						{
+							Log.e(TAG, "Exception occurred in ComposeActivity.mDeleteButton.onClick(). The exception message was: \n" + e.getMessage());
+						}
 						
 						// Set a flag so that the 'Sent' Activity can adjust its list view properly
 						SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
