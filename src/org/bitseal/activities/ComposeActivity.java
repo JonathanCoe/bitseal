@@ -13,7 +13,6 @@ import org.bitseal.database.AddressBookRecordsTable;
 import org.bitseal.database.AddressProvider;
 import org.bitseal.database.AddressesTable;
 import org.bitseal.database.MessageProvider;
-import org.bitseal.network.NetworkHelper;
 import org.bitseal.services.BackgroundService;
 import org.bitseal.util.ColourCalculator;
 
@@ -22,7 +21,6 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -101,8 +99,6 @@ public class ComposeActivity extends Activity
 		
 	private static final int COMPOSE_COLOURS_ALPHA_VALUE = 70;
 	
-	private boolean mInternetAvailable;
-	
 	/**
 	 * The maximum permissible size for a message's text (subject + body), in bytes. The maximum size
 	 * of an object in Bitmessage protocol version 3 is 256kB. We allow some extra room for the rest of 
@@ -135,8 +131,6 @@ public class ComposeActivity extends Activity
 		useAddressLabels();
 		formatEditTexts();
 		positionCursor();
-		
-		new CheckInternetAvailabilityTask().execute(); // Check internet availability
 	}
 	
 	@Override
@@ -290,7 +284,7 @@ public class ComposeActivity extends Activity
 	}
 	
 	/**
-	 * Exceuted when the user presses the 'Send' button
+	 * Executed when the user presses the 'Send' button
 	 */
 	private void sendMessage()
 	{
@@ -382,52 +376,37 @@ public class ComposeActivity extends Activity
 		// --------------------------------- Send the message! -------------------------------------------
 	    try
 	    {
-			// Update the mInternetAvailable variable. This can take a few seconds, so we will not wait for its result before proceeding. Instead, 
-	    	// we will use the value set when onResume() or this method was last called. This is a balance between having the best possible chance of correctly detecting 
-	    	// internet availability before attempting to send a message and having to make the user wait for the check to complete every time they send a message.
-	    	new CheckInternetAvailabilityTask().execute();
+    		// Create a new Message object and populate its fields
+    		Message messageToSend = new Message();
+			messageToSend.setBelongsToMe(true); // If I create and send a message then it 'belongs to me'. If I receive a message from someone else then it does not.
+			messageToSend.setTime(System.currentTimeMillis() / 1000);
+			messageToSend.setToAddress(toAddress);
+			messageToSend.setFromAddress(fromAddress);
+			messageToSend.setSubject(subject);
+			messageToSend.setBody(body);
+			messageToSend.setStatus(Message.STATUS_REQUESTING_PUBKEY);
 			
-			Log.i(TAG, "mInternetAvailable is currently " + mInternetAvailable);
-	    	
-	    	if (mInternetAvailable == true)
-			{	    		
-	    		// Create a new Message object and populate its fields
-	    		Message messageToSend = new Message();
-				messageToSend.setBelongsToMe(true); // If I create and send a message then it 'belongs to me'. If I receive a message from someone else then it does not.
-				messageToSend.setTime(System.currentTimeMillis() / 1000);
-				messageToSend.setToAddress(toAddress);
-				messageToSend.setFromAddress(fromAddress);
-				messageToSend.setSubject(subject);
-				messageToSend.setBody(body);
-				messageToSend.setStatus(Message.STATUS_REQUESTING_PUBKEY);
-				
-				// Save the Message to the database
-				MessageProvider msgProv = MessageProvider.get(getApplicationContext());
-				long messageId = msgProv.addMessage(messageToSend);
-				messageToSend.setId(messageId);
+			// Save the Message to the database
+			MessageProvider msgProv = MessageProvider.get(getApplicationContext());
+			long messageId = msgProv.addMessage(messageToSend);
+			messageToSend.setId(messageId);
 
-				// Start the BackgroundService to complete the 'send message' task
-	    		Intent intent = new Intent(getBaseContext(), BackgroundService.class);		    
-			    intent.putExtra(BackgroundService.UI_REQUEST, BackgroundService.UI_REQUEST_SEND_MESSAGE);	    
-			    intent.putExtra(BackgroundService.MESSAGE_ID, messageId);	    
-			    startService(intent);
-				
-				Toast.makeText(getApplicationContext(), "Sending the message", Toast.LENGTH_LONG).show();
-				
-				mToAddressEditText.setText("");
-				mFromAddressEditText.setText("");
-				mSubjectEditText.setText("");
-				mBodyEditText.setText("");
-				
-				// Open the Sent Activity
-		        Intent i = new Intent(getBaseContext(), SentActivity.class);
-		        startActivityForResult(i, 0);
-			}
-			else
-			{
-				Toast.makeText(getApplicationContext(), "No internet connection available", Toast.LENGTH_LONG).show();
-				return;
-			}
+			// Start the BackgroundService to complete the 'send message' task
+    		Intent intent = new Intent(getBaseContext(), BackgroundService.class);		    
+		    intent.putExtra(BackgroundService.UI_REQUEST, BackgroundService.UI_REQUEST_SEND_MESSAGE);	    
+		    intent.putExtra(BackgroundService.MESSAGE_ID, messageId);	    
+		    startService(intent);
+			
+			Toast.makeText(getApplicationContext(), "Sending the message", Toast.LENGTH_LONG).show();
+			
+			mToAddressEditText.setText("");
+			mFromAddressEditText.setText("");
+			mSubjectEditText.setText("");
+			mBodyEditText.setText("");
+			
+			// Open the Sent Activity
+	        Intent i = new Intent(getBaseContext(), SentActivity.class);
+	        startActivityForResult(i, 0);
 	    }		    
 	    catch (Exception e)
 	    {
@@ -943,32 +922,4 @@ public class ComposeActivity extends Activity
           return convertView;
       }
    }
-    
-    /**
-     * Checks whether an internet connection is available. 
-     */
-    class CheckInternetAvailabilityTask extends AsyncTask<Void, Void, Boolean> 
-    {
-        @Override
-    	protected Boolean doInBackground(Void... params)
-        {
-            try 
-            {
-            	return NetworkHelper.checkInternetAvailability();
-            } 
-            catch (Exception e) 
-            {
-                Log.i(TAG, "While running ComposeActivity.checkInternetAvailabilityTask(), an exception occurred");
-                e.printStackTrace();
-                return false;
-            }
-        }
-        
-        @Override
-        protected void onPostExecute(Boolean result) 
-        {
-        	mInternetAvailable = result;
-        	Log.i(TAG, "mInternetAvailable set to " + result);
-        }
-    }
 }
