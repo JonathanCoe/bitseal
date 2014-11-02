@@ -14,7 +14,6 @@ import org.bitseal.network.ServerCommunicator;
  * 
  * @author Jonathan Coe
  */
-
 public class CreateIdentityController
 {
 	/**

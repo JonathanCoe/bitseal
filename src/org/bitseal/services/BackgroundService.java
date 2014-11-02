@@ -9,7 +9,6 @@ import org.bitseal.core.ObjectProcessor;
 import org.bitseal.core.QueueRecordProcessor;
 import org.bitseal.data.Address;
 import org.bitseal.data.Message;
-import org.bitseal.data.Object;
 import org.bitseal.data.Payload;
 import org.bitseal.data.Pubkey;
 import org.bitseal.data.QueueRecord;
@@ -187,17 +186,8 @@ public class BackgroundService extends IntentService
 				long currentTime = System.currentTimeMillis() / 1000;
 				queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, currentTime + FIRST_ATTEMPT_TTL, 1, messageToSend, null, null);
 				
-				// First check whether an Internet connection is available. If not, the QueueRecord which records the 
-				// need to send the message will be stored (as above) and processed later
-				if (NetworkHelper.checkInternetAvailability() == true)
-				{
-					// Attempt to send the message
-					taskController.sendMessage(queueRecord, messageToSend, DO_POW, FIRST_ATTEMPT_TTL, FIRST_ATTEMPT_TTL);
-				}
-				else
-				{
-					MessageStatusHandler.updateMessageStatus(messageToSend, Message.STATUS_WAITING_FOR_CONNECTION);
-				}
+				// Attempt to send the message
+				taskController.sendMessage(queueRecord, messageToSend, DO_POW, FIRST_ATTEMPT_TTL, FIRST_ATTEMPT_TTL);
 			}
 			
 			else if (uiRequest.equals(UI_REQUEST_CREATE_IDENTITY))
@@ -328,26 +318,21 @@ public class BackgroundService extends IntentService
 							continue;
 						}
 						
-						// Otherwise, if there is an internet connection available, attempt to send the message
-						if (NetworkHelper.checkInternetAvailability() == true)
+						// Check which TTL value we should use
+						if (q.getRecordCount() == 0)
 						{
-							if (q.getRecordCount() == 0)
-							{
-								taskController.sendMessage(q, messageToSend, DO_POW, FIRST_ATTEMPT_TTL, FIRST_ATTEMPT_TTL);
-							}
-							else
-							{
-								// Create a new QueueRecord for re-sending this msg in the event that we do not receive an acknowledgment for it
-								// before its time to live expires. If we do receive the acknowledgment before then, this QueueRecord will be deleted
-								currentTime = System.currentTimeMillis() / 1000;
-								queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, currentTime + SUBSEQUENT_ATTEMPTS_TTL, q.getRecordCount() + 1, messageToSend, null, null);
-								
-								taskController.sendMessage(q, messageToSend, DO_POW, SUBSEQUENT_ATTEMPTS_TTL, SUBSEQUENT_ATTEMPTS_TTL);
-							}
+							// Attempt to send the message
+							taskController.sendMessage(q, messageToSend, DO_POW, FIRST_ATTEMPT_TTL, FIRST_ATTEMPT_TTL);
 						}
 						else
 						{
-							MessageStatusHandler.updateMessageStatus(messageToSend, Message.STATUS_WAITING_FOR_CONNECTION);
+							// Create a new QueueRecord for re-sending this msg in the event that we do not receive an acknowledgment for it
+							// before its time to live expires. If we do receive the acknowledgment before then, this QueueRecord will be deleted
+							currentTime = System.currentTimeMillis() / 1000;
+							queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, currentTime + SUBSEQUENT_ATTEMPTS_TTL, q.getRecordCount() + 1, messageToSend, null, null);
+							
+							// Attempt to send the message
+							taskController.sendMessage(q, messageToSend, DO_POW, SUBSEQUENT_ATTEMPTS_TTL, SUBSEQUENT_ATTEMPTS_TTL);
 						}
 					}
 					catch (RuntimeException e)
@@ -396,13 +381,11 @@ public class BackgroundService extends IntentService
 				
 				else if (task.equals(TASK_DISSEMINATE_MESSAGE))
 				{
-					// Check whether the msg payload has expired or is close to expiration.
+					// Check whether the msg payload is still valid (its time to live pay have expired)
 					PayloadProvider payProv = PayloadProvider.get(getApplicationContext());
 					Payload msgPayload = payProv.searchForSingleRecord(q.getObject1Id());
-					Object msgObject = new ObjectProcessor().parseObject(msgPayload.getPayload());
-					long currentTime = System.currentTimeMillis() / 1000;
-					long objectDiscardTime = currentTime + MINIMUM_TIME_TO_LIVE;
-					if (msgObject.getExpirationTime() < objectDiscardTime)
+					boolean msgValid = new ObjectProcessor().validateObject(msgPayload.getPayload());
+					if (msgValid == false)
 					{
 						Log.d(TAG, "Found a QueueRecord for a 'disseminate message' task with a msg payload which is due to expire soon.\n"
 								+ "We will now delete this QueueRecord and msg and create a new 'process outgoing message' QueueRecord.");
@@ -454,13 +437,12 @@ public class BackgroundService extends IntentService
 				
 				else if (task.equals(TASK_DISSEMINATE_PUBKEY))
 				{
-					// Check whether the pubkey payload has expired or is close to expiration.
+					// Check whether the pubkey payload is still valid (its time to live pay have expired)
 					PayloadProvider payProv = PayloadProvider.get(getApplicationContext());
 					Payload pubkeyPayload = payProv.searchForSingleRecord(q.getObject0Id());
-					Object pubkeyObject = new ObjectProcessor().parseObject(pubkeyPayload.getPayload());
-					long currentTime = System.currentTimeMillis() / 1000;
-					long objectDiscardTime = currentTime + MINIMUM_TIME_TO_LIVE;
-					if (pubkeyObject.getExpirationTime() < objectDiscardTime)
+					
+					boolean pubkeyValid = new ObjectProcessor().validateObject(pubkeyPayload.getPayload());
+					if (pubkeyValid == false)
 					{
 						Log.d(TAG, "Found a QueueRecord for a 'disseminate pubkey' task with a pubkey payload which is due to expire soon.\n"
 								+ "We will now delete this QueueRecord and pubkey and create a new 'create identity' QueueRecord.");

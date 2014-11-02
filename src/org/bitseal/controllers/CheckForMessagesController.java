@@ -21,7 +21,6 @@ import android.content.Intent;
  * 
  * @author Jonathan Coe
  */
-
 public class CheckForMessagesController
 {
 	/** Used when broadcasting Intents to the UI so that it can refresh the data it is displaying */

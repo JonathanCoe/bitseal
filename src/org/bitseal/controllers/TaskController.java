@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import org.bitseal.core.App;
 import org.bitseal.core.BehaviourBitfieldProcessor;
+import org.bitseal.core.ObjectProcessor;
 import org.bitseal.core.QueueRecordProcessor;
 import org.bitseal.data.Address;
 import org.bitseal.data.Message;
@@ -172,26 +173,26 @@ public class TaskController
 	{
 		Log.i(TAG, "TaskController.sendMessage() called");
 		
-		String toAddress = messageToSend.getToAddress();
-		
 		// Attempt to retrieve the pubkey of the address that the message is to be sent to
 		SendMessageController controller = new SendMessageController();
 		QueueRecordProcessor queueProc = new QueueRecordProcessor();
 		Pubkey toPubkey = null;
 		try
 		{
-			Object retrievalResult = null;
+			java.lang.Object retrievalResult = null;
 			// If we have already have getpubkey object created during a previous attempt to retrieve this 
 			// pubkey, pass it to the SendMessageController so it can be reused if necessary
 			if (queueRecord0.getObject1Id() != 0)
 			{
 				PayloadProvider payProv = PayloadProvider.get(App.getContext());
 				Payload getpubkeyPayload = payProv.searchForSingleRecord(queueRecord0.getObject1Id());
-				// If the getpubkey's time to live has not yet expired
-				if ((getpubkeyPayload.getTime() + getpubkeyTimeToLive) > (System.currentTimeMillis() / 1000))
+				
+				// Check whether If the getpubkey is still valid (its time to live pay have expired)
+				boolean getpubkeyValid = new ObjectProcessor().validateObject(getpubkeyPayload.getPayload());
+				if (getpubkeyValid)
 				{
 					// Attempt to retrieve the pubkey using the existing getpubkey object
-					retrievalResult = controller.retrievePubkey(toAddress, getpubkeyPayload, getpubkeyTimeToLive);
+					retrievalResult = controller.retrievePubkey(messageToSend, getpubkeyPayload, getpubkeyTimeToLive);
 				}
 				else
 				{
@@ -199,13 +200,13 @@ public class TaskController
 					payProv.deletePayload(getpubkeyPayload);
 					
 					// Attempt to retrieve the pubkey by creating and disseminating a new getpubkey object
-					retrievalResult = controller.retrievePubkey(toAddress, null, getpubkeyTimeToLive);
+					retrievalResult = controller.retrievePubkey(messageToSend, null, getpubkeyTimeToLive);
 				}
 			}
 			else
 			{
 				// Attempt to retrieve the pubkey by creating and disseminating a new getpubkey object
-				retrievalResult = controller.retrievePubkey(toAddress, null, getpubkeyTimeToLive);
+				retrievalResult = controller.retrievePubkey(messageToSend, null, getpubkeyTimeToLive);
 			}
 			
 			if (retrievalResult instanceof Payload)
@@ -216,7 +217,6 @@ public class TaskController
 				queueRecord0.setObject1Type(QueueRecord.QUEUE_RECORD_OBJECT_TYPE_PAYLOAD);
 				queueRecord0.setObject1Id(((Payload) retrievalResult).getId());
 				queueProc.updateQueueRecord(queueRecord0);
-				queueProc.updateQueueRecordAfterFailure(queueRecord0); // Update the QueueRecord to record the failed attempt
 				return false; // If we failed to retrieve the pubkey, leave the QueueRecord for that
 							  // task in place so that it can be attempted again later
 			}

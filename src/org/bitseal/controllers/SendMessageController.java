@@ -8,7 +8,9 @@ import org.bitseal.data.Message;
 import org.bitseal.data.Payload;
 import org.bitseal.data.Pubkey;
 import org.bitseal.database.PayloadProvider;
+import org.bitseal.network.NetworkHelper;
 import org.bitseal.network.ServerCommunicator;
+import org.bitseal.services.MessageStatusHandler;
 
 import android.util.Log;
 
@@ -18,19 +20,14 @@ import android.util.Log;
  * 
  * @author Jonathan Coe
  */
-
 public class SendMessageController
 {
-	/** This is the maximum age of an object (in seconds) that PyBitmessage will accept. */
-	private static final int PYBITMESSAGE_NEW_OBJECT_ACCEPTANCE_PERIOD = 216000;
-	
 	private static final String TAG = "SEND_MESSAGE_CONTROLLER";
 	
 	/**
 	 * Attempts to retrieve a Pubkey for a given Bitmessage address. <br><br>
 	 * 
-	 * @param toAddress - The Bitmessage address for which we which 
-	 * to retrieve the pubkey
+	 * @param message - The Message object which we attempting to send
 	 * @param getpubkeyPayload - A Payload containing a getpubkey object which has 
 	 * been created in order to retrieve this pubkey. 
 	 * @param timeToLive - The 'time to live' value (in seconds) to be used in creating 
@@ -40,48 +37,54 @@ public class SendMessageController
 	 * retrieved) or a Payload (if we could not retrieve the pubkey and had to send a 
 	 * getpubkey request). 
 	 */
-	public Object retrievePubkey(String toAddress, Payload getpubkeyPayload, long timeToLive)
+	public java.lang.Object retrievePubkey(Message message, Payload getpubkeyPayload, long timeToLive)
 	{
+		MessageStatusHandler.updateMessageStatus(message, Message.STATUS_REQUESTING_PUBKEY);
+		
 		PubkeyProcessor pubProc = new PubkeyProcessor();
 		Pubkey toPubkey = null;
 		try
 		{
-			toPubkey = pubProc.retrievePubkeyByAddressString(toAddress);
+			toPubkey = pubProc.retrievePubkeyForMessage(message);
 		}
 		catch (RuntimeException e) // If we were unable to retrieve the pubkey
-		{
+		{	
 			Log.i(TAG, "Failed to retrieve the requested pubkey. The exception message was: " + e.getMessage());
 			OutgoingGetpubkeyProcessor getProc = new OutgoingGetpubkeyProcessor();
 			
+			// Check whether we already have a getpubkey Payload for retrieving this pubkey
 			if (getpubkeyPayload != null)
-			{	
-				// Check whether the getpubkey object has been successfully disseminated within the 'new object
-				// acceptance period' defined by PyBitmessage. If so then there is no need to disseminate it again, 
-				// as the getpubkey request will still be circulating around the Bitmessage network. 
+			{
+				// Check whether the getpubkey object has already been successfully disseminated 
 				long lastDisseminationTime = getpubkeyPayload.getTime();
 				if (lastDisseminationTime != 0) // If the payload has been disseminated already
 				{
-					long currentTime = System.currentTimeMillis() / 1000;
-					long timeSinceLastDissemination = currentTime - lastDisseminationTime;
-					if (timeSinceLastDissemination < PYBITMESSAGE_NEW_OBJECT_ACCEPTANCE_PERIOD)
-					{
-						Log.i(TAG, "Skipping dissemination of getpubkey payload because it was successfully disseminated " + timeSinceLastDissemination + " seconds ago");
-						return getpubkeyPayload; // Do not disseminate the payload again - there is no need to
-					}
+					Log.i(TAG, "Skipping dissemination of getpubkey payload because it was successfully disseminated and its time to live has not yet expired");
+					return getpubkeyPayload; // Do not disseminate the payload again - there is no need to
 				}
 				
-				// Disseminate the getpubkey Payload that we created earlier
-				getProc.disseminateGetpubkeyRequest(getpubkeyPayload);
+				// Check whether an Internet connection is available. 
+				if (NetworkHelper.checkInternetAvailability() == true)
+				{
+					MessageStatusHandler.updateMessageStatus(message, Message.STATUS_REQUESTING_PUBKEY);
+					
+					// Disseminate the getpubkey Payload that we created earlier
+					getProc.disseminateGetpubkeyRequest(getpubkeyPayload);
+				}
+				else
+				{
+					MessageStatusHandler.updateMessageStatus(message, Message.STATUS_WAITING_FOR_CONNECTION);
+				}
 				return getpubkeyPayload;
 			}
 			else
 			{
 				// Create a new getpubkey Payload and disseminate it
-				Payload newGetpubkeyPayload = getProc.constructAndDisseminateGetpubkeyRequst(toAddress, timeToLive);
+				Payload newGetpubkeyPayload = getProc.constructAndDisseminateGetpubkeyRequst(message, timeToLive);
 				return newGetpubkeyPayload;
 			}
 		}
-		// If we successfully retrieved the pubkey
+		// If we successfully retrieved the pubkey (there was no RuntimeException thrown)
 		if (getpubkeyPayload != null)
 		{
 			PayloadProvider payProv = PayloadProvider.get(App.getContext());

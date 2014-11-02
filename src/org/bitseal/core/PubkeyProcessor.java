@@ -9,6 +9,7 @@ import org.bitseal.crypt.CryptProcessor;
 import org.bitseal.crypt.KeyConverter;
 import org.bitseal.crypt.SigProcessor;
 import org.bitseal.data.Address;
+import org.bitseal.data.Message;
 import org.bitseal.data.Object;
 import org.bitseal.data.Payload;
 import org.bitseal.data.Pubkey;
@@ -16,8 +17,10 @@ import org.bitseal.database.AddressProvider;
 import org.bitseal.database.PayloadProvider;
 import org.bitseal.database.PubkeyProvider;
 import org.bitseal.database.PubkeysTable;
+import org.bitseal.network.NetworkHelper;
 import org.bitseal.network.ServerCommunicator;
 import org.bitseal.pow.POWProcessor;
+import org.bitseal.services.MessageStatusHandler;
 import org.bitseal.util.ArrayCopier;
 import org.bitseal.util.ByteUtils;
 import org.bitseal.util.VarintEncoder;
@@ -111,13 +114,53 @@ public class PubkeyProcessor
 	}
 	
 	/**
+	 * Takes a Message and attempts to retrieve the Pubkey of the Message's 'to address'<br><br>
+	 * 
+	 * Note: If the pubkey has to be retrieved from a server and the attempt to do so fails, 
+	 * this method will throw a RuntimeException.
+	 * 
+	 * @param addressString - The Message we are attempting to send
+	 * 
+	 * @return A Pubkey object that represents the pubkey for the supplied Message's 'to address'
+	 */
+	public Pubkey retrievePubkeyForMessage (Message message)
+	{
+		String addressString = message.getToAddress();
+		
+		// Extract the ripe hash from the address String
+		byte[] ripeHash = new AddressProcessor().extractRipeHashFromAddress(addressString);
+		
+		Pubkey pubkey = retrievePubkeyFromDatabase(ripeHash);
+		if (pubkey != null)
+		{
+			return pubkey;
+		}
+		else
+		{
+			Log.i(TAG, "Unable to find the requested pubkey in the application database. The pubkey will now be requested from a server.");
+			
+			// Check whether an Internet connection is available.
+			if (NetworkHelper.checkInternetAvailability() == true)
+			{
+				return retrievePubkeyFromServer(addressString, ripeHash);
+			}
+			else
+			{
+				MessageStatusHandler.updateMessageStatus(message, Message.STATUS_WAITING_FOR_CONNECTION);
+				throw new RuntimeException("Unable to retrieve the pubkey because no internet connection is available");
+			}
+		}
+	}
+	
+	/**
 	 * Takes a String representing a Bitmessage address and uses it to retrieve the Pubkey that
 	 * corresponds to that address. <br><br>
 	 * 
 	 * This method is intended to be used to retrieve the Pubkey of another person 
 	 * when we have their address and wish to send them a message.<br><br>
 	 * 
-	 * Note: If the pubkey cannot be retrieved, this method will return null. 
+	 * Note: If the pubkey has to be retrieved from a server and the attempt to do so fails, 
+	 * this method will throw a RuntimeException.
 	 * 
 	 * @param addressString - A String containing the Bitmessage address that we wish to retrieve
 	 * the pubkey for - e.g. "BM-NBpe4wbtC59sWFKxwaiGGNCb715D6xvY"
@@ -126,10 +169,34 @@ public class PubkeyProcessor
 	 */
 	public Pubkey retrievePubkeyByAddressString (String addressString)
 	{
-		// First, extract the ripe hash from the address String
+		// Extract the ripe hash from the address String
 		byte[] ripeHash = new AddressProcessor().extractRipeHashFromAddress(addressString);
 		
-		// Now search the application's database to see if the pubkey we need is stored there
+		Pubkey pubkey = retrievePubkeyFromDatabase(ripeHash);
+		if (pubkey != null)
+		{
+			return pubkey;
+		}
+		else
+		{
+			Log.i(TAG, "Unable to find the requested pubkey in the application database. The pubkey will now be requested from a server.");
+			
+			return retrievePubkeyFromServer(addressString, ripeHash);
+		}
+	}
+	
+	/**
+	 * Attempts to retrieve the Pubkey with a given ripe hash from the database.<br><br>
+	 * 
+	 * Note! If the Pubkey cannot be found, this method will return null
+	 * 
+	 * @param ripeHash A byte[] containing the ripe hash of the Pubkey to be retrieved
+	 * 
+	 * @return A Pubkey, or null if the Pubkey cannot be found
+	 */
+	private Pubkey retrievePubkeyFromDatabase(byte[] ripeHash)
+	{
+		// Search the application's database to see if the pubkey we need is stored there
 		// Note that ripe hashes in the database have their leading zeros removed
 		PubkeyProvider pubProv = PubkeyProvider.get(App.getContext());
 		ArrayList<Pubkey> retrievedPubkeys = pubProv.searchPubkeys(PubkeysTable.COLUMN_RIPE_HASH, Base64.encodeToString(ByteUtils.stripLeadingZeros(ripeHash), Base64.DEFAULT));
@@ -155,38 +222,52 @@ public class PubkeyProcessor
 		}
 		else
 		{
-			Log.i(TAG, "Unable to find the requested pubkey in the application database. The pubkey will now be requested from a server.");
-			
-			// Extract the address version from the address string in order to determine whether the pubkey will
-			// be encrypted (version 4 and above)
-			AddressProcessor addProc = new AddressProcessor();
-			int[] decodedAddressValues = addProc.decodeAddressNumbers(addressString);
-			int addressVersion = decodedAddressValues[0];
-			
-			// Retrieve the pubkey from a server
-			ServerCommunicator servCom = new ServerCommunicator();
-			Pubkey pubkey = null;
-			
-			if (addressVersion >= 4) // The pubkey will be encrypted
-			{
-				// Calculate the tag that will be used to request the encrypted pubkey
-				byte[] tag = addProc.calculateAddressTag(addressString);
-				
-				// Retrieve the encrypted pubkey from a server
-				pubkey = servCom.requestPubkeyFromServer(addressString, tag, addressVersion);
-			}
-			else // The pubkey is of version 3 or below, and will therefore not be encrypted
-			{
-				pubkey = servCom.requestPubkeyFromServer(addressString, ripeHash, addressVersion);
-			}
-			
-			// Save the pubkey to the database and set its ID with the one generated by the database
-			long id = pubProv.addPubkey(pubkey);
-			pubkey.setId(id);
-			
-			return pubkey; // If the ServerCommunicator fails to retrieve the Pubkey then it will throw a RuntimeException. This will be passed
-						   // up the method call hierarchy and handled. 
+			return null;
 		}
+	}
+	
+	/**
+	 * Attempts to retrieve the pubkey with a given address string and ripe hash from a server.<br><br>
+	 * 
+	 * Note! If the pubkey cannot be found, this method will throw a RuntimeException
+	 * 
+	 * @param addressString - A String containing the address of pubkey to be retrieved 
+	 * @param ripeHash - A byte[] containing the ripe hash of the pubkey to be retrieved
+	 * 
+	 * @return A Pubkey, or null if the Pubkey cannot be found
+	 */
+	private Pubkey retrievePubkeyFromServer(String addressString, byte[] ripeHash)
+	{
+		// Extract the address version from the address string in order to determine whether the pubkey will
+		// be encrypted (version 4 and above)
+		AddressProcessor addProc = new AddressProcessor();
+		int[] decodedAddressValues = addProc.decodeAddressNumbers(addressString);
+		int addressVersion = decodedAddressValues[0];
+		
+		// Retrieve the pubkey from a server
+		ServerCommunicator servCom = new ServerCommunicator();
+		Pubkey pubkey = null;
+		
+		if (addressVersion >= 4) // The pubkey will be encrypted
+		{
+			// Calculate the tag that will be used to request the encrypted pubkey
+			byte[] tag = addProc.calculateAddressTag(addressString);
+			
+			// Retrieve the encrypted pubkey from a server
+			pubkey = servCom.requestPubkeyFromServer(addressString, tag, addressVersion);
+		}
+		else // The pubkey is of version 3 or below, and will therefore not be encrypted
+		{
+			pubkey = servCom.requestPubkeyFromServer(addressString, ripeHash, addressVersion);
+		}
+		
+		// Save the pubkey to the database and set its ID with the one generated by the database
+		PubkeyProvider pubProv = PubkeyProvider.get(App.getContext());
+		long id = pubProv.addPubkey(pubkey);
+		pubkey.setId(id);
+		
+		return pubkey; // If the ServerCommunicator fails to retrieve the Pubkey then it will throw a RuntimeException. This will be passed
+					   // up the method call hierarchy and handled. 
 	}
 		
 	/**

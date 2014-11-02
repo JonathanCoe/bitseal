@@ -3,10 +3,13 @@ package org.bitseal.core;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import org.bitseal.data.Message;
 import org.bitseal.data.Payload;
 import org.bitseal.database.PayloadProvider;
+import org.bitseal.network.NetworkHelper;
 import org.bitseal.network.ServerCommunicator;
 import org.bitseal.pow.POWProcessor;
+import org.bitseal.services.MessageStatusHandler;
 import org.bitseal.util.ByteUtils;
 import org.bitseal.util.TimeUtils;
 import org.bitseal.util.VarintEncoder;
@@ -50,46 +53,55 @@ public class OutgoingGetpubkeyProcessor
 	}
 	
 	/**
-	 * Creates a new getpubkey object for the given Bitmessage address and
+	 * Creates a new getpubkey object for the 'to address' of a given Message and
 	 * disseminates it to the rest of the Bitmessage network. 
 	 * 
-	 * @param addressString - A String containing the Bitmessage address to create
-	 * a getpubkey object for
+	 * @param addressString - The Message we are trying to send
 	 * @param timeToLive - The 'time to live' value (in seconds) to be used in creating 
 	 * this getpubkey
 	 * 
 	 * @return - A Payload object containing the newly created getpubkey object
 	 */
-	public Payload constructAndDisseminateGetpubkeyRequst(String addressString, long timeToLive)
+	public Payload constructAndDisseminateGetpubkeyRequst(Message message, long timeToLive)
 	{
 		// We were unable to retrieve the pubkey after trying all servers. Now we must create a getpubkey 
 		// object which can be sent out to servers. We should then be able to retrieve the required pubkey.
-		Payload getpubkeyPayload = constructGetpubkeyPayload(addressString, timeToLive);
+		Payload getpubkeyPayload = constructGetpubkeyPayload(message.getToAddress(), timeToLive);
 		
 		// Save the getpubkey object to the database
 		PayloadProvider payProv = PayloadProvider.get(App.getContext());
 		long id = payProv.addPayload(getpubkeyPayload);
 		getpubkeyPayload.setId(id);
 		
-		// Disseminate the getpubkey payload
-		try
+		// Check whether an Internet connection is available. 
+		if (NetworkHelper.checkInternetAvailability() == true)
 		{
-			ServerCommunicator servCom = new ServerCommunicator();
-			boolean disseminationSuccessful = servCom.disseminateGetpubkey(getpubkeyPayload.getPayload());
-			if (disseminationSuccessful == true)
+			MessageStatusHandler.updateMessageStatus(message, Message.STATUS_REQUESTING_PUBKEY);
+			
+			// Disseminate the getpubkey payload
+			try
 			{
-				getpubkeyPayload.setTime(System.currentTimeMillis() / 1000);
-				payProv.updatePayload(getpubkeyPayload);
+				ServerCommunicator servCom = new ServerCommunicator();
+				boolean disseminationSuccessful = servCom.disseminateGetpubkey(getpubkeyPayload.getPayload());
+				if (disseminationSuccessful == true)
+				{
+					getpubkeyPayload.setTime(System.currentTimeMillis() / 1000);
+					payProv.updatePayload(getpubkeyPayload);
+				}
+				return getpubkeyPayload;
+			}
+			catch (RuntimeException e)
+			{
+				Log.e(TAG, "RuntimeException occurred in PubkeyProcessor.constructAndDisseminateGetpubkeyRequst()\n"
+						+ "The exception message was: " + e.getMessage());
+				return getpubkeyPayload;
 			}
 		}
-		catch (RuntimeException e)
+		else
 		{
-			Log.e(TAG, "RuntimeException occurred in PubkeyProcessor.constructAndDisseminateGetpubkeyRequst()\n"
-					+ "The exception message was: " + e.getMessage());
+			MessageStatusHandler.updateMessageStatus(message, Message.STATUS_WAITING_FOR_CONNECTION);
 			return getpubkeyPayload;
-		}
-		
-		return getpubkeyPayload;
+		}	
 	}
 	
 	/**

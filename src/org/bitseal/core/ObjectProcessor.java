@@ -27,6 +27,27 @@ public class ObjectProcessor
 	public static final int NETWORK_EXTRA_BYTES = 1000;
 	
 	/**
+	 * Validates a set of bytes that may contain a Bitmessage Object
+	 * 
+	 * @param objectBytes - A byte[] containing the Object data
+	 * 
+	 * @return A boolean indicating whether or not the provided bytes are
+	 * a valid Bitmessage Object
+	 */
+	public boolean validateObject (byte[] objectBytes)
+	{
+		try
+		{
+			parseObject(objectBytes);
+			return true;
+		}
+		catch(RuntimeException e)
+		{
+			return false;
+		}
+	}
+	
+	/**
 	 * Takes a byte[] containing the data of a Bitmessage Object (e.g. a msg)
 	 * and parses it, returning an Object. 
 	 * 

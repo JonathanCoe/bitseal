@@ -79,8 +79,6 @@ org.bitseal.controllers
 	- TaskController
 		- UI_NOTIFICATION
 		- LAST_MSG_CHECK_TIME
-	- SendMessageController
-		- PYBITMESSAGE_NEW_OBJECT_ACCEPTANCE_PERIOD
 
 org.bitseal.core:
 	- AckProcessor
