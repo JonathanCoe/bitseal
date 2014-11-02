@@ -1,7 +1,7 @@
 package org.bitseal.data;
 
 /**
- * An object representing a plain-text message.<br><br>
+ * Class for a plain-text message.<br><br>
  * 
  * <b>NOTE:</b> This class should not be confused with the 'Message' data
  * structure defined in the Bitmessage protocol. This class is for internal
@@ -34,7 +34,7 @@ public class Message implements Comparable<Message>
 	public static final String STATUS_MSG_SENT = "Message sent, waiting for acknowledgment";
 	public static final String STATUS_MSG_SENT_NO_ACK_EXPECTED = "Message sent, no acknowledgment expected";
 	public static final String STATUS_ACK_RECEIVED = "Acknowledgment received";
-	public static final String STATUS_SENDING_FAILED = "Failed to sent the message";
+	public static final String STATUS_SENDING_FAILED = "Failed to send the message";
 	
 	public Message()
 	{
