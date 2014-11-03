@@ -28,12 +28,10 @@ public class CheckForMessagesController
 	
 	/**
 	 * Polls one or more servers to check whether any new messages are available. 
-	 * 
 	 */
 	public void checkServerForMessages()
 	{
-		ServerCommunicator servCom = new ServerCommunicator();
-		servCom.checkServerForNewMsgs();
+		new ServerCommunicator().checkServerForNewMsgs();
 	}
 	
 	/**
@@ -44,7 +42,6 @@ public class CheckForMessagesController
 	 */
 	public int processIncomingMessages()
 	{
-		IncomingMessageProcessor inMsgProc = new IncomingMessageProcessor();
 		int newMessagesReceived = 0;
 		
 		// Search the database for the Payloads of any possible new msgs
@@ -57,19 +54,17 @@ public class CheckForMessagesController
 		ArrayList<Payload> processedMsgs = new ArrayList<Payload>();
 		for (Payload p : msgsToProcess)
 		{
-			Message decryptedMessage = inMsgProc.processReceivedMsg(p);
+			Message decryptedMessage = new IncomingMessageProcessor().processReceivedMsg(p);
 			
 			if (decryptedMessage != null) // If the message was decrypted and authenticated successfully
 			{
 				newMessagesReceived ++;
 				
 				// Save the decrypted Message to the database
-				MessageProvider msgProv = MessageProvider.get(App.getContext());
-				msgProv.addMessage(decryptedMessage);
+				MessageProvider.get(App.getContext()).addMessage(decryptedMessage);
 				
 				// Update the UI
-				Intent intent = new Intent(UI_NOTIFICATION);
-				App.getContext().sendBroadcast(intent);
+				App.getContext().sendBroadcast(new Intent(UI_NOTIFICATION));
 			}
 			
 			processedMsgs.add(p);
@@ -94,7 +89,6 @@ public class CheckForMessagesController
 	 */
 	public boolean sendAcknowledgments()
 	{
-		AckProcessor ackProc = new AckProcessor();
-		return ackProc.sendAcknowledgments();
+		return new AckProcessor().sendAcknowledgments();
 	}
 }

@@ -38,15 +38,13 @@ public class ReDisseminatePubkeysController
 	public ArrayList<Address> checkIfPubkeyDisseminationIsDue()
 	{
 		// Get all the user's pubkeys
-		PubkeyProvider pubProv = PubkeyProvider.get(App.getContext());
-		ArrayList<Pubkey> myPubkeys = pubProv.searchPubkeys(PubkeysTable.COLUMN_BELONGS_TO_ME, String.valueOf(1)); // 1 stands for true in the database
+		ArrayList<Pubkey> myPubkeys = PubkeyProvider.get(App.getContext()).searchPubkeys(PubkeysTable.COLUMN_BELONGS_TO_ME, String.valueOf(1)); // 1 stands for true in the database
 		
 		// Check whether any of our pubkeys need to be disseminated again
 		ArrayList<Address> addressesWithExpiredPubkeys = new ArrayList<Address>();
 		for (Pubkey p : myPubkeys)
 		{
-			AddressProvider addProv = AddressProvider.get(App.getContext());
-			Address address = addProv.searchForSingleRecord(p.getCorrespondingAddressId());
+			Address address = AddressProvider.get(App.getContext()).searchForSingleRecord(p.getCorrespondingAddressId());
 			
 			long currentTime = System.currentTimeMillis() / 1000;
 			long expirationTime = p.getExpirationTime();
@@ -56,7 +54,7 @@ public class ReDisseminatePubkeysController
 				Log.d(TAG, "The pubkey for address " + address.getAddress() + " expired " + TimeUtils.getTimeMessage(timeSinceExpiration) + " ago.\n" +
 						"We will now attempt to re-disseminate it.");
 				
-				addressesWithExpiredPubkeys.add(address);				
+				addressesWithExpiredPubkeys.add(address);
 			}
 			else
 			{
@@ -84,7 +82,7 @@ public class ReDisseminatePubkeysController
 		Pubkey oldPubkey = pubProv.searchForSingleRecord(address.getCorrespondingPubkeyId());
 		pubProv.deletePubkey(oldPubkey);
 		
-		// Delete the old pubkey's corresponding Payload
+		// Delete the old pubkey's corresponding Payload(s)
 		PayloadProvider payProv = PayloadProvider.get(App.getContext());
 		String [] columnNames = new String[]{PayloadsTable.COLUMN_TYPE, PayloadsTable.COLUMN_BELONGS_TO_ME, PayloadsTable.COLUMN_RELATED_ADDRESS_ID};
 		String[] selections = new String[]{Payload.OBJECT_TYPE_PUBKEY, "1", String.valueOf(address.getId())}; // 1 stands for true in the database
@@ -95,8 +93,7 @@ public class ReDisseminatePubkeysController
 		}
 		
 		// Generate a new pubkey
-		PubkeyGenerator pubGen = new PubkeyGenerator();
-		Pubkey regeneratedPubkey = pubGen.generateAndSaveNewPubkey(address);
+		Pubkey regeneratedPubkey = new PubkeyGenerator().generateAndSaveNewPubkey(address);
 		
 		// Create an updated payload for the pubkey. We can then re-disseminate it to the network.
 		return new PubkeyProcessor().constructPubkeyPayload(regeneratedPubkey, doPOW);

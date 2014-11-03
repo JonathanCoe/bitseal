@@ -34,30 +34,35 @@ public class SendMessageController
 	 * a getpubkey object to retrieve the pubkey
 	 * 
 	 * @return An Object, which will either be a Pubkey (if the pubkey was successfully
-	 * retrieved) or a Payload (if we could not retrieve the pubkey and had to send a 
-	 * getpubkey request). 
+	 * retrieved) or a Payload containing a getpubkey (if we could not retrieve the pubkey
+	 * and had to send a getpubkey request). 
 	 */
 	public java.lang.Object retrievePubkey(Message message, Payload getpubkeyPayload, long timeToLive)
 	{
 		MessageStatusHandler.updateMessageStatus(message, Message.STATUS_REQUESTING_PUBKEY);
 		
-		PubkeyProcessor pubProc = new PubkeyProcessor();
-		Pubkey toPubkey = null;
 		try
 		{
-			toPubkey = pubProc.retrievePubkeyForMessage(message);
+			Pubkey toPubkey = new PubkeyProcessor().retrievePubkeyForMessage(message);
+			
+			// If we successfully retrieve the pubkey, delete any getpubkey we may have created
+			if (getpubkeyPayload != null)
+			{
+				PayloadProvider payProv = PayloadProvider.get(App.getContext());
+				payProv.deletePayload(getpubkeyPayload);
+			}
+			
+			return toPubkey;
 		}
 		catch (RuntimeException e) // If we were unable to retrieve the pubkey
 		{	
 			Log.i(TAG, "Failed to retrieve the requested pubkey. The exception message was: " + e.getMessage());
-			OutgoingGetpubkeyProcessor getProc = new OutgoingGetpubkeyProcessor();
 			
 			// Check whether we already have a getpubkey Payload for retrieving this pubkey
 			if (getpubkeyPayload != null)
 			{
 				// Check whether the getpubkey object has already been successfully disseminated 
-				long lastDisseminationTime = getpubkeyPayload.getTime();
-				if (lastDisseminationTime != 0) // If the payload has been disseminated already
+				if (getpubkeyPayload.getTime() != 0) // If the payload has been disseminated already
 				{
 					Log.i(TAG, "Skipping dissemination of getpubkey payload because it was successfully disseminated and its time to live has not yet expired");
 					return getpubkeyPayload; // Do not disseminate the payload again - there is no need to
@@ -66,10 +71,9 @@ public class SendMessageController
 				// Check whether an Internet connection is available. 
 				if (NetworkHelper.checkInternetAvailability() == true)
 				{
-					MessageStatusHandler.updateMessageStatus(message, Message.STATUS_REQUESTING_PUBKEY);
-					
 					// Disseminate the getpubkey Payload that we created earlier
-					getProc.disseminateGetpubkeyRequest(getpubkeyPayload);
+					MessageStatusHandler.updateMessageStatus(message, Message.STATUS_REQUESTING_PUBKEY);
+					new OutgoingGetpubkeyProcessor().disseminateGetpubkeyRequest(getpubkeyPayload);
 				}
 				else
 				{
@@ -80,39 +84,29 @@ public class SendMessageController
 			else
 			{
 				// Create a new getpubkey Payload and disseminate it
-				Payload newGetpubkeyPayload = getProc.constructAndDisseminateGetpubkeyRequst(message, timeToLive);
-				return newGetpubkeyPayload;
+				return new OutgoingGetpubkeyProcessor().constructAndDisseminateGetpubkeyRequst(message, timeToLive);
 			}
 		}
-		// If we successfully retrieved the pubkey (there was no RuntimeException thrown)
-		if (getpubkeyPayload != null)
-		{
-			PayloadProvider payProv = PayloadProvider.get(App.getContext());
-			payProv.deletePayload(getpubkeyPayload);
-		}
-		return toPubkey;
 	}
 	
 	/**
-	 * Processes a message to be sent by me, returning a msg payload that
-	 * is ready to be sent over the network. 
+	 * Processes a message to be sent by me, returning a msg payload that is ready
+	 * to be sent over the network. 
 	 * 
-	 * @param messageToSend - A Message object containing the message data to be sent
-	 * @param toPubkey - A Pubkey object containing the public keys of the address that the
-	 * message is to be sent to
-	 * @param doPOW - A boolean indicating whether or not proof of 
-	 * work calculations should be done for the msg created
+	 * @param message - A Message object containing the message data to be sent
+	 * @param toPubkey - A Pubkey object containing the public keys of the address
+	 * that the message is to be sent to
+	 * @param doPOW - A boolean indicating whether or not proof of work calculations
+	 * should be done for the msg created
 	 * during this process.
-	 * @param timeToLive - The 'time to live' value (in seconds) to be used in sending this message
+	 * @param timeToLive - The 'time to live' value (in seconds) to be used in sending
+	 * this message
 	 * 
 	 * @return A Payload object containing the msg payload for this message
 	 */
-	public Payload processOutgoingMessage (Message messageToSend, Pubkey toPubkey, boolean doPOW, long timeToLive)
+	public Payload processOutgoingMessage(Message message, Pubkey toPubkey, boolean doPOW, long timeToLive)
 	{
-		OutgoingMessageProcessor outMsgProc = new OutgoingMessageProcessor();
-		Payload msgPayload = outMsgProc.processOutgoingMessage(messageToSend, toPubkey, doPOW, timeToLive);
-		
-		return msgPayload;
+		return new OutgoingMessageProcessor().processOutgoingMessage(message, toPubkey, doPOW, timeToLive);
 	}
 	
 	/**
@@ -129,18 +123,13 @@ public class SendMessageController
 	 */
 	public boolean disseminateMessage(Payload msgPayload, Pubkey toPubkey, boolean POWDone)
 	{
-		ServerCommunicator servCom = new ServerCommunicator();
-		boolean disseminationSuccessful;
-		
 		if (POWDone == true)
 		{
-			disseminationSuccessful = servCom.disseminateMsg(msgPayload.getPayload());
+			return new ServerCommunicator().disseminateMsg(msgPayload.getPayload());
 		}
 		else
 		{
-			disseminationSuccessful = servCom.disseminateMsgNoPOW(msgPayload.getPayload(), toPubkey.getNonceTrialsPerByte(), toPubkey.getExtraBytes());
+			return new ServerCommunicator().disseminateMsgNoPOW(msgPayload.getPayload(), toPubkey.getNonceTrialsPerByte(), toPubkey.getExtraBytes());
 		}
-		
-		return disseminationSuccessful;
 	}
 }

@@ -31,13 +31,9 @@ public class CreateIdentityController
 	 */
 	public Payload generatePubkeyData(Address address, boolean doPOW)
 	{
-		PubkeyGenerator pubGen = new PubkeyGenerator();
-		Pubkey pubkey = pubGen.generateAndSaveNewPubkey(address);
+		Pubkey pubkey = new PubkeyGenerator().generateAndSaveNewPubkey(address);
 		
-		PubkeyProcessor pubProc = new PubkeyProcessor();
-		Payload pubkeyPayload = pubProc.constructPubkeyPayload(pubkey, doPOW);
-		
-		return pubkeyPayload;
+		return new PubkeyProcessor().constructPubkeyPayload(pubkey, doPOW);
 	}
 	
 	/**
@@ -55,16 +51,15 @@ public class CreateIdentityController
 	{
 		byte[] payload = pubkeyPayload.getPayload();
 		
-		ServerCommunicator servCom = new ServerCommunicator();
 		boolean disseminationSuccessful;
 		
 		if (POWDone == true)
 		{
-			disseminationSuccessful = servCom.disseminatePubkey(payload);
+			disseminationSuccessful = new ServerCommunicator().disseminatePubkey(payload);
 		}
 		else
 		{
-			disseminationSuccessful = servCom.disseminatePubkeyNoPOW(payload);
+			disseminationSuccessful = new ServerCommunicator().disseminatePubkeyNoPOW(payload);
 		}
 		
 		return disseminationSuccessful;
