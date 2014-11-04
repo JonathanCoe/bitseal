@@ -92,7 +92,7 @@ public class ServerCommunicator
 	/** A key used to store the time of the last successful 'check for new msgs' server request */
 	private static final String LAST_MSG_CHECK_TIME = "lastMsgCheckTime";
 	
-	// Api commands recognized by PyBitmessage
+	// API commands recognised by PyBitmessage
 	private static final String API_METHOD_DISSEMINATE_MSG = "disseminateMsg";
 	private static final String API_METHOD_DISSEMINATE_MSG_NO_POW = "disseminateMsgNoPOW";
 	private static final String API_METHOD_DISSEMINATE_PUBKEY = "disseminatePubkey";
@@ -408,7 +408,7 @@ public class ServerCommunicator
 	 * @param addressVersion - An int containing the version number of the address for
 	 * which we are requesting the pubkey
 	 * 
-	 * @return A Pubkey object conatining the requested pubkey
+	 * @return A Pubkey object containing the requested pubkey
 	 */
 	public Pubkey requestPubkeyFromServer(String addressString, byte[] identifier, int addressVersion)
 	{
