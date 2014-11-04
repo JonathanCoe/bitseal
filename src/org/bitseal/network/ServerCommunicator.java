@@ -644,18 +644,14 @@ public class ServerCommunicator
 	 */
 	private long calculateReceivedSinceTime(long lastCheckTime)
 	{
-		long receivedSinceTime;
-		long currentTime = System.currentTimeMillis() / 1000;
 		if (lastCheckTime == 0) // If this is the first time we have checked for msgs sent to this address
 		{
-			receivedSinceTime = currentTime - FIRST_CHECK_RECEIVED_TIME_MODIFIER;
+			return (System.currentTimeMillis() / 1000) - FIRST_CHECK_RECEIVED_TIME_MODIFIER;
 		}
 		else
 		{
-			receivedSinceTime = lastCheckTime - DEFAULT_RECEIVED_TIME_MODIFIER;
+			return lastCheckTime - DEFAULT_RECEIVED_TIME_MODIFIER;
 		}
-		
-		return receivedSinceTime;
 	}
 	
 	/**
