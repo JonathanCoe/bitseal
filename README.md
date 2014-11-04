@@ -1,8 +1,6 @@
 Bitseal
 =======
 
-[![tip for next commit](https://tip4commit.com/projects/1001.svg)](https://tip4commit.com/github/JonathanCoe/bitseal)
-
 Bitseal is a Bitmessage client for Android, currently in Beta. 
 
 <img src="https://i.imgur.com/45OuinZ.png" align="left" height="620" width="349" hspace="5" vspace="20">
@@ -38,18 +36,17 @@ Roadmap for development (subject to change)
 
 Notes
 ---------------
-+ The beta release should be used for testing purposes only. A first production release is planned once lite client message retrieval is implemented.
-+ Bitseal is free, open source software, released under the Gnu General Public License Version 3. 
++ At this stage Bitseal should NOT be considered to be secure, and therefore should be used for testing purposes only. Please take this warning seriously!
 + Some parts of Bitseal include, are based on, or are reliant upon software written by others, including [Jonathan Warren](https://github.com/Atheros1), [Sebastian Schmidt](https://github.com/ISibboI), [Tim Roes](https://github.com/timroes), [Roberto Tyley](https://github.com/rtyley), the [bitcoinj](https://github.com/bitcoinj/bitcoinj) developers, and the [Bouncy Castle](https://www.bouncycastle.org/java.html) developers. This is noted in the source code where applicable.
-+ I have set up a few default servers which can be used for testing purposes. Anyone is free to set up and use their own. The server application is simply a copy of PyBitmessage with a modified API. 
-+ See also the repositories [bitseal-server](https://github.com/JonathanCoe/bitseal-server) and [bitseal-tests](https://github.com/JonathanCoe/bitseal-tests)
++ I have set up a few default servers which can be used for testing purposes. Anyone is free to set up and use their own. The server application is a slightly modified copy of [PyBitmessage](https://github.com/bitmessage/pybitmessage).
++ See also the repositories [bitseal-server](https://github.com/JonathanCoe/bitseal-server) and [bitseal-tests](https://github.com/JonathanCoe/bitseal-tests).
 
 
 License
 ---------------
 Copyright 2014 Jonathan Coe
 
-Licensed under the [Gnu General Public License Version 3](https://www.gnu.org/licenses/gpl-3.0.html)
+Bitseal is free, open source software, licensed under the [Gnu General Public License Version 3](https://www.gnu.org/licenses/gpl-3.0.html)
 
 
 Support the project!
