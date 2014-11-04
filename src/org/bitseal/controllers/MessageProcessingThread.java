@@ -45,19 +45,19 @@ public class MessageProcessingThread
     	        {
     				Log.i(TAG, "Starting message processing thread.");
     				
-    				TaskController taskController = new TaskController();
+    				CheckForMessagesController controller = new CheckForMessagesController();
     	            int totalNewMessages = 0;
-    	            int newMessagesReceived = taskController.processIncomingMessages();
+    	            int newMessagesReceived = controller.processIncomingMessages();
     	            while (newMessagesReceived > 0)
     	            {
     	            	totalNewMessages = totalNewMessages + newMessagesReceived;
-    	            	newMessagesReceived = taskController.processIncomingMessages();
+    	            	newMessagesReceived = controller.processIncomingMessages();
     	            }
     	            
     				if (totalNewMessages > 0)
     				{
     					// Attempt to send any pending acknowledgments
-    					taskController.sendAcknowledgments();
+    					controller.sendAcknowledgments();
     					
     					// Display a notification for the new message(s)
     					Context appContext = App.getContext();

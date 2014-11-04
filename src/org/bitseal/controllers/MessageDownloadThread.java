@@ -63,10 +63,10 @@ public class MessageDownloadThread
 		            	
 			    		lastMsgCheckTime = prefs.getLong(LAST_MSG_CHECK_TIME, 0);
 			    		currentTime = System.currentTimeMillis() / 1000;
-			    		
-			    		// Attempt to start the message processing thread
-			    		MessageProcessingThread.getInstance().startThread();
 		            }
+		            
+				    // Attempt to run the message processing thread
+					MessageProcessingThread.getInstance().startThread();
 		             
 		            Log.i(TAG, "Finishing message download thread.");
 	            }

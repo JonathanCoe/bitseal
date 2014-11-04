@@ -368,50 +368,27 @@ public class TaskController
 	public void checkForMessagesAndSendAcks()
 	{
 		Log.i(TAG, "TaskController.checkForMessagesAndAcks() called");
-		
-		// Run the message download thread.
-	    MessageDownloadThread.getInstance().startThread();
-	}
-	
-	/**
-	 * Checks the database for any Payload objects containing new msgs and
-	 * processes any that are found.
-	 * 
-	 * @return An int representing the number of new messages successfully 
-	 * processed (zero to many)
-	 */
-	public int processIncomingMessages()
-	{
-		Log.i(TAG, "TaskController.processIncomingMessages called");
+			
+		try
+		{
+			// Run the message download thread.
+		    MessageDownloadThread.getInstance().startThread();
+		}
+		catch (Exception e)
+		{
+			Log.e(TAG, "While running TaskController.checkForMessagesAndSendAcks(), MessageDownloadThread.getInstance().startThread() threw an Exception. \n" +
+					"The exception message was: " + e.getMessage());
+		}
 		
 		try
 		{
-			return new CheckForMessagesController().processIncomingMessages();
+		    // Run the message processing thread
+			MessageProcessingThread.getInstance().startThread();
 		}
-		catch (RuntimeException runEx)
+		catch (Exception e)
 		{
-			Log.e(TAG, "While running TaskController.processIncomingMessages(), CheckForMessagesController.processIncomingMessages() threw a RuntimeExecption. \n" +
-					"The exception message was: " + runEx.getMessage());
-			return 0;
-		}
-	}
-	
-	/**
-	 * Attempts to send any outstanding acknowledgments for messages
-	 * that I have received. <br><br>
-	 */
-	public void sendAcknowledgments()
-	{
-		Log.i(TAG, "TaskController.sendAcknowledgments() called");
-		
-		try
-		{
-			new CheckForMessagesController().sendAcknowledgments();
-		}
-		catch (RuntimeException runEx)
-		{
-			Log.e(TAG, "While running TaskController.sendAcknowledgments(), CheckForMessagesController.sendAcknowledgments() threw a RuntimeExecption. \n" +
-					"The exception message was: " + runEx.getMessage());
+			Log.e(TAG, "While running TaskController.checkForMessagesAndSendAcks(), MessageProcessingThread.getInstance().startThread() threw an Exception. \n" +
+					"The exception message was: " + e.getMessage());
 		}
 	}
 	
