@@ -25,16 +25,46 @@ public class MessageDownloadThread
 	
 	private static class Holder 
     {
-        static final MessageDownloadThread INSTANCE = new MessageDownloadThread();
+        static MessageDownloadThread INSTANCE = new MessageDownloadThread();
     }
 	
 	/**
 	 * Returns a singleton instance of the MessageDownloadThread. This ensures that
 	 * only one instance of the thread will ever be exist at once. 
 	 */
-    public static MessageDownloadThread getInstance() 
+    protected static MessageDownloadThread getInstance() 
     {
         return Holder.INSTANCE;
+    }
+    
+    /**
+     * Starts the thread for downloading new messages, in such a way that the 
+     * thread will only be started if it is not already running. 
+     */
+    protected void startThread()
+    {
+    	if (downloadThread.getState() == Thread.State.NEW) // The thread has not been started yet
+    	{
+    		downloadThread.start();
+    	}
+    	else if (downloadThread.getState() == Thread.State.TERMINATED) // The thread has run to completion
+    	{
+    		setNewThreadInstance();	
+    		MessageDownloadThread.getInstance().startThread();
+    	}
+    	else
+    	{
+    		Log.d(TAG, "MessageDownloadThread.startThread() was called, but the thread is already running.");
+    	}
+    }
+    
+    /**
+     * Creates a new MessageDownloadThread instance and sets the
+     * static INSTANCE variable to point to it. 
+     */
+    private void setNewThreadInstance()
+    {
+    	Holder.INSTANCE = new MessageDownloadThread();
     }
     
     private MessageDownloadThread()
@@ -65,8 +95,7 @@ public class MessageDownloadThread
 			    		currentTime = System.currentTimeMillis() / 1000;
 		            }
 		            
-				    // Attempt to run the message processing thread
-					MessageProcessingThread.getInstance().startThread();
+		            MessageProcessingThread.getInstance().startThread();
 		             
 		            Log.i(TAG, "Finishing message download thread.");
 	            }
@@ -77,25 +106,5 @@ public class MessageDownloadThread
 	            }
 	        }
 	    });
-    }
-    
-    /**
-     * Starts the thread for downloading new messages, in such a way that the 
-     * thread will only be started if it is not already running. 
-     */
-    protected void startThread()
-    {
-    	if (downloadThread.getState() == Thread.State.NEW) // The thread has not been started yet
-    	{
-    		downloadThread.start();
-    	}
-    	else if (downloadThread.getState() == Thread.State.TERMINATED) // The thread has run to completion
-    	{
-    		downloadThread.run();
-    	}
-    	else
-    	{
-    		Log.d(TAG, "MessageDownloadThread.startThread() was called, but the thread is already running.");
-    	}
     }
 }

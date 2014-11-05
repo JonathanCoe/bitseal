@@ -368,7 +368,7 @@ public class TaskController
 	public void checkForMessagesAndSendAcks()
 	{
 		Log.i(TAG, "TaskController.checkForMessagesAndAcks() called");
-			
+		
 		try
 		{
 			// Run the message download thread.
@@ -382,7 +382,7 @@ public class TaskController
 		
 		try
 		{
-		    // Run the message processing thread
+			// Run the message processing thread
 			MessageProcessingThread.getInstance().startThread();
 		}
 		catch (Exception e)
