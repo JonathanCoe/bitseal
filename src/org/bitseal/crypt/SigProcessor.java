@@ -49,7 +49,14 @@ public class SigProcessor
 			long currentTime = System.currentTimeMillis() / 1000;
 			if (currentTime < 1416175200) // Sun, 16 November 2014 22:00:00 GMT
 			{
-				outputStream.write(ByteUtils.longToBytes(pubkey.getExpirationTime() - 2419200)); // Expiration time minus 28 days
+				if (pubkey.getObjectVersion() < 4)
+				{
+					outputStream.write(ByteUtils.intToBytes((int) (pubkey.getExpirationTime() - 2419200))); // Expiration time minus 28 days
+				}
+				else
+				{
+					outputStream.write(ByteUtils.longToBytes(pubkey.getExpirationTime() - 2419200)); // Expiration time minus 28 days
+				}	
 				outputStream.write(VarintEncoder.encode(pubkey.getObjectVersion()));
 				outputStream.write(VarintEncoder.encode(pubkey.getStreamNumber()));
 				outputStream.write(ByteUtils.intToBytes(pubkey.getBehaviourBitfield()));
