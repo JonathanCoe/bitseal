@@ -74,8 +74,17 @@ public class IncomingMessageProcessor
 	 */
 	public Message processReceivedMsg(Payload msgPayload)
 	{	
-		// Reconstruct the payload into a Msg object
-		Object msg = new ObjectProcessor().parseObject(msgPayload.getPayload());
+		// Attempt to reconstruct the payload into a Msg object
+		Object msg = null;
+		try
+		{		
+			msg = new ObjectProcessor().parseObject(msgPayload.getPayload());
+		}
+		catch (RuntimeException runEx)
+		{
+			Log.e(TAG, "RuntimeException occurred in IncomingMessageProcessor.processReceivedMsg(). The exception message was: " + runEx.getMessage());
+			return null;
+		}
 		
 		// Check whether this msg is an acknowledgment
 		byte[] messageData = msg.getPayload();

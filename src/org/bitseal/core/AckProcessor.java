@@ -7,6 +7,7 @@ import org.bitseal.database.PayloadProvider;
 import org.bitseal.database.PayloadsTable;
 import org.bitseal.network.ServerCommunicator;
 import org.bitseal.util.ArrayCopier;
+import org.bitseal.util.ByteFormatter;
 
 import android.util.Log;
 
@@ -58,7 +59,16 @@ public class AckProcessor
 			int numberOfAcksNotProcessedSuccessfully = 0;
 			for (Payload p : acksToSend)
 			{
-				boolean ackProcessedSuccessfully = checkAndSendAcknowledgment(p);
+				boolean ackProcessedSuccessfully = false;
+				try
+				{
+					ackProcessedSuccessfully = checkAndSendAcknowledgment(p);
+				}
+    	        catch (Exception e)
+    	        {
+    	        	Log.e(TAG, "While running AckProcessor.checkAndSendAcknowledgment(), and Exception was thrown. \n" +
+    						"The exception message was: " + e.getMessage());
+    	        }
 				
 				if (ackProcessedSuccessfully == false)
 				{
@@ -96,12 +106,14 @@ public class AckProcessor
 	private boolean checkAndSendAcknowledgment(Payload p)
 	{
 		byte[] fullAckMessage = p.getPayload();
-						
+		
+		Log.d("ACK_PROCESSOR", "TEMPORARY: Full ack Message: " + ByteFormatter.byteArrayToHexString(fullAckMessage));
+		
 		// Bitmessage acknowledgments are full Message objects, including the header data (magic bytes, command, length, checksum). 
 		// We only need the payload, so we will skip over the first 24 bytes. 
 		byte[] ackObjectBytes = ArrayCopier.copyOfRange(fullAckMessage, 24, fullAckMessage.length);
 				
-		// Check whether this ack is a valid Bitmessage object
+		// Check whether this ack is a valid Bitmessage Object
 		new ObjectProcessor().parseObject(ackObjectBytes);
 		
 		// Attempt to send the acknowledgment. 
