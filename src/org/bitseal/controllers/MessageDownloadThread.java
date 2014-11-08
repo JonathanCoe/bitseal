@@ -5,6 +5,7 @@ import org.bitseal.network.NetworkHelper;
 import org.bitseal.services.BackgroundService;
 
 import android.content.SharedPreferences;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -95,8 +96,11 @@ public class MessageDownloadThread
 			    		currentTime = System.currentTimeMillis() / 1000;
 		            }
 		            
+		            // Before attempting to start the message processing thread, sleep for 1 second. This helps
+		            // prevent Exceptions being thrown when the thread is started simultaneously by the TaskController
+		            SystemClock.sleep(1000);
 		            MessageProcessingThread.getInstance().startThread();
-		             
+		            
 		            Log.i(TAG, "Finishing message download thread.");
 	            }
 	            catch (Exception e)
