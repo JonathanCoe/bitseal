@@ -1,13 +1,14 @@
 package org.bitseal.data;
 
 /**
- * Represents an 'Object' in the Bitmessage protocol. <br><br>
+ * Represents an 'Object' in the Bitmessage protocol. Named this way
+ * to distinguish it from java.lang.Object <br><br>
  * 
  * See https://bitmessage.org/wiki/Protocol_specification#objects
  * 
  * @author Jonathan Coe
  */
-public class Object
+public class BMObject
 {
 	// These first two fields are internal use by Bitseal, and are not part of the Bitmessage protocol
 	private long id;

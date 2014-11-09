@@ -10,7 +10,7 @@ package org.bitseal.data;
  * 
  * @author Jonathan Coe
  */
-public class UnencryptedMsg extends Object
+public class UnencryptedMsg extends BMObject
 {	
 	// All fields below this are part of the data to be encrypted
 	private int senderAddressVersion; // The sender's address version

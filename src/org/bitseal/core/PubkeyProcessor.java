@@ -10,7 +10,7 @@ import org.bitseal.crypt.KeyConverter;
 import org.bitseal.crypt.SigProcessor;
 import org.bitseal.data.Address;
 import org.bitseal.data.Message;
-import org.bitseal.data.Object;
+import org.bitseal.data.BMObject;
 import org.bitseal.data.Payload;
 import org.bitseal.data.Pubkey;
 import org.bitseal.database.AddressProvider;
@@ -286,7 +286,7 @@ public class PubkeyProcessor
 	public Pubkey reconstructPubkey (byte[] pubkeyData, String addressString)
 	{
 		// First parse the standard Bitmessage object data
-		Object pubkeyObject = new ObjectProcessor().parseObject(pubkeyData);
+		BMObject pubkeyObject = new ObjectProcessor().parseObject(pubkeyData);
 		
 		// Now parse the pubkey-specific data
 		byte[] pubkeyPayload = pubkeyObject.getPayload();

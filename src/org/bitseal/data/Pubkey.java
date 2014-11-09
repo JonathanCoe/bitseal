@@ -10,7 +10,7 @@ package org.bitseal.data;
  * 
  * @author Jonathan Coe
  */
-public class Pubkey extends Object
+public class Pubkey extends BMObject
 {
 	// The first three fields of this class are for internal use by the Bitseal app and are not part of the data to be sent over the wire
 	private long correspondingAddressId;

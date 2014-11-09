@@ -1,6 +1,6 @@
 package org.bitseal.core;
 
-import org.bitseal.data.Object;
+import org.bitseal.data.BMObject;
 import org.bitseal.pow.POWProcessor;
 import org.bitseal.util.ArrayCopier;
 import org.bitseal.util.ByteFormatter;
@@ -62,7 +62,7 @@ public class ObjectProcessor
 	 * 
 	 * @return An Object created from the parsed data
 	 */
-	public Object parseObject (byte[] objectBytes)
+	public BMObject parseObject (byte[] objectBytes)
 	{	
 		// Parse the data from the byte[] 
 		int readPosition = 0;
@@ -130,7 +130,7 @@ public class ObjectProcessor
 		}
 		
 		// Create a new Object and use the parsed data to populate its fields
-		Object object = new Object();
+		BMObject object = new BMObject();
 		object.setBelongsToMe(false); // i.e. this object was not created by me
 		object.setPOWNonce(powNonce);
 		object.setExpirationTime(expirationTime);

@@ -171,7 +171,7 @@ public class TaskController
 		Pubkey toPubkey = null;
 		try
 		{
-			java.lang.Object retrievalResult = null;
+			Object retrievalResult = null;
 			// If we have already have getpubkey object created during a previous attempt to retrieve this 
 			// pubkey, pass it to the SendMessageController so it can be reused if necessary
 			if (inputQueueRecord.getObject1Id() != 0)

@@ -37,7 +37,7 @@ public class SendMessageController
 	 * retrieved) or a Payload containing a getpubkey (if we could not retrieve the pubkey
 	 * and had to send a getpubkey request). 
 	 */
-	public java.lang.Object retrievePubkey(Message message, Payload getpubkeyPayload, long timeToLive)
+	public Object retrievePubkey(Message message, Payload getpubkeyPayload, long timeToLive)
 	{
 		MessageStatusHandler.updateMessageStatus(message, Message.STATUS_REQUESTING_PUBKEY);
 		

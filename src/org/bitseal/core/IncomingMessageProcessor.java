@@ -9,7 +9,7 @@ import org.bitseal.crypt.KeyConverter;
 import org.bitseal.crypt.SigProcessor;
 import org.bitseal.data.Address;
 import org.bitseal.data.Message;
-import org.bitseal.data.Object;
+import org.bitseal.data.BMObject;
 import org.bitseal.data.Payload;
 import org.bitseal.data.Pubkey;
 import org.bitseal.data.QueueRecord;
@@ -75,7 +75,7 @@ public class IncomingMessageProcessor
 	public Message processReceivedMsg(Payload msgPayload)
 	{	
 		// Attempt to reconstruct the payload into a Msg object
-		Object msg = null;
+		BMObject msg = null;
 		try
 		{		
 			msg = new ObjectProcessor().parseObject(msgPayload.getPayload());
@@ -210,7 +210,7 @@ public class IncomingMessageProcessor
 	 * 
 	 * @param msg - A msg object containing the acknowledgment to be processed
 	 */
-	private void processAck(Object msg)
+	private void processAck(BMObject msg)
 	{
 		// Get the ack data from the msg
 		byte[] ackData = msg.getPayload();
@@ -280,7 +280,7 @@ public class IncomingMessageProcessor
 	 * @return If decryption is successful, returns an UnencryptedMsg object
 	 * containing the decrypted message data. Otherwise returns null.
 	 */
-	private UnencryptedMsg attemptMsgDecryption(Object msg, Address address)
+	private UnencryptedMsg attemptMsgDecryption(BMObject msg, Address address)
 	{
 		try
 		{
@@ -324,7 +324,7 @@ public class IncomingMessageProcessor
 	 * 
 	 * @return An UnencryptedMsg object containing the decrypted message data
 	 */
-	private UnencryptedMsg parseDecryptedMessage(Object msg, byte[] plainText, Address toAddress)
+	private UnencryptedMsg parseDecryptedMessage(BMObject msg, byte[] plainText, Address toAddress)
 	{		
 		// Parse the individual fields from the decrypted msg data
 		int readPosition = 0;

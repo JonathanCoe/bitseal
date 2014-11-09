@@ -11,7 +11,7 @@ import org.bitseal.crypt.PubkeyGenerator;
 import org.bitseal.crypt.SigProcessor;
 import org.bitseal.data.Address;
 import org.bitseal.data.Message;
-import org.bitseal.data.Object;
+import org.bitseal.data.BMObject;
 import org.bitseal.data.Payload;
 import org.bitseal.data.Pubkey;
 import org.bitseal.data.UnencryptedMsg;
@@ -74,7 +74,7 @@ public class OutgoingMessageProcessor
 		UnencryptedMsg unencMsg = constructUnencryptedMsg(message, toPubkey, doPOW, timeToLive);
 		
 		// Encrypt the message and, if enabled, do POW
-		Object encMsg = constructMsg(message, unencMsg, toPubkey, doPOW, timeToLive);
+		BMObject encMsg = constructMsg(message, unencMsg, toPubkey, doPOW, timeToLive);
 
 		// Construct the msg payload that will be sent over the network
 		Payload msgPayload = constructMsgPayloadForDissemination(encMsg, doPOW, toPubkey);
@@ -244,7 +244,7 @@ public class OutgoingMessageProcessor
 	 * 
 	 * @return A Msg object containing the encrypted message data
 	 */
-	private Object constructMsg (Message message, UnencryptedMsg unencMsg, Pubkey toPubkey, boolean doPOW, long timeToLive)
+	private BMObject constructMsg (Message message, UnencryptedMsg unencMsg, Pubkey toPubkey, boolean doPOW, long timeToLive)
 	{		
 		// Reconstruct the ECPublicKey object from the byte[] found the the relevant PubKey
 		ECPublicKey publicEncryptionKey = new KeyConverter().reconstructPublicKey(toPubkey.getPublicEncryptionKey());
@@ -259,7 +259,7 @@ public class OutgoingMessageProcessor
 		byte[] encryptedPayload = cryptProc.encrypt(msgDataForEncryption, publicEncryptionKey);
 				
 		// Create a new Msg object and populate its fields
-		Object msg = new Object();
+		BMObject msg = new BMObject();
 		msg.setBelongsToMe(true); // NOTE: This method assumes that any message I am encrypting 'belongs to me' (i.e. The user of the application is the author of the message)
 		msg.setExpirationTime(unencMsg.getExpirationTime());
 		msg.setObjectType(unencMsg.getObjectType());
@@ -292,7 +292,7 @@ public class OutgoingMessageProcessor
 	 * 
 	 * @return The POW payload
 	 */
-	private byte[] constructMsgPayloadForPOW (Object msg)
+	private byte[] constructMsgPayloadForPOW (BMObject msg)
 	{
 		try
 		{
@@ -468,7 +468,7 @@ public class OutgoingMessageProcessor
 	 * 
 	 * @return A Payload object containing the message payload
 	 */
-	private Payload constructMsgPayloadForDissemination (Object encMsg, boolean powDone, Pubkey toPubkey)
+	private Payload constructMsgPayloadForDissemination (BMObject encMsg, boolean powDone, Pubkey toPubkey)
 	{
 		// Create a new Payload object to hold the payload data
 		Payload msgPayload = new Payload();
