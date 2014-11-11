@@ -7,7 +7,6 @@ import org.bitseal.database.PayloadProvider;
 import org.bitseal.database.PayloadsTable;
 import org.bitseal.network.ServerCommunicator;
 import org.bitseal.util.ArrayCopier;
-import org.bitseal.util.ByteFormatter;
 
 import android.util.Log;
 
@@ -106,8 +105,6 @@ public class AckProcessor
 	private boolean checkAndSendAcknowledgment(Payload p)
 	{
 		byte[] fullAckMessage = p.getPayload();
-		
-		Log.d("ACK_PROCESSOR", "TEMPORARY: Full ack Message: " + ByteFormatter.byteArrayToHexString(fullAckMessage));
 		
 		// Bitmessage acknowledgments are full Message objects, including the header data (magic bytes, command, length, checksum). 
 		// We only need the payload, so we will skip over the first 24 bytes. 
