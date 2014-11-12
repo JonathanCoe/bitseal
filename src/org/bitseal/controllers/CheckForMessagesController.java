@@ -11,7 +11,9 @@ import org.bitseal.database.MessageProvider;
 import org.bitseal.database.PayloadProvider;
 import org.bitseal.database.PayloadsTable;
 import org.bitseal.network.ServerCommunicator;
+import org.bitseal.services.NotificationsService;
 
+import android.content.Context;
 import android.content.Intent;
 
 /**
@@ -37,8 +39,7 @@ public class CheckForMessagesController
 	/**
 	 * Processes one or more msg payloads that have been sent to me
 	 *  
-	 * @return An int representing the number of new messages successfully 
-	 * received (i.e. successfully decrypted and authenticated). 
+	 * @return An int representing the number of new messages successfully processed
 	 */
 	public int processIncomingMessages()
 	{
@@ -77,7 +78,16 @@ public class CheckForMessagesController
 			payProv.updatePayload(p);
 		}
 		
-		return newMessagesReceived;
+		if (newMessagesReceived > 0)
+		{
+			// Display a notification for any new message(s) we have received
+			Context appContext = App.getContext();
+			Intent intent = new Intent(appContext, NotificationsService.class);
+		    intent.putExtra(NotificationsService.EXTRA_DISPLAY_NEW_MESSAGES_NOTIFICATION, newMessagesReceived);
+		    appContext.startService(intent);
+		}
+		
+		return processedMsgs.size();
 	}
 	
 	/**

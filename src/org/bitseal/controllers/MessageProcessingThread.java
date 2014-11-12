@@ -1,10 +1,5 @@
 package org.bitseal.controllers;
 
-import org.bitseal.core.App;
-import org.bitseal.services.NotificationsService;
-
-import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
 
 /**
@@ -76,25 +71,14 @@ public class MessageProcessingThread
     				Log.i(TAG, "Starting message processing thread.");
     				
     				CheckForMessagesController controller = new CheckForMessagesController();
-    	            int totalNewMessages = 0;
-    	            int newMessagesReceived = controller.processIncomingMessages();
-    	            while (newMessagesReceived > 0)
+    	            int newMessagesProcessed = controller.processIncomingMessages();
+    	            while (newMessagesProcessed > 0)
     	            {
-    	            	totalNewMessages = totalNewMessages + newMessagesReceived;
-    	            	newMessagesReceived = controller.processIncomingMessages();
+    	            	newMessagesProcessed = controller.processIncomingMessages();
     	            }
     	            
-    				if (totalNewMessages > 0)
-    				{
-    					// Attempt to send any pending acknowledgments
-    					controller.sendAcknowledgments();
-    					
-    					// Display a notification for the new message(s)
-    					Context appContext = App.getContext();
-    					Intent intent = new Intent(appContext, NotificationsService.class);
-    				    intent.putExtra(NotificationsService.EXTRA_DISPLAY_NEW_MESSAGES_NOTIFICATION, totalNewMessages);
-    				    appContext.startService(intent);
-    				}
+					// Attempt to send any pending acknowledgments
+					controller.sendAcknowledgments();
     	            
     	            Log.i(TAG, "Finishing message processing thread.");
     	        }
