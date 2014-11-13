@@ -17,13 +17,7 @@ import android.util.Log;
  * @author Jonathan Coe
  */
 public class AckProcessor
-{
-	/** In Bitmessage protocol version 3, the network standard value for nonce trials per byte is 1000. */
-	public static final int NETWORK_NONCE_TRIALS_PER_BYTE = 1000;
-	
-	/** In Bitmessage protocol version 3, the network standard value for extra bytes is 1000. */
-	public static final int NETWORK_EXTRA_BYTES = 1000;
-	
+{	
 	private static final String TAG = "ACK_PROCESSOR";
 	
 	/**

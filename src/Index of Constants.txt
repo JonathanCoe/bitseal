@@ -81,9 +81,6 @@ org.bitseal.controllers
 		- LAST_MSG_CHECK_TIME
 
 org.bitseal.core:
-	- AckProcessor
-		- NETWORK_NONCE_TRIALS_PER_BYTE
-		- NETWORK_EXTRA_BYTES
 	- Address Processor
 		- BITMESSAGE_ADDRESS_PREFIX
 		- BITMESSAGE_ADDRESS_MIN_LENGTH
