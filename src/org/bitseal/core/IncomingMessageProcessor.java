@@ -82,7 +82,7 @@ public class IncomingMessageProcessor
 		}
 		catch (RuntimeException runEx)
 		{
-			Log.e(TAG, "RuntimeException occurred in IncomingMessageProcessor.processReceivedMsg(). The exception message was: " + runEx.getMessage());
+			Log.e(TAG, "RuntimeException occurred in IncomingMessageProcessor.processReceivedMsg(). The exception message was:\n" + runEx.getMessage());
 			return null;
 		}
 		

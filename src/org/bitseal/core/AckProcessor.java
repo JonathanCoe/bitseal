@@ -51,7 +51,7 @@ public class AckProcessor
 				}
 			}
 			
-			Log.d(TAG, "Number of acknowledgment messages that I need to send: " + acksToSend.size());
+			Log.i(TAG, "Number of acknowledgment messages that I need to send: " + acksToSend.size());
 			
 			// Attempt to send each ack payload retrieved from the database. If any of these payloads
 			// are not processed successfully, that failure is recorded in 'numberOfAcksNotProcessedSuccessfully'
