@@ -12,6 +12,7 @@ import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,6 +20,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnFocusChangeListener;
+import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
@@ -191,10 +193,11 @@ public class ServersActivity extends ListActivity
 						
 						updateListView();
 						
-						// Toggle the Android soft keyboard in order to hide it (since this is a method for when the save 
-						// button has been clicked, it is very likely that the soft keyboard is already open. Now we want to close it.
-						InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-						imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+						// Our current method for detecting and closing the soft keyboard only works with API 16 and later
+						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
+						{
+							closeKeyboardIfOpen();
+						}
 					}
 				});
 			    
@@ -268,6 +271,37 @@ public class ServersActivity extends ListActivity
 				});
 			}
 		});
+	}
+	
+	/**
+	 * If the soft keyboard is open, this method will close it. 
+	 */
+	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+	private void closeKeyboardIfOpen()
+	{
+		final View activityRootView = getWindow().getDecorView().getRootView();	
+		final OnGlobalLayoutListener globalListener = new OnGlobalLayoutListener()
+		{
+			@Override
+			public void onGlobalLayout() 
+			{
+			    Rect rect = new Rect();
+			    // rect will be populated with the coordinates of your view that area still visible.
+			    activityRootView.getWindowVisibleDisplayFrame(rect);
+
+			    int heightDiff = activityRootView.getRootView().getHeight() - (rect.bottom - rect.top);
+			    if (heightDiff > 100)
+			    {
+			    	// If the difference is more than 100 pixels, it's probably cause by the soft keyboard being open. Now we want to close it.
+					InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+					imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0); // Toggle the soft keyboard. 
+			    }
+			    
+			    // Now we have to remove the OnGlobalLayoutListener, otherwise we will experience errors
+			    activityRootView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+			}
+		};
+		activityRootView.getViewTreeObserver().addOnGlobalLayoutListener(globalListener);
 	}
 
 	@Override
@@ -459,10 +493,11 @@ public class ServersActivity extends ListActivity
 				
 				listItemDialog.dismiss();
 				
-				// Toggle the Android soft keyboard in order to hide it (since this is a method for when the save 
-				// button has been clicked, it is very likely that the soft keyboard is already open. Now we want to close it.
-				InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-				imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+				// Our current method for detecting and closing the soft keyboard only works with API 16 and later
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
+				{
+					closeKeyboardIfOpen();
+				}
 			}
 		});
 	    
