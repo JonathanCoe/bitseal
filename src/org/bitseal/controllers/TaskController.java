@@ -460,7 +460,7 @@ public class TaskController
 		}
 		catch (RuntimeException runEx)
 		{
-			Log.e(TAG, "While running TaskController.reDisseminatePubkeys(), ReDisseminatePubkeysController.reDisseminatePubkeys() threw a RuntimeExecption. \n" +
+			Log.e(TAG, "A RuntimeException was thrown while running TaskController.reDisseminatePubkeys(). \n" +
 					"The exception message was: " + runEx.getMessage());
 		}
 	}
