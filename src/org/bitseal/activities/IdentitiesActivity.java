@@ -123,8 +123,8 @@ public class IdentitiesActivity extends ListActivity
 	    }
 	    catch (Exception e)
 	    {
-	    	Log.e(TAG, "Exception occured in IdentitiesActivity while running mAddressGenerationButton.onClick(). \n " +
-	    			"Exception message: " + e.getMessage());
+	    	Log.e(TAG, "Exception occured in IdentitiesActivity while running mAddressGenerationButton.onClick().\n" +
+	    			"The Exception message was: " + e.getMessage());
 	    }
 		// ---------------------------------------------------------------------------------------
 	}
