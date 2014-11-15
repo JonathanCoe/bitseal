@@ -1,7 +1,7 @@
 Bitseal
 =======
 
-Bitseal is a Bitmessage client for Android, currently in Beta. 
+Bitseal is a [Bitmessage](https://bitmessage.org) client for Android, currently in Beta. 
 
 <img src="https://i.imgur.com/45OuinZ.png" align="left" height="620" width="349" hspace="5" vspace="20">
 <img src="https://i.imgur.com/R2xgeDW.png" align="left" height="620" width="349" hspace="5" vspace="20">
