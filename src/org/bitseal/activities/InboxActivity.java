@@ -60,8 +60,6 @@ public class InboxActivity extends ListActivity
     private static final String ADDRESS_BOOK_ENTRY_0_ADDRESS = "BM-NC2oGii7w8UT4igUhsCBGBE7gngvoD83";
     private static final String ADDRESS_BOOK_ENTRY_1_LABEL = "Darklogs.com";
     private static final String ADDRESS_BOOK_ENTRY_1_ADDRESS = "BM-2cTUZmrFaypXnAR4DAXLbAb6KrFPRhGyEe";
-    private static final String ADDRESS_BOOK_ENTRY_2_LABEL = "Bitchirp.org";
-    private static final String ADDRESS_BOOK_ENTRY_2_ADDRESS = "BM-2D7yBNF87Msi8M3hZr3eop6Fd1ENPAzPoi";
     
     // A welcome message for new users
     protected static final String WELCOME_MESSAGE_TO_ADDRESS = "Me";
@@ -210,14 +208,9 @@ public class InboxActivity extends ListActivity
 		addressBookEntry1.setLabel(ADDRESS_BOOK_ENTRY_1_LABEL);
 		addressBookEntry1.setAddress(ADDRESS_BOOK_ENTRY_1_ADDRESS);
 		
-		AddressBookRecord addressBookEntry2 = new AddressBookRecord();
-		addressBookEntry2.setLabel(ADDRESS_BOOK_ENTRY_2_LABEL);
-		addressBookEntry2.setAddress(ADDRESS_BOOK_ENTRY_2_ADDRESS);
-		
 		AddressBookRecordProvider addBookProv = AddressBookRecordProvider.get(getApplicationContext());
 		addBookProv.addAddressBookRecord(addressBookEntry0);
 		addBookProv.addAddressBookRecord(addressBookEntry1);
-		addBookProv.addAddressBookRecord(addressBookEntry2);
 	    
 	    // Add the 'Welcome to Bitseal' message to the inbox
 		Message welcomeMessage = new Message();
@@ -330,7 +323,7 @@ public class InboxActivity extends ListActivity
 	}
 	
 	/**
-	 * A ViewHolder used to speed up this activity's listview.
+	 * A ViewHolder used to speed up this activity's ListView.
 	 */
     static class ViewHolder 
     {
