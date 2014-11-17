@@ -241,7 +241,7 @@ public final class ByteUtils
 	 * @param start - The starting index of the range of bytes to be removed
 	 * @param end - The end index of the range of bytes to be removed
 	 * 
-	 * @return A byte[] containing the remaining bytes fromt the array
+	 * @return A byte[] containing the remaining bytes from the array
 	 */
 	public static byte[] removeBytesFromArray(byte[] original, int start, int end)
 	{
@@ -263,7 +263,29 @@ public final class ByteUtils
 		{
 			input = ArrayCopier.copyOfRange(input, 1, input.length);
 		}
-		
+		return input;
+	}
+	
+	/**
+	 * Takes a byte[] and pads it with leading zeros until its total
+	 * length is equal to the 'finalLength' parameter. <br><br>
+	 * 
+	 * If the length of the supplied byte[] is already equal to or greater
+	 * than the supplied 'finalLength' value then the byte[] will be returned unchanged. 
+	 * 
+	 * @param input - The byte[] to be padded with leading zeros
+	 * @param finalLength - The desired total length of the byte[] once it
+	 * has been padded with leading zeros
+	 * 
+	 * @return The byte[] with leading zeros added
+	 */
+	public static byte[] padWithLeadingZeros(byte[] input, int finalLength)
+	{
+		while (input.length < finalLength)
+		{
+			byte[] zeroByte = new byte[]{0};
+			input = ByteUtils.concatenateByteArrays(zeroByte, input);
+		}
 		return input;
 	}
 }
