@@ -160,12 +160,12 @@ public class CryptProcessor
 		byte[] expectedMAC = SHA256.hmacSHA256(cipherText, key_m);
 		if (Arrays.equals(mac, expectedMAC) == false)
 		{
-			// The mac was invalid
-			throw new RuntimeException("While attempting to decrypt a message in CryptProcessor.decryptMsg(), the mac was found to be invalid");
+			// The mac is invalid
+			throw new RuntimeException("While attempting to decrypt an encrypted payload in CryptProcessor.decryptMsg(), the mac was found to be invalid");
 		}
 		else
 		{
-			// The mac was valid. Decrypt the parsed data
+			// The mac is valid. Decrypt the parsed data
 			return doAES(key_e, iv, cipherText, false);
 		}
 	}
