@@ -379,7 +379,9 @@ public class PubkeyProcessor
 	/**
 	 * Takes a Pubkey and encodes it into a single byte[] (in a way that is compatible
 	 * with the way that PyBitmessage does), and does POW for this payload. This payload
-	 * can then be sent to a server to be disseminated across the network. 
+	 * can then be sent to a server to be disseminated across the network. <br><br>
+	 * 
+	 * Note: This method is currently only valid for version 4 pubkeys
 	 * 
 	 * @param pubkey - An Pubkey object containing the pubkey data used to create
 	 * the payload.
@@ -399,82 +401,50 @@ public class PubkeyProcessor
 			payloadStream.write(VarintEncoder.encode(pubkey.getObjectVersion())); 
 			payloadStream.write(VarintEncoder.encode(pubkey.getStreamNumber())); 
 			
-			if (pubkey.getObjectVersion() >= 4) // Pubkeys of version 4 and above have most of their data encrypted
-			{
-				// Combine all the data to be encrypted into a single byte[]
-				ByteArrayOutputStream dataToEncryptStream = new ByteArrayOutputStream();
-				
-				dataToEncryptStream.write(ByteUtils.intToBytes(pubkey.getBehaviourBitfield()));
-				
-				// If the public signing and public encryption keys have their leading 0x04 byte in place then we need to remove them
-				byte[] publicSigningKey = pubkey.getPublicSigningKey();
-				if (publicSigningKey[0] == (byte) 4  && publicSigningKey.length == 65)
-				{
-					publicSigningKey = ArrayCopier.copyOfRange(publicSigningKey, 1, publicSigningKey.length);
-				}
-				dataToEncryptStream.write(publicSigningKey);
-				
-				byte[] publicEncryptionKey = pubkey.getPublicEncryptionKey();
-				if (publicEncryptionKey[0] == (byte) 4  && publicEncryptionKey.length == 65)
-				{
-					publicEncryptionKey = ArrayCopier.copyOfRange(publicEncryptionKey, 1, publicEncryptionKey.length);
-				}
-				dataToEncryptStream.write(publicEncryptionKey);
-				
-				dataToEncryptStream.write(VarintEncoder.encode(pubkey.getNonceTrialsPerByte()));
-				dataToEncryptStream.write(VarintEncoder.encode(pubkey.getExtraBytes()));
-				dataToEncryptStream.write(VarintEncoder.encode(pubkey.getSignatureLength()));
-				dataToEncryptStream.write(pubkey.getSignature());
-				
-				// Create the ECPublicKey object that we will use to encrypt the data. First we will
-				// retrieve the Address corresponding to this pubkey, so that we can calculate the encryption
-				// key derived from the double hash of the address data.
-				AddressProvider addProv = AddressProvider.get(App.getContext());
-				Address address = addProv.searchForSingleRecord(pubkey.getCorrespondingAddressId());
-				String addressString = address.getAddress();
-				AddressProcessor addProc = new AddressProcessor();
-				byte[] encryptionKey = addProc.calculateAddressEncryptionKey(addressString);
-				KeyConverter keyConv = new KeyConverter();
-				ECPublicKey K = keyConv.calculatePublicKeyFromDoubleHashKey(encryptionKey);
-				
-				// Encrypt the pubkey data
-				byte[] dataToEncrypt = dataToEncryptStream.toByteArray();
-				CryptProcessor cryptProc = new CryptProcessor();
-				byte[] encryptedPayload = cryptProc.encrypt(dataToEncrypt, K);
-				
-				// Get the tag used to identify the pubkey payload
-				byte[] tag = address.getTag();
-				
-				// Add the tag and the encrypted data to the rest of the pubkey payload
-				payloadStream.write(tag);
-				payloadStream.write(encryptedPayload);
-			}
+			// Assemble the pubkey data that will be encrypted
+			ByteArrayOutputStream dataToEncryptStream = new ByteArrayOutputStream();
 			
-			else // For pubkeys of version 3 and below
-			{
-				payloadStream.write(ByteUtils.intToBytes(pubkey.getBehaviourBitfield()));
-				
-				// If the public signing and public encryption keys have their leading 0x04 byte in place then we need to remove them
-				byte[] publicSigningKey = pubkey.getPublicSigningKey();
-				if (publicSigningKey[0] == (byte) 4  && publicSigningKey.length == 65)
-				{
-					publicSigningKey = ArrayCopier.copyOfRange(publicSigningKey, 1, publicSigningKey.length);
-				}
-				payloadStream.write(publicSigningKey);
-				
-				byte[] publicEncryptionKey = pubkey.getPublicEncryptionKey();
-				if (publicEncryptionKey[0] == (byte) 4  && publicEncryptionKey.length == 65)
-				{
-					publicEncryptionKey = ArrayCopier.copyOfRange(publicEncryptionKey, 1, publicEncryptionKey.length);
-				}
-				payloadStream.write(publicEncryptionKey);
-				
-				payloadStream.write(VarintEncoder.encode(pubkey.getNonceTrialsPerByte())); 
-				payloadStream.write(VarintEncoder.encode(pubkey.getExtraBytes())); ;
-				payloadStream.write(VarintEncoder.encode(pubkey.getSignatureLength()));
-				payloadStream.write(pubkey.getSignature());
-			}
+			dataToEncryptStream.write(ByteUtils.intToBytes(pubkey.getBehaviourBitfield()));
 			
+			// If the public signing and public encryption keys have their leading 0x04 byte in place then we need to remove them
+			byte[] publicSigningKey = pubkey.getPublicSigningKey();
+			if (publicSigningKey[0] == (byte) 4  && publicSigningKey.length == 65)
+			{
+				publicSigningKey = ArrayCopier.copyOfRange(publicSigningKey, 1, publicSigningKey.length);
+			}
+			dataToEncryptStream.write(publicSigningKey);
+			
+			byte[] publicEncryptionKey = pubkey.getPublicEncryptionKey();
+			if (publicEncryptionKey[0] == (byte) 4  && publicEncryptionKey.length == 65)
+			{
+				publicEncryptionKey = ArrayCopier.copyOfRange(publicEncryptionKey, 1, publicEncryptionKey.length);
+			}
+			dataToEncryptStream.write(publicEncryptionKey);
+			
+			dataToEncryptStream.write(VarintEncoder.encode(pubkey.getNonceTrialsPerByte()));
+			dataToEncryptStream.write(VarintEncoder.encode(pubkey.getExtraBytes()));
+			dataToEncryptStream.write(VarintEncoder.encode(pubkey.getSignatureLength()));
+			dataToEncryptStream.write(pubkey.getSignature());
+			
+			// Create the ECPublicKey object that we will use to encrypt the data. First we will
+			// retrieve the Address corresponding to this pubkey, so that we can calculate the encryption
+			// key derived from the double hash of the address data.
+			Address address = AddressProvider.get(App.getContext()).searchForSingleRecord(pubkey.getCorrespondingAddressId());
+			String addressString = address.getAddress();
+			byte[] encryptionKey = new AddressProcessor().calculateAddressEncryptionKey(addressString);
+			ECPublicKey K = new KeyConverter().calculatePublicKeyFromDoubleHashKey(encryptionKey);
+			
+			// Encrypt the pubkey data
+			byte[] dataToEncrypt = dataToEncryptStream.toByteArray();
+			byte[] encryptedPayload = new CryptProcessor().encrypt(dataToEncrypt, K);
+			
+			// Get the tag used to identify the pubkey payload
+			byte[] tag = address.getTag();
+			
+			// Add the tag and the encrypted data to the rest of the pubkey payload
+			payloadStream.write(tag);
+			payloadStream.write(encryptedPayload);
+
 			payload = payloadStream.toByteArray();
 		} 
 		catch (IOException e)
