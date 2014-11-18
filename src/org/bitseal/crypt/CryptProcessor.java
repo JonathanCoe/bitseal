@@ -163,10 +163,11 @@ public class CryptProcessor
 			// The mac was invalid
 			throw new RuntimeException("While attempting to decrypt a message in CryptProcessor.decryptMsg(), the mac was found to be invalid");
 		}
-		
-		// Decrypt the parsed data
-		byte[] plainText = doAES(key_e, iv, cipherText, false);
-		return plainText;
+		else
+		{
+			// The mac was valid. Decrypt the parsed data
+			return doAES(key_e, iv, cipherText, false);
+		}
 	}
 	
 	/**
