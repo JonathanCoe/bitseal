@@ -80,9 +80,7 @@ public class PubkeyGenerator
 		
 		byte[] publicSigningKey = signingKeyPair.getPubKey();
 		byte[] publicEncryptionKey = encryptionKeyPair.getPubKey();
-		
-		byte[] ripeHash = address.getRipeHash();
-		
+				
 		// Get the address version and stream number
 		AddressProcessor addProc = new AddressProcessor();
 		int[] decoded = addProc.decodeAddressNumbers(address.getAddress());
@@ -92,15 +90,14 @@ public class PubkeyGenerator
     	// Set the Behaviour Bitfield.
     	int behaviourBitfield = BehaviourBitfieldProcessor.getBitfieldForMyPubkeys();
 		
-		// Create a new Pubkey object and populate its fields. 
-		Pubkey pubkey = new Pubkey();
-		
 		// Work out the 'end of life time' value to use
 		long expirationTime = TimeUtils.getFuzzedExpirationTime(PUBKEY_TTL);
-	
+    	
+		// Create a new Pubkey object and populate its fields. 
+		Pubkey pubkey = new Pubkey();
 		pubkey.setCorrespondingAddressId(address.getId());
 		pubkey.setBelongsToMe(true);
-		pubkey.setRipeHash(ripeHash);
+		pubkey.setRipeHash(address.getRipeHash());
 		pubkey.setExpirationTime(expirationTime);
 		pubkey.setObjectType(OBJECT_TYPE_PUBKEY);
 		pubkey.setObjectVersion(addressVersion);
