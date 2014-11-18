@@ -71,11 +71,12 @@ public class POWProcessor
 		powCalc.setInitialHash(SHA512.sha512(payload));
 		powCalc.setTargetLoad(1);
 		
-		Log.d(TAG, "Doing POW calculations for a payload " + payload.length + " bytes in length.\n" +
-				"Nonce trials per byte: " + nonceTrialsPerByte + "\n" +
-				"Extra bytes          : " + extraBytes + "\n" +
-				"Time to live         : " + TimeUtils.getTimeMessage(timeToLive) + "\n" +
-				"Target               : " + powTarget);
+		Log.d(TAG, "Doing POW calculations for a payload.\n" +
+				"Payload length        : " + payload.length + " bytes\n" +
+				"Nonce trials per byte : " + nonceTrialsPerByte + "\n" +
+				"Extra bytes           : " + extraBytes + "\n" +
+				"Time to live          : " + TimeUtils.getTimeMessage(timeToLive) + "\n" +
+				"Target                : " + powTarget);
 		
 		return powCalc.execute(MAX_TIME_ALLOWED);
 	}
