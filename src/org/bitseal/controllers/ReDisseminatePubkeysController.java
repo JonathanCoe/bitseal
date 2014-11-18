@@ -77,6 +77,8 @@ public class ReDisseminatePubkeysController
 	 */
 	public Payload regeneratePubkey(Address address, boolean doPOW)
 	{
+		Log.d(TAG, "The pubkey for address " + address.getAddress() + " is due to be re-disseminated. This will be done now.");
+		
 		// Delete the old pubkey
 		PubkeyProvider pubProv = PubkeyProvider.get(App.getContext());
 		Pubkey oldPubkey = pubProv.searchForSingleRecord(address.getCorrespondingPubkeyId());
