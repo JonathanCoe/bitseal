@@ -44,10 +44,9 @@ public class POWProcessor
 //	 */
 //	public long doPOW(byte[] payload, long expirationTime, long nonceTrialsPerByte, long extraBytes)
 //	{	
-//		SecureRandom secRand = new SecureRandom();
-//		byte[] POWNonce = new byte[8];
-//		secRand.nextBytes(POWNonce);
-//		return ByteUtils.bytesToLong(POWNonce);
+//		byte[] fakePOWNonce = new byte[8];
+//		new SecureRandom().nextBytes(fakePOWNonce);
+//		return ByteUtils.bytesToLong(fakePOWNonce);
 //	}
 	
 	/**
