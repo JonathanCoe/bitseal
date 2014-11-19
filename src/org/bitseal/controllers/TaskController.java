@@ -371,7 +371,7 @@ public class TaskController
 		
 		try
 		{
-			// Run the message download thread.
+			// Start the message download thread.
 		    MessageDownloadThread.getInstance().startThread();
 		}
 		catch (Exception e)
@@ -382,7 +382,7 @@ public class TaskController
 		
 		try
 		{
-			// Run the message processing thread
+			// Start the message processing thread
 			MessageProcessingThread.getInstance().startThread();
 		}
 		catch (Exception e)
