@@ -78,6 +78,9 @@ org.bitseal.controllers
 	- CheckForMessagesController
 		- UI_NOTIFICATION
 		- LAST_PROCESSED_MSG_TIME
+	- MessageDownloadThread
+		- MINIMUM_TIME_BEHIND_NETWORK
+		- LAST_MSG_CHECK_TIME
 	- TaskController
 		- UI_NOTIFICATION
 		- LAST_MSG_CHECK_TIME

@@ -2,7 +2,6 @@ package org.bitseal.controllers;
 
 import org.bitseal.core.App;
 import org.bitseal.network.NetworkHelper;
-import org.bitseal.services.BackgroundService;
 
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -16,6 +15,9 @@ import android.util.Log;
  */
 public class MessageDownloadThread 
 {
+	/** Defines the minimum amount of time (in seconds) behind the network for which we will make a 'check for new msgs' server request */
+	private static final int MINIMUM_TIME_BEHIND_NETWORK = 30;
+	
 	/** A key used to store the time of the last successful 'check for new msgs' server request */
 	private static final String LAST_MSG_CHECK_TIME = "lastMsgCheckTime";
 	
@@ -86,7 +88,7 @@ public class MessageDownloadThread
 		    		// Check whether we are significantly behind in checking for new msgs. If we are AND there is an internet connection available
 		    	    // then we should keep downloading new msgs
 		    		CheckForMessagesController controller = new CheckForMessagesController();
-		            while (((currentTime - lastMsgCheckTime) > BackgroundService.BACKGROUND_SERVICE_NORMAL_START_INTERVAL) && (NetworkHelper.checkInternetAvailability() == true))
+		            while (((currentTime - lastMsgCheckTime) > MINIMUM_TIME_BEHIND_NETWORK) && (NetworkHelper.checkInternetAvailability() == true))
 		            {
 		            	controller.checkServerForMessages();
 		            	
