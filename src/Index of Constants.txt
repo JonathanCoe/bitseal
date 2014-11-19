@@ -50,6 +50,7 @@ org.bitseal.activities
 		- FIRST_ADDRESS_LABEL
 		- UI_NOTIFICATION
 		- LAST_MSG_CHECK_TIME
+		- LAST_PROCESSED_MSG_TIME
 		- INBOX_COLOURS_ALPHA_VALUE
 	- InboxMessageActivity
 		- EXTRA_MESSAGE_ID
@@ -76,6 +77,7 @@ org.bitseal.activities
 org.bitseal.controllers
 	- CheckForMessagesController
 		- UI_NOTIFICATION
+		- LAST_PROCESSED_MSG_TIME
 	- TaskController
 		- UI_NOTIFICATION
 		- LAST_MSG_CHECK_TIME
@@ -266,7 +268,7 @@ org.bitseal.util
 		- BASE
 	- TimeUtils
 		- FUZZ_TIME_SECONDS
-		- LAST_MSG_CHECK_TIME
+		- LAST_PROCESSED_MSG_TIME
 		- SECONDS_IN_A_DAY
 		- SECONDS_IN_AN_HOUR
 		- MINUTES_IN_AN_HOUR
