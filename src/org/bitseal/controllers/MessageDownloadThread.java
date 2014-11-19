@@ -5,7 +5,6 @@ import org.bitseal.network.NetworkHelper;
 import org.bitseal.services.BackgroundService;
 
 import android.content.SharedPreferences;
-import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -86,7 +85,6 @@ public class MessageDownloadThread
 		    		
 		    		// Check whether we are significantly behind in checking for new msgs. If we are AND there is an internet connection available
 		    	    // then we should keep downloading new msgs
-		    				    		
 		    		CheckForMessagesController controller = new CheckForMessagesController();
 		            while (((currentTime - lastMsgCheckTime) > BackgroundService.BACKGROUND_SERVICE_NORMAL_START_INTERVAL) && (NetworkHelper.checkInternetAvailability() == true))
 		            {
@@ -94,12 +92,10 @@ public class MessageDownloadThread
 		            	
 			    		lastMsgCheckTime = prefs.getLong(LAST_MSG_CHECK_TIME, 0);
 			    		currentTime = System.currentTimeMillis() / 1000;
+			    		
+			    		// Start the message processing thread
+			    		MessageProcessingThread.getInstance().startThread();
 		            }
-		            
-		            // Before attempting to start the message processing thread, sleep for 1 second. This helps
-		            // prevent Exceptions being thrown when the thread is started simultaneously by the TaskController
-		            SystemClock.sleep(1000);
-		            MessageProcessingThread.getInstance().startThread();
 		            
 		            Log.i(TAG, "Finishing message download thread.");
 	            }
