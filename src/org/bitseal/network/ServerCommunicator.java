@@ -630,7 +630,7 @@ public class ServerCommunicator
 		SharedPreferences.Editor editor = prefs.edit();
 	    editor.putLong(LAST_MSG_CHECK_TIME, receivedBeforeTime);
 	    editor.commit();
-		Log.i(TAG, "Updated the 'last successful msg check time' time stored in SharedPreferences to " + receivedBeforeTime);
+		Log.i(TAG, "Updated the 'last successful msg check time' value stored in SharedPreferences to " + receivedBeforeTime);
 	}
 	
 	/**
