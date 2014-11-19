@@ -23,8 +23,6 @@ package org.bitseal.util;
 
 import java.math.BigInteger;
 
-import android.util.Log;
-
 /**
  * A custom form of base58 is used to encode Bitcoin addresses. Note that this is not the same base58 as used by
  * Flickr, which you may see reference to around the internet.<p>
@@ -104,7 +102,6 @@ public class Base58
             int alphaIndex = ALPHABET.indexOf(input.charAt(i));
             if (alphaIndex == -1)
             {
-                Log.d("BASE_58", "TEMPORARY: In Base58.decodeToBigInteger(), Illegal character " + input.charAt(i) + " at index " + i);
             	throw new IllegalArgumentException("In Base58.decodeToBigInteger(), Illegal character " + input.charAt(i) + " at index " + i + ". Throwing new IlleglArgumentException.");
             }
             bi = bi.add(BigInteger.valueOf(alphaIndex).multiply(BASE.pow(input.length() - 1 - i)));
