@@ -15,6 +15,9 @@ import org.bitseal.services.NotificationsService;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+import android.util.Log;
 
 /**
  * This class controls the operations necessary to check whether
@@ -26,7 +29,12 @@ import android.content.Intent;
 public class CheckForMessagesController
 {
 	/** Used when broadcasting Intents to the UI so that it can refresh the data it is displaying */
-	public static final String UI_NOTIFICATION = "uiNotification";
+	private static final String UI_NOTIFICATION = "uiNotification";
+	
+	/** Stores the Unix timestamp of the last msg payload we processed. This can be used to tell us how far behind the network we are. */
+	private static final String LAST_PROCESSED_MSG_TIME = "lastProcessedMsgTime";
+	
+	private static final String TAG = "CHECK_FOR_MESSAGES_CONTROLLER";
 	
 	/**
 	 * Polls one or more servers to check whether any new messages are available. 
@@ -76,6 +84,19 @@ public class CheckForMessagesController
 		{
 			p.setProcessingComplete(true);
 			payProv.updatePayload(p);
+		}
+		
+		if (processedMsgs.size() > 0)
+		{
+			// If we have processed at least 1 message, use the time value of the last processed message to set a
+			// variable that tells us how far behind the network we are  
+			Payload lastMsgPayload = processedMsgs.get(processedMsgs.size() - 1);
+			long lastProcessedMsgTime = lastMsgPayload.getTime();
+			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(App.getContext());
+			SharedPreferences.Editor editor = prefs.edit();
+		    editor.putLong(LAST_PROCESSED_MSG_TIME, lastProcessedMsgTime);
+		    editor.commit();
+			Log.i(TAG, "Updated the 'last processed msg time' value stored in SharedPreferences to " + lastProcessedMsgTime);
 		}
 		
 		if (newMessagesReceived > 0)

@@ -26,8 +26,8 @@ public final class TimeUtils
 	private static final int SECONDS_IN_A_MINUTE = 60;
 	private static final int HOURS_IN_A_DAY = 24;
 	
-	/** A key used to store the time of the last successful 'check for new msgs' server request */
-	private static final String LAST_MSG_CHECK_TIME = "lastMsgCheckTime";
+	/** Stores the Unix timestamp of the last msg payload we processed. This can be used to tell us how far behind the network we are. */
+	private static final String LAST_PROCESSED_MSG_TIME = "lastProcessedMsgTime";
 	
 	private TimeUtils()
 	{
@@ -71,7 +71,7 @@ public final class TimeUtils
     public static String getTimeBehindNetworkMessage()
     {
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(App.getContext());
-		long lastMsgCheckTime = prefs.getLong(LAST_MSG_CHECK_TIME, 0);
+		long lastMsgCheckTime = prefs.getLong(LAST_PROCESSED_MSG_TIME, 0);
     	
     	long currentTime = System.currentTimeMillis() / 1000;
 		long secondsBehindNetwork = currentTime - lastMsgCheckTime;

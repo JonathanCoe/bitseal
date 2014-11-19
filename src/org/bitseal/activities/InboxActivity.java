@@ -74,6 +74,9 @@ public class InboxActivity extends ListActivity
 	
 	/** A key used to store the time of the last successful 'check for new msgs' server request */
 	private static final String LAST_MSG_CHECK_TIME = "lastMsgCheckTime";
+	
+	/** Stores the Unix timestamp of the last msg payload we processed. This can be used to tell us how far behind the network we are. */
+	private static final String LAST_PROCESSED_MSG_TIME = "lastProcessedMsgTime";
     
 	// Used when receiving Intents to the UI so that it can refresh the data it is displaying
 	public static final String UI_NOTIFICATION = "uiNotification";
@@ -129,7 +132,7 @@ public class InboxActivity extends ListActivity
 		}
 		
 		// If we are returning to this activity after an inbox message has been deleted, we need to do a
-		// special adjustment to the list positon
+		// special adjustment to the list position
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		if (prefs.getBoolean(InboxMessageActivity.FLAG_INBOX_MESSAGE_DELETED, false))
 		{
@@ -240,7 +243,13 @@ public class InboxActivity extends ListActivity
 	    	long currentTime = System.currentTimeMillis() / 1000;
 		    editor.putLong(LAST_MSG_CHECK_TIME, currentTime);
 		    editor.commit();
-			Log.i(TAG, "Updated the 'last successful msg check time' time stored in SharedPreferences to " + currentTime);
+			Log.i(TAG, "Updated the 'last successful msg check time' value stored in SharedPreferences to " + currentTime);
+			
+	    	// Set the 'last msg processed time' to the current time. As above, we do not have any addresses yet, so we
+			// cannot have been sent a message yet. 
+		    editor.putLong(LAST_PROCESSED_MSG_TIME, currentTime);
+		    editor.commit();
+		    Log.i(TAG, "Updated the 'last processed msg time' value stored in SharedPreferences to " + currentTime);
 	    	
 	    	// Start the BackgroundService in order to complete the 'create new identity' task
 		    Intent intent = new Intent(getBaseContext(), BackgroundService.class);
