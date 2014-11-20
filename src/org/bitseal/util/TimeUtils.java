@@ -95,8 +95,9 @@ public final class TimeUtils
      * 
      * e.g. 777329 returns "8 days and 23 hours"
      * 
-     * @param time
-     * @return
+     * @param time A long containing a time value in seconds
+     * 
+     * @return A String containing the time message
      */
     public static String getTimeMessage(long time)
     {
