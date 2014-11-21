@@ -26,6 +26,9 @@ public final class TimeUtils
 	private static final int SECONDS_IN_A_MINUTE = 60;
 	private static final int HOURS_IN_A_DAY = 24;
 	
+	/** A key used to store the time of the last successful 'check for new msgs' server request */
+	private static final String LAST_MSG_CHECK_TIME = "lastMsgCheckTime";
+	
 	/** Stores the Unix timestamp of the last msg payload we processed. This can be used to tell us how far behind the network we are. */
 	private static final String LAST_PROCESSED_MSG_TIME = "lastProcessedMsgTime";
 	
@@ -71,14 +74,49 @@ public final class TimeUtils
     public static String getTimeBehindNetworkMessage()
     {
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(App.getContext());
-		long lastMsgCheckTime = prefs.getLong(LAST_PROCESSED_MSG_TIME, 0);
+		long lastProcessedMsgTime = prefs.getLong(LAST_PROCESSED_MSG_TIME, 0);
+		long lastMsgCheckTime = prefs.getLong(LAST_MSG_CHECK_TIME, 0);
+    	long currentTime = System.currentTimeMillis() / 1000;
+    	
+    	long secondsBehindNetwork;
+    	
+    	// We want the returned message to describe how far behind Bitseal is from having both downloaded
+    	// and processed all current msgs in the stream(s) in participates in. If we are significantly behind the
+    	// network, we use the 'lastMsgCheckTime' value. If we are relatively close to being caught up, we use the
+    	// 'lastProcessedMsgTime' value. 
+    	if ((currentTime - lastMsgCheckTime) > (currentTime - lastProcessedMsgTime))
+    	{
+    		secondsBehindNetwork = currentTime - lastMsgCheckTime;
+    	}
+    	else
+    	{
+    		secondsBehindNetwork = currentTime - lastProcessedMsgTime;
+    	}
+		
+		String timeMessage = getTimeMessage(secondsBehindNetwork);
+		timeMessage = "Bitseal is " + timeMessage;
+		timeMessage = timeMessage + " behind the network";
+		
+		return timeMessage;
+    }
+    
+    /**
+     * Returns a String containing a message describing how long ago
+     * the last successful server check for new msgs was. <br><br>
+     * 
+     * e.g. "The last successful msg check was 1 minute and 12 seconds ago."
+     */
+    public static String getLastMsgCheckTimeMessage()
+    {
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(App.getContext());
+		long lastMsgCheckTime = prefs.getLong(LAST_MSG_CHECK_TIME, 0);
     	
     	long currentTime = System.currentTimeMillis() / 1000;
 		long secondsBehindNetwork = currentTime - lastMsgCheckTime;
 		
 		String timeMessage = getTimeMessage(secondsBehindNetwork);
-		timeMessage = "Bitseal is " + timeMessage;
-		timeMessage = timeMessage + " behind the network";
+		timeMessage = "The last successful msg check was " + timeMessage;
+		timeMessage = timeMessage + " ago";
 		
 		return timeMessage;
     }

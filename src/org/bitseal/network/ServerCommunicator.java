@@ -530,7 +530,7 @@ public class ServerCommunicator
 		for (Integer streamNumber : myStreamNumbers)
 		{
 			Log.d(TAG, "Making a server request for any msgs in stream " + streamNumber + " received between " + receivedSinceTime + " and " + receivedBeforeTime + "\n"
-					+ "- a time period of " + TimeUtils.getTimeMessage((receivedBeforeTime - receivedSinceTime)) + ". " + TimeUtils.getTimeBehindNetworkMessage() + ".");
+					+ "- a period of " + TimeUtils.getTimeMessage((receivedBeforeTime - receivedSinceTime)) + ". " + TimeUtils.getLastMsgCheckTimeMessage() + ".");
 			
 			// Work out how many servers to poll in this request
 			ApiCaller caller = new ApiCaller();
