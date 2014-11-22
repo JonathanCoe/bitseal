@@ -56,68 +56,65 @@ public class ObjectProcessor
 	
 	/**
 	 * Takes a byte[] containing the data of a Bitmessage Object (e.g. a msg)
-	 * and parses it, returning an Object. 
+	 * and parses it, returning a BMObject. 
 	 * 
 	 * @param objectBytes - A byte[] containing the Object data
 	 * 
-	 * @return An Object created from the parsed data
+	 * @return A BMObject created from the parsed data
 	 */
 	public BMObject parseObject (byte[] objectBytes)
-	{	
-		// Parse the data from the byte[] 
+	{
+		// Read the POW Nonce
 		int readPosition = 0;
-		
 		long powNonce = ByteUtils.bytesToLong((ArrayCopier.copyOfRange(objectBytes, readPosition, readPosition + 8)));
 		readPosition += 8; //The POW nonce should always be 8 bytes in length
 		
+		// Read and check the expiration time
 		long expirationTime = ByteUtils.bytesToLong((ArrayCopier.copyOfRange(objectBytes, readPosition, readPosition + 8)));
 		readPosition += 8;
 		long currentTime = System.currentTimeMillis() / 1000;
 		if (expirationTime < currentTime)
 		{
 			throw new RuntimeException("While running ObjectProcessor.parseObject(), it was found that the object's expiration time passed " + TimeUtils.getTimeMessage(currentTime - expirationTime) + " ago.\n"
-					+ "The full object which containined the passed expriation time was: " + ByteFormatter.byteArrayToHexString(objectBytes));
+					+ "The full object containing the passed expriation time was: " + ByteFormatter.byteArrayToHexString(objectBytes));
 		}
 		else if (expirationTime > currentTime + MAX_TIME_TILL_EXPIRATION)
 		{
 			throw new RuntimeException("While running ObjectProcessor.parseObject(), the embedded expiration time was found to be too far in the future. \n" 
 					+ "The embedded expiration time was " + expirationTime + ", which is " + TimeUtils.getTimeMessage(expirationTime - currentTime) + " in the future.\n"
-					+ "The full object which containined the invalid expiration time was: " + ByteFormatter.byteArrayToHexString(objectBytes));
+					+ "The full object containing the invalid expiration time was: " + ByteFormatter.byteArrayToHexString(objectBytes));
 		}
 		
+		// Read and check the object type
 		int objectType = ByteUtils.bytesToInt((ArrayCopier.copyOfRange(objectBytes, readPosition, readPosition + 4)));
 		readPosition += 4;
 		if (objectType < MIN_VALID_OBJECT_TYPE || objectType > MAX_VALID_OBJECT_TYPE)
 		{
 			throw new RuntimeException("While running ObjectProcessor.parseObject(), the decoded object type number was invalid. The invalid value was " + objectType + ".\n"
-					+ "The full object which containined the invalid object type number was: " + ByteFormatter.byteArrayToHexString(objectBytes));
+					+ "The full object containing the invalid object type number was: " + ByteFormatter.byteArrayToHexString(objectBytes));
 		}
 		
-		// --------------------------------------------------Upgrade period code------------------------------------------------------
-		int objectVersion = 0;
-		if ((currentTime < 1416175200 && objectType == 2) == false) // All objects apart from msgs received before Sun, 16 November 2014 22:00:00 GMT
-		{
-			long[] decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(objectBytes, readPosition, readPosition + 9)); // Take 9 bytes, the maximum length for an encoded var_int
-			objectVersion = (int) decoded[0]; // Get the var_int encoded value
-			readPosition += (int) decoded[1]; // Find out how many bytes the var_int was in length and adjust the read position accordingly
-			if (objectVersion < MIN_VALID_OBJECT_VERSION || objectVersion > MAX_VALID_OBJECT_VERSION)
-			{
-				throw new RuntimeException("While running ObjectProcessor.parseObject(), the decoded object version number was invalid. The invalid value was " + objectVersion + ".\n"
-						+ "The full object which containined the invalid object version number was: " + ByteFormatter.byteArrayToHexString(objectBytes));
-			}
-		}
-		// --------------------------------------------------------------------------------------------------------------------------------	
-		
+		// Read and check the object version
 		long[] decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(objectBytes, readPosition, readPosition + 9)); // Take 9 bytes, the maximum length for an encoded var_int
+		int objectVersion = (int) decoded[0]; // Get the var_int encoded value
+		readPosition += (int) decoded[1]; // Find out how many bytes the var_int was in length and adjust the read position accordingly
+		if (objectVersion < MIN_VALID_OBJECT_VERSION || objectVersion > MAX_VALID_OBJECT_VERSION)
+		{
+			throw new RuntimeException("While running ObjectProcessor.parseObject(), the decoded object version number was invalid. The invalid value was " + objectVersion + ".\n"
+					+ "The full object containing the invalid object version number was: " + ByteFormatter.byteArrayToHexString(objectBytes));
+		}
+		
+		// Read and check the stream number
+		decoded = VarintEncoder.decode(ArrayCopier.copyOfRange(objectBytes, readPosition, readPosition + 9)); // Take 9 bytes, the maximum length for an encoded var_int
 		int streamNumber = (int) decoded[0]; // Get the var_int encoded value
 		readPosition += (int) decoded[1]; // Find out how many bytes the var_int was in length and adjust the read position accordingly
 		if (streamNumber < MIN_VALID_STREAM_NUMBER || streamNumber > MAX_VALID_STREAM_NUMBER)
 		{
 			throw new RuntimeException("While running ObjectProcessor.parseObject(), the decoded object stream number was invalid. The invalid value was " + streamNumber + ".\n"
-					+ "The full object which containined the invalid stream number was: " + ByteFormatter.byteArrayToHexString(objectBytes));
+					+ "The full object containing the invalid stream number was: " + ByteFormatter.byteArrayToHexString(objectBytes));
 		}
 		
-		// Now deal with the remaining data.
+		// Read the remaining data.
 		byte[] payload = ArrayCopier.copyOfRange(objectBytes, readPosition, objectBytes.length);
 		
 		// Check whether the POW for this Object is valid
@@ -126,30 +123,19 @@ public class ObjectProcessor
 		if (powValid == false)
 		{
 			throw new RuntimeException("While running ObjectProcessor.parseObject(), the POW nonce was found to be invalid. The invalid value was " + powNonce + ".\n"
-					+ "The full object which containined the invalid POW nonce was: " + ByteFormatter.byteArrayToHexString(objectBytes));
+					+ "The full object containing the invalid POW nonce was: " + ByteFormatter.byteArrayToHexString(objectBytes));
 		}
 		
-		// Create a new Object and use the parsed data to populate its fields
-		BMObject object = new BMObject();
-		object.setBelongsToMe(false); // i.e. this object was not created by me
-		object.setPOWNonce(powNonce);
-		object.setExpirationTime(expirationTime);
-		object.setObjectType(objectType);
+		// Create a new BMObject and use the parsed data to populate its fields
+		BMObject bmObject = new BMObject();
+		bmObject.setBelongsToMe(false); // i.e. this BMObject was not created by me
+		bmObject.setPOWNonce(powNonce);
+		bmObject.setExpirationTime(expirationTime);
+		bmObject.setObjectType(objectType);
+		bmObject.setObjectVersion(objectVersion);
+		bmObject.setStreamNumber(streamNumber);
+		bmObject.setPayload(payload);
 		
-		// --------------------------------------------------Upgrade period code------------------------------------------------------
-		if (currentTime < 1416175200 && objectType == 2) // Msgs received before Sun, 16 November 2014 22:00:00 GMT
-		{
-			object.setObjectVersion(1);
-		}
-		else
-		{
-			object.setObjectVersion(objectVersion);
-		}
-		// -------------------------------------------------------------------------------------------------------------------------------
-		
-		object.setStreamNumber(streamNumber);
-		object.setPayload(payload);
-		
-		return object;
+		return bmObject;
 	}
 }

@@ -297,16 +297,10 @@ public class OutgoingMessageProcessor
 		try
 		{
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			outputStream.write(ByteUtils.longToBytes(msg.getExpirationTime())); // This conversion results in a byte[] of length 8, which is what we want
-			outputStream.write(ByteUtils.intToBytes(OBJECT_TYPE_MSG));	
 			
-			// --------------------------------------Upgrade period code---------------------------------------------------------------------
-			long currentTime = System.currentTimeMillis() / 1000;
-			if (currentTime > 1416175200) // Sun, 16 November 2014 22:00:00 GMT
-			{
-				outputStream.write(VarintEncoder.encode(OBJECT_VERSION_MSG)); // Message version
-			}
-			// -------------------------------------------------------------------------------------------------------------------------------
+			outputStream.write(ByteUtils.longToBytes(msg.getExpirationTime())); // This conversion results in a byte[] of length 8, which is what we want
+			outputStream.write(ByteUtils.intToBytes(OBJECT_TYPE_MSG));
+			outputStream.write(VarintEncoder.encode(OBJECT_VERSION_MSG));
 			outputStream.write(VarintEncoder.encode(msg.getStreamNumber()));
 			outputStream.write(msg.getPayload());
 			
@@ -330,16 +324,8 @@ public class OutgoingMessageProcessor
 	{		
 		byte[] msgDataForEncryption = null;
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		try 
+		try
 		{
-			// --------------------------------------Upgrade period code---------------------------------------------------------------------
-			long currentTime = System.currentTimeMillis() / 1000;
-			if (currentTime < 1416175200) // Sun, 16 November 2014 22:00:00 GMT
-			{
-				outputStream.write(VarintEncoder.encode(1)); // Message version
-			}
-			// -------------------------------------------------------------------------------------------------------------------------------
-			
 			outputStream.write(VarintEncoder.encode(unencMsg.getSenderAddressVersion())); 
 			outputStream.write(VarintEncoder.encode(unencMsg.getSenderStreamNumber())); 
 			outputStream.write(ByteUtils.intToBytes(unencMsg.getBehaviourBitfield()));
@@ -414,23 +400,9 @@ public class OutgoingMessageProcessor
 		byte[] streamNumberBytes = VarintEncoder.encode((long) toStreamNumber);
 		
 		// Combine the time, object type, object version, stream number, and ack data values into a single byte[]
-		byte[] initialPayload = null;
-		// --------------------------------------Upgrade period code---------------------------------------------------------------------
-		long currentTime = System.currentTimeMillis() / 1000;
-		if (currentTime < 1416175200) // Sun, 16 November 2014 22:00:00 GMT
-		{
-			initialPayload = ByteUtils.concatenateByteArrays(expirationTimeBytes, objectTypeBytes, streamNumberBytes, ackData);
-		}
-		// -------------------------------------------------------------------------------------------------------------------------------
+		byte[] initialPayload = ByteUtils.concatenateByteArrays(expirationTimeBytes, objectTypeBytes, objectVersionBytes, streamNumberBytes, ackData);
 		
-		
-		// --------------------------------------Protocol version 3 code------------------------------------------------------------------
-		else
-		{
-			initialPayload = ByteUtils.concatenateByteArrays(expirationTimeBytes, objectTypeBytes, objectVersionBytes, streamNumberBytes, ackData);
-		}
-		// -------------------------------------------------------------------------------------------------------------------------------
-		
+		// Create the payload for the ack msg
 		byte[] payload = new byte[0];
 		if (doPOW == true)
 		{
@@ -493,13 +465,7 @@ public class OutgoingMessageProcessor
 			}
 			outputStream.write(expirationTimeBytes);
 			outputStream.write(objectTypeBytes);
-			
-			// Upgrade period code
-			long currentTime = System.currentTimeMillis() / 1000;
-			if (currentTime >= 1416175200) // Sun, 16 November 2014 22:00:00 GMT
-			{
-				outputStream.write(objectVersionBytes);
-			}
+			outputStream.write(objectVersionBytes);
 			outputStream.write(streamNumberBytes);
 			outputStream.write(encMsg.getPayload());
 		
