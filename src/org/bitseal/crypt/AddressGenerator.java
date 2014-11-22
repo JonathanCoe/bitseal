@@ -85,6 +85,9 @@ public class AddressGenerator
 	{		
 		byte[] ripeHash = calculateRipeHash(publicSigningKey, publicEncryptionKey);
 		
+		// When creating addresses, any leading zeros should be stripped from the ripe hash
+		ripeHash = ByteUtils.stripLeadingZeros(ripeHash);
+		
 		String addressString = calculateAddressString(addressVersion, streamNumber, ripeHash);
 		
 		return addressString;
