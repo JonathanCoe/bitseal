@@ -102,25 +102,19 @@ public class CryptProcessor
 		new SecureRandom().nextBytes(iv);
 
 		byte[] cipherText = doAES(key_e, iv, plain, true);
-
-		byte[] mac = SHA256.hmacSHA256(cipherText, key_m);
-
+		
 		byte[] x = ByteUtils.getUnsignedBytes(R.getQ().getX().toBigInteger(), 32);
 		byte[] y = ByteUtils.getUnsignedBytes(R.getQ().getY().toBigInteger(), 32);
 
 		int xLength = x.length;
 		int yLength = y.length;
 		
-		byte[] encryptedPayload = new byte[16 + 6 + x.length + y.length + cipherText.length + mac.length];
+		byte[] encodedR = ByteUtils.concatenateByteArrays(ByteUtils.shortToBytes((short) 714), ByteUtils.shortToBytes((short) xLength), x, ByteUtils.shortToBytes((short) yLength), y);
+		
+		byte[] dataForMac = ByteUtils.concatenateByteArrays(iv, encodedR, cipherText);
+		byte[] mac = SHA256.hmacSHA256(dataForMac, key_m);
 
-		System.arraycopy(iv, 0, encryptedPayload, 0, 16);
-		System.arraycopy(ByteUtils.shortToBytes((short) 714), 0, encryptedPayload, 16, 2);  // Elliptic Curve type 0x02CA (714) 
-		System.arraycopy(ByteUtils.shortToBytes((short) xLength), 0, encryptedPayload, 18, 2);
-		System.arraycopy(x, 0, encryptedPayload, 20, xLength);
-		System.arraycopy(ByteUtils.shortToBytes((short) yLength), 0, encryptedPayload, 20 + x.length, 2);
-		System.arraycopy(y, 0, encryptedPayload, 22 + x.length, yLength);
-		System.arraycopy(cipherText, 0, encryptedPayload, 22 + x.length + y.length, cipherText.length);
-		System.arraycopy(mac, 0, encryptedPayload, encryptedPayload.length - mac.length, mac.length);
+		byte[] encryptedPayload = ByteUtils.concatenateByteArrays(iv, encodedR, cipherText, mac);
 		
 		return encryptedPayload;
 	}
@@ -150,14 +144,16 @@ public class CryptProcessor
 
 		// Now that we have parsed all the data from the encrypted payload, we can begin the decryption process.
 		// First, do an EC point multiply with private key k and public key R. This gives you public key P. 
-		ECPoint point = R.getQ().multiply(k.getD());
+		ECPoint P = R.getQ().multiply(k.getD());
 
-		byte[] tmpKey = deriveKey(point);
+		byte[] tmpKey = deriveKey(P);
 		byte[] key_e = ArrayCopier.copyOf(tmpKey, 32);
 		byte[] key_m = ArrayCopier.copyOfRange(tmpKey, 32, 64);
 
-		// Check whether the mac is valid
-		byte[] expectedMAC = SHA256.hmacSHA256(cipherText, key_m);
+		// Check whether the mac is valid	
+		byte[] dataForMac = ArrayCopier.copyOfRange(encryptedPayload, 0, encryptedPayload.length - 32); // The mac now covers everything except itself
+		byte[] expectedMAC = SHA256.hmacSHA256(dataForMac, key_m);
+		
 		if (Arrays.equals(mac, expectedMAC) == false)
 		{
 			// The mac is invalid
