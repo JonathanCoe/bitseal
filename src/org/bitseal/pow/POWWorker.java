@@ -2,6 +2,7 @@ package org.bitseal.pow;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.NumberFormat;
 
 import org.bitseal.util.ByteUtils;
 
@@ -51,6 +52,9 @@ public class POWWorker implements Runnable
 	private MessageDigest sha512;
 	
 	private long startTime;
+	
+	/** The number of double SHA-512 hashes calculated by this worker so far. */
+	private int doubleHashesCalculated = 0;
 	
 	private static final String TAG = "POW_WORKER";
 
@@ -125,6 +129,11 @@ public class POWWorker implements Runnable
 	{
 		return POWSuccessful;
 	}
+	
+	public int getDoubleHashesCalculated()
+	{
+		return doubleHashesCalculated;
+	}
 
 	/**
 	 * Calculates the POW.
@@ -157,11 +166,13 @@ public class POWWorker implements Runnable
 				sha512.reset();
 				hash = sha512.digest(hash);
 				
+				doubleHashesCalculated ++;
+				
 				result = ByteUtils.bytesToLong(hash);
 
 				if (result <= target && result >= 0)
 				{
-					Log.d(TAG, "Found a valid nonce! : " + nonce);
+					Log.d(TAG, "Found a valid nonce!     : " + NumberFormat.getIntegerInstance().format(nonce));
 					stop();
 					this.nonce = nonce;
 					POWSuccessful = true;

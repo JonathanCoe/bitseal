@@ -1,5 +1,11 @@
 package org.bitseal.pow;
 
+import java.text.NumberFormat;
+
+import org.bitseal.util.TimeUtils;
+
+import android.util.Log;
+
 /**
  * Does the POW calculation, uses multiple threads.
  * 
@@ -21,6 +27,11 @@ public class POWCalculator implements POWListener
 
 	/** The worker that found a valid nonce. */
 	private POWWorker finishedWorker;
+	
+	/** The number of double SHA-512 hashes calculated. */
+	private int doubleHashesCalculated = 0;
+	
+	private static final String TAG = "POW_CALCULATOR";
 	
 	public void setTarget(long newTarget)
 	{
@@ -51,6 +62,8 @@ public class POWCalculator implements POWListener
 	public synchronized long execute(long maxTime) 
 	{
 		POWWorker[] workers = new POWWorker[Runtime.getRuntime().availableProcessors() * THREADS_PER_CPU];
+		
+		long startTime = System.currentTimeMillis();
 
 		for (int i = 0; i < workers.length; i++) 
 		{
@@ -70,7 +83,15 @@ public class POWCalculator implements POWListener
 		for (POWWorker w : workers) 
 		{
 			w.stop();
+			
+			doubleHashesCalculated = doubleHashesCalculated + w.getDoubleHashesCalculated();
 		}
+		
+		long endTime = System.currentTimeMillis();
+		long totalTime = (endTime - startTime) / 1000;
+		Log.d(TAG, "Double hashes calculated : " + NumberFormat.getIntegerInstance().format(doubleHashesCalculated));
+		Log.d(TAG, "Time taken               : " + TimeUtils.getTimeMessage(totalTime));
+		Log.d(TAG, "Hash rate                : " + NumberFormat.getIntegerInstance().format((doubleHashesCalculated / totalTime)) + " double-hashes per second");
 		
 		return finishedWorker.getNonce();
 	}
