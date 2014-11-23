@@ -193,11 +193,7 @@ public class ServersActivity extends ListActivity
 						
 						updateListView();
 						
-						// Our current method for detecting and closing the soft keyboard only works with API 16 and later
-						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
-						{
-							closeKeyboardIfOpen();
-						}
+						closeKeyboardIfOpen();
 					}
 				});
 			    
@@ -274,34 +270,38 @@ public class ServersActivity extends ListActivity
 	}
 	
 	/**
-	 * If the soft keyboard is open, this method will close it. 
+	 * If the soft keyboard is open, this method will close it. Currently only
+	 * works for API 16 and above. 
 	 */
-	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
 	private void closeKeyboardIfOpen()
 	{
-		final View activityRootView = getWindow().getDecorView().getRootView();	
-		final OnGlobalLayoutListener globalListener = new OnGlobalLayoutListener()
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
 		{
-			@Override
-			public void onGlobalLayout() 
+			final View activityRootView = getWindow().getDecorView().getRootView();	
+			final OnGlobalLayoutListener globalListener = new OnGlobalLayoutListener()
 			{
-			    Rect rect = new Rect();
-			    // rect will be populated with the coordinates of your view that area still visible.
-			    activityRootView.getWindowVisibleDisplayFrame(rect);
-
-			    int heightDiff = activityRootView.getRootView().getHeight() - (rect.bottom - rect.top);
-			    if (heightDiff > 100)
-			    {
-			    	// If the difference is more than 100 pixels, it's probably cause by the soft keyboard being open. Now we want to close it.
-					InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-					imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0); // Toggle the soft keyboard. 
-			    }
-			    
-			    // Now we have to remove the OnGlobalLayoutListener, otherwise we will experience errors
-			    activityRootView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-			}
-		};
-		activityRootView.getViewTreeObserver().addOnGlobalLayoutListener(globalListener);
+				@Override
+				@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+				public void onGlobalLayout() 
+				{
+				    Rect rect = new Rect();
+				    // rect will be populated with the coordinates of your view that area still visible.
+				    activityRootView.getWindowVisibleDisplayFrame(rect);
+	
+				    int heightDiff = activityRootView.getRootView().getHeight() - (rect.bottom - rect.top);
+				    if (heightDiff > 100)
+				    {
+				    	// If the difference is more than 100 pixels, it's probably caused by the soft keyboard being open. Now we want to close it.
+						InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+						imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0); // Toggle the soft keyboard. 
+				    }
+				    
+				    // Now we have to remove the OnGlobalLayoutListener, otherwise we will experience errors
+				    activityRootView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+				}
+			};
+			activityRootView.getViewTreeObserver().addOnGlobalLayoutListener(globalListener);
+		}
 	}
 
 	@Override
@@ -493,11 +493,7 @@ public class ServersActivity extends ListActivity
 				
 				listItemDialog.dismiss();
 				
-				// Our current method for detecting and closing the soft keyboard only works with API 16 and later
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
-				{
-					closeKeyboardIfOpen();
-				}
+				closeKeyboardIfOpen();
 			}
 		});
 	    
