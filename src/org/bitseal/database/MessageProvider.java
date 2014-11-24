@@ -195,11 +195,11 @@ public class MessageProvider
 		else
 		{
 			Log.i(TAG, "Unable to find any Messages with the value " + searchString + " in the " + columnName + " column");
+			cursor.close();
 			return matchingRecords;
 		}
 		
 		cursor.close();
-	
     	return matchingRecords;
      }
     
@@ -306,6 +306,7 @@ public class MessageProvider
     	   while (cursor.moveToNext());
     	}
     	
+		cursor.close();
     	return messages;
     }
     
@@ -451,11 +452,13 @@ public class MessageProvider
     	   }
     	   
     	   Log.d(TAG, "Found " + counter + " duplicates of message with subject " + subject + " and to address " + toAddress);
+   		   cursor.close();
     	   return true;
     	}
     	else
     	{
     		Log.i(TAG, "Found no duplicates for the message provided");
+    		cursor.close();
     		return false;
     	}
     }

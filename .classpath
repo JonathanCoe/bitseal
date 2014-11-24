@@ -3,7 +3,10 @@
 	<classpathentry exported="true" kind="lib" path="jars/aXMLRPC_v1.7.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="jars/scprov-jdk15-1.46.99.3.jar"/>
 	<classpathentry exported="true" kind="lib" path="jars/android-integration-3.1.0.jar"/>
-	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
+	<classpathentry exported="true" kind="lib" path="libs/commons-codec.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/guava-r09.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/sqlcipher.jar"/>
+	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
 	<classpathentry kind="src" path="src"/>

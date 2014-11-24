@@ -202,15 +202,14 @@ public class PubkeyProvider
     	    } 
     	    while (cursor.moveToNext());
     	}
-			
 		else
 		{
 			Log.i(TAG, "Unable to find any Pubkeys with the value " + searchString + " in the " + columnName + " column");
+			cursor.close();
 			return matchingRecords;
 		}
 		
 		cursor.close();
-	
     	return matchingRecords;
      }
     
@@ -327,6 +326,7 @@ public class PubkeyProvider
     	    while (cursor.moveToNext());
     	}
     	
+		cursor.close();
     	return pubkeys;
     }
     

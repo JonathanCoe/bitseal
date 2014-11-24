@@ -168,15 +168,14 @@ public class QueueRecordProvider
     	    } 
     	    while (cursor.moveToNext());
     	}
-			
 		else
 		{
 			Log.i(TAG, "Unable to find any QueueRecords with the value " + searchString + " in the " + columnName + " column");
+			cursor.close();
 			return matchingRecords;
 		}
 		
 		cursor.close();
-	
     	return matchingRecords;
      }
 
@@ -273,6 +272,7 @@ public class QueueRecordProvider
     	    while (cursor.moveToNext());
     	}
     	
+		cursor.close();
     	return queueRecords;
     }
     

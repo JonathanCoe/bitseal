@@ -1,5 +1,9 @@
 package org.bitseal.activities;
 
+import info.guardianproject.cacheword.CacheWordHandler;
+import info.guardianproject.cacheword.ICacheWordSubscriber;
+
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -12,15 +16,18 @@ import org.bitseal.database.AddressBookRecordProvider;
 import org.bitseal.database.AddressBookRecordsTable;
 import org.bitseal.database.AddressProvider;
 import org.bitseal.database.AddressesTable;
+import org.bitseal.database.DatabaseHelper;
 import org.bitseal.database.MessageProvider;
 import org.bitseal.services.BackgroundService;
 import org.bitseal.util.ColourCalculator;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -47,7 +54,7 @@ import com.google.zxing.integration.android.IntentResult;
  * 
  * @author Jonathan Coe
  */
-public class ComposeActivity extends Activity
+public class ComposeActivity extends Activity implements ICacheWordSubscriber
 {	
 	public static final String EXTRA_TO_ADDRESS = "composeActivity.TO_ADDRESS";
 	public static final String EXTRA_FROM_ADDRESS = "composeActivity.FROM_ADDRESS";
@@ -106,12 +113,18 @@ public class ComposeActivity extends Activity
 	 */
 	private static final int MAXIMUM_MESSAGE_TEXT_SIZE = 250000;
 	
-	private static final String TAG = "COMPOSE_ACTIVITY";
+    private CacheWordHandler mCacheWord;
+	
+    private static final String TAG = "COMPOSE_ACTIVITY";
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) 
 	{
 		super.onCreate(savedInstanceState);
+		
+		// Connect to the CacheWord service
+        mCacheWord = new CacheWordHandler(getApplicationContext(), this);
+        mCacheWord.connectToService();
 		
 		setLayout();
 		createDialogs();
@@ -922,4 +935,47 @@ public class ComposeActivity extends Activity
           return convertView;
       }
    }
+
+	@SuppressLint("InlinedApi")
+	@Override
+	public void onCacheWordLocked()
+	{
+		// Start the 'lock screen' activity
+        Intent intent = new Intent(getBaseContext(), LockScreenActivity.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later
+        {
+        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
+        }
+        startActivityForResult(intent, 0);
+	}
+
+	@Override
+	public void onCacheWordOpened()
+	{
+		// This should be handled automatically by the DatabaseHelper class, which is a subclass of SQLCipherOpenHelper
+	}
+
+	@Override
+	public void onCacheWordUninitialized()
+	{
+	    // Set the default passphrase for the encrypted SQLite database - this is NOT intended to have any security value, but
+	    // rather to give us a convenient default value to use when the user has not yet set a passphrase of their own. 
+	    try
+		{
+			mCacheWord.setPassphrase(DatabaseHelper.DEFAULT_DATABASE_PASSPHRASE.toCharArray());
+		}
+		catch (GeneralSecurityException e)
+		{
+			Log.e(TAG, "Attempt to set the default database encryption passphrase failed.\n" + 
+					"The GeneralSecurityException message was: " + e.getMessage());
+		}
+	}
+ 	
+	@Override
+	protected void onStop() 
+	{
+	    super.onStop();
+	    
+	    mCacheWord.disconnectFromService();
+	}
 }

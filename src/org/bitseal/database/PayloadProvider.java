@@ -198,7 +198,6 @@ public class PayloadProvider
     	}
 		
 		cursor.close();
-	
     	return matchingRecords;
      }
     
@@ -303,7 +302,6 @@ public class PayloadProvider
     	}
 		
 		cursor.close();
-	
     	return matchingRecords;
      }
     
@@ -413,6 +411,7 @@ public class PayloadProvider
     	    while (cursor.moveToNext());
     	}
     	
+		cursor.close();
     	return payloads;
     }
     

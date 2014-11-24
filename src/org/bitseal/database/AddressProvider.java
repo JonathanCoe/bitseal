@@ -108,7 +108,7 @@ public class AddressProvider
     {
     	ArrayList<Address> matchingRecords = new ArrayList<Address>();
 
-    	// Specify which colums from the table we are interested in
+    	// Specify which columns from the table we are interested in
 		String[] projection = {
 				AddressesTable.COLUMN_ID, 
 				AddressesTable.COLUMN_CORRESPONDING_PUBKEY_ID,
@@ -158,11 +158,11 @@ public class AddressProvider
 		else
 		{
 			Log.i(TAG, "Unable to find any Addresses with the value " + searchString + " in the " + columnName + " column");
+			cursor.close();
 			return matchingRecords;
 		}
 		
 		cursor.close();
-	
     	return matchingRecords;
      }
     
@@ -247,6 +247,7 @@ public class AddressProvider
     	   while (cursor.moveToNext());
     	}
     	
+		cursor.close();
     	return addresses;
     }
     
