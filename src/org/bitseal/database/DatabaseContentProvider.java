@@ -10,15 +10,21 @@ import net.sqlcipher.database.SQLiteQueryBuilder;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 
 public class DatabaseContentProvider extends ContentProvider
 {
 	private DatabaseHelper mDatabaseHelper;
 	private Context mContext;
+	private CacheWordHandler mCacheWordHandler;
+	
+    /** The key for a boolean variable that records whether or not a user-defined database encryption passphrase has been saved */
+    private static final String KEY_DATABASE_PASSPHRASE_SAVED = "databasePassphraseSaved";
 	  
 	// Used by the URI Matcher
 	private static final int ADDRESSES = 10;
@@ -86,8 +92,8 @@ public class DatabaseContentProvider extends ContentProvider
     public boolean onCreate() 
     {
     	mContext = getContext();
-    	CacheWordHandler cacheWordHandler = new CacheWordHandler(mContext);
-	    mDatabaseHelper = new DatabaseHelper(mContext, cacheWordHandler);
+    	mCacheWordHandler = new CacheWordHandler(mContext);
+	    mDatabaseHelper = new DatabaseHelper(mContext, mCacheWordHandler); 
 	    return false;
     }
     
@@ -99,7 +105,18 @@ public class DatabaseContentProvider extends ContentProvider
     private SQLiteDatabase getDatabase()
     {
     	SQLiteDatabase.loadLibs(mContext);
-	    return mDatabaseHelper.getWritableDatabase();
+    	
+        // Check whether the user has set a database encryption passphrase
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+		boolean databasePassphraseSaved= prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
+		if (databasePassphraseSaved)
+		{
+			return mDatabaseHelper.getWritableDatabase();
+		}
+		else
+		{
+			return mDatabaseHelper.getUnencryptedDatabase();
+		}
     }
     
     @Override

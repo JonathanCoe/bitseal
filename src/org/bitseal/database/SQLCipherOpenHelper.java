@@ -96,7 +96,7 @@ public abstract class SQLCipherOpenHelper extends SQLiteOpenHelper
      */
     public synchronized SQLiteDatabase getWritableDatabase()
     {
-    	Log.d(TAG, "TEMPORARY: SQLCiperOpenHelper.getWritableDatabase() called.");
+    	Log.d(TAG, "TEMPORARY: SQLCiperOpenHelper.getWritableDatabase() called."); 
     	
     	if (mCacheWordHandler.isLocked())
         {
@@ -104,6 +104,20 @@ public abstract class SQLCipherOpenHelper extends SQLiteOpenHelper
         }
         
         return super.getWritableDatabase(encodeRawKey(mCacheWordHandler.getEncryptionKey()));
+    }
+    
+    /**
+     * Create and/or opens an unencrypted SQLiteDatabase
+     *
+     * @throws SQLiteException if the database cannot be opened for writing
+     * 
+     * @return a read/write database object valid until {@link #close} is called
+     */
+    public synchronized SQLiteDatabase getUnencryptedDatabase()
+    {
+    	Log.d(TAG, "TEMPORARY: SQLCiperOpenHelper.getUnencryptedDatabase() called.");
+        
+        return super.getWritableDatabase("");
     }
 
     /**

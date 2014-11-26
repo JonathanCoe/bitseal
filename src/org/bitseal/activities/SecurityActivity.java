@@ -77,8 +77,14 @@ public class SecurityActivity extends Activity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_security);
 		
-		mCacheWordHandler = new CacheWordHandler(App.getContext());
-		mCacheWordHandler.connectToService();
+        // Check whether the user has set a database encryption passphrase
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		boolean databasePassphraseSaved= prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
+		if (databasePassphraseSaved)
+		{
+			mCacheWordHandler = new CacheWordHandler(App.getContext());
+			mCacheWordHandler.connectToService();
+		}
 				
 		enterPassphraseLabelTextView = (TextView) findViewById(R.id.security_enter_passphrase_label_textview);
 		confirmPassphraseLabelTextView = (TextView) findViewById(R.id.security_confirm_passphrase_label_textview);
@@ -136,8 +142,23 @@ public class SecurityActivity extends Activity
 				
 				if (validateDatabasePassphrase(enteredPassphrase, confirmedPassphrase))
 				{
-					boolean passphraseChangeSuccessful = saveDatabasePassphrase(enteredPassphrase);
-					if (passphraseChangeSuccessful)
+					boolean passphraseModificationSuccessful;
+					
+					// Check whether this is the first time that the user has set a database passphrase
+					SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+					boolean databasePassphraseSaved= prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
+					if (databasePassphraseSaved)
+					{
+						// Change the database passphrase
+						passphraseModificationSuccessful = changeDatabasePassphrase(enteredPassphrase);
+					}
+					else
+					{
+						// Set the database passphrase for the first time
+						passphraseModificationSuccessful = setDatabasePassphrase(enteredPassphrase);
+					}
+					
+					if (passphraseModificationSuccessful)
 					{
 						databaseEncryptionCheckbox.setChecked(true);
 						databaseEncryptionCheckbox.setText("Database encryption enabled");
@@ -147,12 +168,10 @@ public class SecurityActivity extends Activity
 						
 					    passphraseSaveButton.setVisibility(View.GONE);
 					    passphraseCancelButton.setVisibility(View.GONE);
-						
-						Toast.makeText(getApplicationContext(), "Database encryption passphrase saved", Toast.LENGTH_LONG).show();
 					}
 					else
 					{
-						Toast.makeText(getApplicationContext(), "An error occurred while attempting to change the database passphrase", Toast.LENGTH_LONG).show();
+						Toast.makeText(getBaseContext(), "An error occurred while attempting to set the database passphrase", Toast.LENGTH_LONG).show();
 					}
 				}
 			}
@@ -217,8 +236,7 @@ public class SecurityActivity extends Activity
         });
 		
 		// Read the Shared Preferences to determine whether or not the database encryption settings should be visible
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		boolean databasePassphraseSaved = prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
+		databasePassphraseSaved = prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
 		Log.i(TAG, "Database passphrase saved is set to " + databasePassphraseSaved);
 		if (databasePassphraseSaved == true)
 		{
@@ -345,7 +363,7 @@ public class SecurityActivity extends Activity
 		// Check whether the passphrases matched
 		if (enteredPassphrase.equals(confirmedPassphrase) == false)
 		{
-			Toast.makeText(getApplicationContext(), "The passphrases do not match", Toast.LENGTH_LONG).show();
+			Toast.makeText(this, "The passphrases do not match", Toast.LENGTH_LONG).show();
 			Log.e(TAG, "The passphrases do not match");
 			return false;
 		}
@@ -353,7 +371,7 @@ public class SecurityActivity extends Activity
 		// Check the length of the passphrase
 		if (enteredPassphrase.length() < MINIMUM_PASSPHRASE_LENGTH)
 		{
-			Toast.makeText(getApplicationContext(), "The passphrase must be at least " + MINIMUM_PASSPHRASE_LENGTH + " characters long", Toast.LENGTH_LONG).show();
+			Toast.makeText(this, "The passphrase must be at least " + MINIMUM_PASSPHRASE_LENGTH + " characters long", Toast.LENGTH_LONG).show();
 			Log.e(TAG, "The passphrase entered is too short - only " + enteredPassphrase.length() + " characters in length.\n" +
 					"The passphrase must be at least " + MINIMUM_PASSPHRASE_LENGTH + " characters in length");
 			return false;
@@ -364,11 +382,41 @@ public class SecurityActivity extends Activity
 	}
 	
 	/**
+	 * Sets the passphrase of the encrypted database
+	 * 
+	 * @param passphrase - The new passphrase
+	 */
+	private boolean setDatabasePassphrase(String newPassphrase)
+	{
+		try
+		{
+			mCacheWordHandler = new CacheWordHandler(App.getContext());
+			mCacheWordHandler.connectToService();
+			mCacheWordHandler.setPassphrase(newPassphrase.toCharArray());
+		}
+		catch (Exception e)
+		{
+			Log.e(TAG, "Attempt to set the database encryption passphrase failed.\n" + 
+					"The exception message was: " + e.getMessage());
+			return false;
+		}
+		
+    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+    	SharedPreferences.Editor editor = prefs.edit();
+	    editor.putBoolean(KEY_DATABASE_PASSPHRASE_SAVED, true);
+	    editor.commit();
+	    
+		Toast.makeText(this, "Database encryption passphrase set successfully", Toast.LENGTH_LONG).show();
+	    
+	    return true;
+	}
+	
+	/**
 	 * Changes the passphrase of the encrypted database
 	 * 
 	 * @param passphrase - The new passphrase
 	 */
-	private boolean saveDatabasePassphrase(String newPassphrase)
+	private boolean changeDatabasePassphrase(String newPassphrase)
 	{
 		try
 		{
@@ -385,6 +433,8 @@ public class SecurityActivity extends Activity
     	SharedPreferences.Editor editor = prefs.edit();
 	    editor.putBoolean(KEY_DATABASE_PASSPHRASE_SAVED, true);
 	    editor.commit();
+	    
+	    Toast.makeText(this, "Database encryption passphrase changed successfully", Toast.LENGTH_LONG).show();
 	    
 	    return true;
 	}

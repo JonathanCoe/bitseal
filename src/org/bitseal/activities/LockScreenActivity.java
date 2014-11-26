@@ -34,10 +34,11 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
     /** The minimum length we will allow for a database encryption passphrase */
     private static final int MINIMUM_PASSPHRASE_LENGTH = 8;
     
-    /** The default passphrase for the database. This is NOT intended to provided any security value, 
-     * but rather to give us an easy default value to work with when the user has chosen not to set
-     * their own passphrase. */
-    public static final String DEFAULT_DATABASE_PASSPHRASE = "default123";
+    /**
+     * Signals to the InboxActivity that the database has just been unlocked, so it should not redirect
+     * the user to the lock screen.
+     */
+    public static final String EXTRA_DATABASE_UNLOCKED = "lockScreenActivity.DATABASE_UNLOCKED";
     
     private static final String TAG = "LOCK_SCREEN_ACTIVITY";
 	
@@ -151,9 +152,9 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 	{
 		Log.d(TAG, "TEMPORARY: LockScreenActivity.onCacheWordOpened() called.");
 		
-		// TODO: At this stage in your app you may call getCachedSecrets() to retrieve the unencrypted secrets from CacheWord.
-		
+		// Open the Inbox Activity
 		Intent intent = new Intent(getBaseContext(), InboxActivity.class);
+		intent.putExtra(EXTRA_DATABASE_UNLOCKED, true);
         startActivityForResult(intent, 0);
 	}
 	
@@ -162,16 +163,6 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 	{
 		Log.d(TAG, "TEMPORARY: LockScreenActivity.onCacheWordUninitialized() called.");
 		
-	    // Set the default passphrase for the encrypted SQLite database - this is NOT intended to have any security value, but
-	    // rather to give us a convenient default value to use when the user has not yet set a passphrase of their own. 
-	    try
-		{
-	    	mCacheWordHandler.setPassphrase(DEFAULT_DATABASE_PASSPHRASE.toCharArray());
-		}
-		catch (GeneralSecurityException e)
-		{
-			Log.e(TAG, "Attempt to set the default database encryption passphrase failed.\n" + 
-					"The GeneralSecurityException message was: " + e.getMessage());
-		}
+		// Database encryption is currently not enabled by default, so there is nothing to do here
 	}
 }

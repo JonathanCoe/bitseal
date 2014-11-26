@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
-
 import org.bitseal.R;
 import org.bitseal.crypt.AddressGenerator;
 import org.bitseal.data.Address;
@@ -21,7 +20,7 @@ import org.bitseal.database.MessagesTable;
 import org.bitseal.services.BackgroundService;
 import org.bitseal.services.NotificationsService;
 import org.bitseal.util.ColourCalculator;
-
+import android.annotation.SuppressLint;
 import android.app.ListActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -29,6 +28,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
@@ -83,16 +83,41 @@ public class InboxActivity extends ListActivity
 	
 	private static final int INBOX_COLOURS_ALPHA_VALUE = 70;
 	
+    /** The key for a boolean variable that records whether or not a user-defined database encryption passphrase has been saved */
+    private static final String KEY_DATABASE_PASSPHRASE_SAVED = "databasePassphraseSaved";
+    	
     private static final String TAG = "INBOX_ACTIVITY";
     
+	@SuppressLint("InlinedApi")
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_inbox);
         
-        // Check whether this is the first time the inbox activity has been opened - if so then run the 'first launch' routine
+        // Check whether the user has set a database encryption passphrase
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false))
+		{
+			if (getIntent().hasExtra(LockScreenActivity.EXTRA_DATABASE_UNLOCKED) == false)
+			{
+				// Redirect to the lock screen activity
+		        Intent intent = new Intent(this, LockScreenActivity.class);
+		        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
+		        {
+		        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
+		        }
+		        else
+		        {
+		        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		        }
+		        startActivity(intent);
+		        
+		        return;
+			}
+		}
+		
+        // Check whether this is the first time the inbox activity has been opened - if so then run the 'first launch' routine
 		if (prefs.getBoolean(INBOX_FIRST_RUN, true))
 		{
 			runFirstLaunchRoutine();
@@ -100,7 +125,7 @@ public class InboxActivity extends ListActivity
 		
 		MessageProvider msgProv = MessageProvider.get(this);
 		mMessages =msgProv.searchMessages(MessagesTable.COLUMN_BELONGS_TO_ME, String.valueOf(0)); // 0 stands for "false" in the database
-					
+		
         // Sort the messages so that the most recent are displayed first
         Collections.sort(mMessages);
         
