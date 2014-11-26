@@ -152,7 +152,6 @@ public abstract class SQLCipherOpenHelper extends SQLiteOpenHelper
 
         if (sqlcipher_uses_native_key)
         {
-            Log.d(TAG, "sqlcipher uses native method to set key");
             kPrefix = "x'";
             kSuffix = "'";
         } 

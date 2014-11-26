@@ -9,7 +9,7 @@ public class DatabaseHelper extends SQLCipherOpenHelper
 	private static final String DATABASE_NAME = "bitseal_database.db";
 	private static final int DATABASE_VERSION = 7;
 	
-	public DatabaseHelper(Context context, CacheWordHandler cacheWordHandler) 
+	public DatabaseHelper(Context context, CacheWordHandler cacheWordHandler)
 	{
 		super(cacheWordHandler, context, DATABASE_NAME, null, DATABASE_VERSION);
 	}
@@ -29,7 +29,7 @@ public class DatabaseHelper extends SQLCipherOpenHelper
 	
 	// Method is called during an upgrade of the database, e.g. if you increase the database version
 	@Override
-	public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) 
+	public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion)
 	{
 		// Nothing to do here currently
 	}

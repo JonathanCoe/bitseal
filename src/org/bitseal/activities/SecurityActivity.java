@@ -75,6 +75,7 @@ public class SecurityActivity extends Activity
 		setContentView(R.layout.activity_security);
 		
 		mCacheWordHandler = new CacheWordHandler(App.getContext());
+		mCacheWordHandler.connectToService();
 				
 		enterPassphraseLabelTextView = (TextView) findViewById(R.id.security_enter_passphrase_label_textview);
 		confirmPassphraseLabelTextView = (TextView) findViewById(R.id.security_confirm_passphrase_label_textview);

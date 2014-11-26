@@ -47,6 +47,7 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 		setContentView(R.layout.activity_lock_screen);
 		
 		mCacheWordHandler = new CacheWordHandler(this);
+		mCacheWordHandler.connectToService();
 		
 		enterPassphraseEditText = (EditText) findViewById(R.id.lock_screen_enter_passphrase_edittext);
 		
@@ -123,8 +124,9 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 		
         try 
         {
+        	mCacheWordHandler.connectToService();
         	mCacheWordHandler.setPassphrase(enteredPassphrase.toCharArray());
-        } 
+        }
         catch (GeneralSecurityException e) 
         {
             Log.e(TAG, "Cacheword passphrase verification failed: " + e.getMessage());
@@ -154,7 +156,7 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 		Intent intent = new Intent(getBaseContext(), InboxActivity.class);
         startActivityForResult(intent, 0);
 	}
-
+	
 	@Override
 	public void onCacheWordUninitialized()
 	{

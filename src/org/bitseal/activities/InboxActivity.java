@@ -227,6 +227,7 @@ public class InboxActivity extends ListActivity
 		MessageProvider msgProv = MessageProvider.get(getApplicationContext());
 		long msg0Id = msgProv.addMessage(welcomeMessage);
 		welcomeMessage.setId(msg0Id);
+		mMessages = new ArrayList<Message>();
 		mMessages.add(welcomeMessage);
 		
 		// Generate a new Bitmessage address
