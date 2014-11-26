@@ -1,9 +1,5 @@
 package org.bitseal.activities;
 
-import info.guardianproject.cacheword.CacheWordHandler;
-import info.guardianproject.cacheword.ICacheWordSubscriber;
-
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -12,10 +8,8 @@ import org.bitseal.core.AddressProcessor;
 import org.bitseal.data.AddressBookRecord;
 import org.bitseal.database.AddressBookRecordProvider;
 import org.bitseal.database.AddressBookRecordsTable;
-import org.bitseal.database.DatabaseHelper;
 import org.bitseal.util.ColourCalculator;
 
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Dialog;
 import android.app.ListActivity;
@@ -53,7 +47,7 @@ import com.google.zxing.integration.android.IntentResult;
  * 
  * @author Jonathan Coe
  */
-public class AddressBookActivity extends ListActivity implements ICacheWordSubscriber
+public class AddressBookActivity extends ListActivity
 {	
 	private ArrayList<AddressBookRecord> mAddressBookRecords;
     
@@ -71,8 +65,6 @@ public class AddressBookActivity extends ListActivity implements ICacheWordSubsc
     
     private static final int ADDRESS_BOOK_COLOURS_ALPHA_VALUE = 70;
     
-    private CacheWordHandler mCacheWord;
-        
     private static final String TAG = "ADDRESS_BOOK_ACTIVITY";
 	
 	@Override
@@ -80,10 +72,6 @@ public class AddressBookActivity extends ListActivity implements ICacheWordSubsc
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_address_book);
-				
-		// Connect to the CacheWord service
-        mCacheWord = new CacheWordHandler(getApplicationContext(), this);
-        mCacheWord.connectToService();
 		
 		// Set up the data for this activity
 		AddressBookRecordProvider addBookProv = AddressBookRecordProvider.get(getApplicationContext());
@@ -738,47 +726,4 @@ public class AddressBookActivity extends ListActivity implements ICacheWordSubsc
 			return convertView;
 	    }
 	}
-
-	@SuppressLint("InlinedApi")
-	@Override
-	public void onCacheWordLocked()
-	{
-		// Start the 'lock screen' activity
-        Intent intent = new Intent(getBaseContext(), LockScreenActivity.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later
-        {
-        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
-        }
-        startActivityForResult(intent, 0);
-	}
-
-	@Override
-	public void onCacheWordOpened()
-	{
-		// This should be handled automatically by the DatabaseHelper class, which is a subclass of SQLCipherOpenHelper
-	}
-
-	@Override
-	public void onCacheWordUninitialized()
-	{
-	    // Set the default passphrase for the encrypted SQLite database - this is NOT intended to have any security value, but
-	    // rather to give us a convenient default value to use when the user has not yet set a passphrase of their own. 
-	    try
-		{
-			mCacheWord.setPassphrase(DatabaseHelper.DEFAULT_DATABASE_PASSPHRASE.toCharArray());
-		}
-		catch (GeneralSecurityException e)
-		{
-			Log.e(TAG, "Attempt to set the default database encryption passphrase failed.\n" + 
-					"The GeneralSecurityException message was: " + e.getMessage());
-		}
-	}
-	
-    @Override
-    protected void onStop()
-    {
-    	super.onStop();
-    	
-    	mCacheWord.disconnectFromService();
-     }
 }

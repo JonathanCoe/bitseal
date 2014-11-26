@@ -64,18 +64,21 @@ public abstract class SQLCipherOpenHelper extends SQLiteOpenHelper
     private static final String TAG = "SQLCipherOpenHelper";
 
     protected Context mContext; // shame we have to duplicate this here
-    private CacheWordHandler mHandler;
+    private CacheWordHandler mCacheWordHandler;
 
-    public SQLCipherOpenHelper(CacheWordHandler cacheWord, Context context, String name, CursorFactory factory, int version) 
+    public SQLCipherOpenHelper(CacheWordHandler cacheWordHandler, Context context, String name, CursorFactory factory, int version) 
     {
         super(context, name, factory, version, new SQLCipherV3MigrationHook(context));
         
-        if (cacheWord == null)
+        if (cacheWordHandler == null)
         {
         	throw new IllegalArgumentException("CacheWordHandler is null");
         }
         
-        mHandler = cacheWord;
+		mCacheWordHandler = cacheWordHandler;
+		mCacheWordHandler.connectToService();
+	    
+		Log.d(TAG, "TEMPORARY: SQLCipherOpenHelper constructor method called");
     }
 
     /**
@@ -93,12 +96,14 @@ public abstract class SQLCipherOpenHelper extends SQLiteOpenHelper
      */
     public synchronized SQLiteDatabase getWritableDatabase()
     {
-        if (mHandler.isLocked())
+    	Log.d(TAG, "TEMPORARY: SQLCiperOpenHelper.getWritableDatabase() called.");
+    	
+    	if (mCacheWordHandler.isLocked())
         {
-        	throw new SQLiteException("Database locked. Decryption key unavailable.");
+    		throw new SQLiteException("Database locked. Decryption key unavailable.");
         }
         
-        return super.getWritableDatabase(encodeRawKey(mHandler.getEncryptionKey()));
+        return super.getWritableDatabase(encodeRawKey(mCacheWordHandler.getEncryptionKey()));
     }
 
     /**
@@ -116,12 +121,12 @@ public abstract class SQLCipherOpenHelper extends SQLiteOpenHelper
      */
     public synchronized SQLiteDatabase getReadableDatabase()
     {
-        if (mHandler.isLocked())
+        if (mCacheWordHandler.isLocked())
         {
         	throw new SQLiteException("Database locked. Decryption key unavailable.");
         }
         
-        return super.getReadableDatabase(encodeRawKey(mHandler.getEncryptionKey()));
+        return super.getReadableDatabase(encodeRawKey(mCacheWordHandler.getEncryptionKey()));
     }
 
     /**

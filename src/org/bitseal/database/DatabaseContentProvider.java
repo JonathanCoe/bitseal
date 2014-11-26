@@ -2,11 +2,8 @@ package org.bitseal.database;
 
 import info.guardianproject.cacheword.CacheWordHandler;
 
-import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.HashSet;
-
-import org.bitseal.core.App;
 
 import net.sqlcipher.database.SQLiteDatabase;
 import net.sqlcipher.database.SQLiteQueryBuilder;
@@ -16,14 +13,11 @@ import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.SystemClock;
 import android.text.TextUtils;
-import android.util.Log;
 
 public class DatabaseContentProvider extends ContentProvider
 {
 	private DatabaseHelper mDatabaseHelper;
-	private CacheWordHandler mCacheWord;
 	private Context mContext;
 	  
 	// Used by the URI Matcher
@@ -63,9 +57,7 @@ public class DatabaseContentProvider extends ContentProvider
     public static final Uri CONTENT_URI_SERVER_RECORDS = Uri.parse("content://" + AUTHORITY + "/" + PATH_SERVER_RECORDS);
 	  
     private static final UriMatcher sURIMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-    
-    private static final String TAG = "DATABASE_CONTENT_PROVIDER";
-    	  
+            	  
     static 
     {
     	sURIMatcher.addURI(AUTHORITY, PATH_ADDRESSES, ADDRESSES);
@@ -93,21 +85,9 @@ public class DatabaseContentProvider extends ContentProvider
     @Override
     public boolean onCreate() 
     {
-	    SystemClock.sleep(10000);
-    	mContext = App.getContext(); // TODO! This may be null!!!!!
-	    mCacheWord = new CacheWordHandler(mContext);
-	    // Set the default passphrase for the encrypted SQLite database - this is NOT intended to have any security value, but
-	    // rather to give us a convenient default value to use when the user has not yet set a passphrase of their own. 
-	    try
-		{
-			mCacheWord.setPassphrase(DatabaseHelper.DEFAULT_DATABASE_PASSPHRASE.toCharArray());
-		}
-		catch (GeneralSecurityException e)
-		{
-			Log.e(TAG, "Attempt to set the default database encryption passphrase failed.\n" + 
-					"The GeneralSecurityException message was: " + e.getMessage());
-		}
-	    mDatabaseHelper = new DatabaseHelper(mContext, mCacheWord); // This instance of mCacheWord must be unlocked
+    	mContext = getContext();
+    	CacheWordHandler cacheWordHandler = new CacheWordHandler(mContext);
+	    mDatabaseHelper = new DatabaseHelper(mContext, cacheWordHandler);
 	    return false;
     }
     
@@ -118,7 +98,7 @@ public class DatabaseContentProvider extends ContentProvider
      */
     private SQLiteDatabase getDatabase()
     {
-    	SQLiteDatabase.loadLibs(getContext());
+    	SQLiteDatabase.loadLibs(mContext);
 	    return mDatabaseHelper.getWritableDatabase();
     }
     

@@ -1,15 +1,11 @@
 package org.bitseal.activities;
 
 import info.guardianproject.cacheword.CacheWordHandler;
-import info.guardianproject.cacheword.ICacheWordSubscriber;
 import info.guardianproject.cacheword.PassphraseSecrets;
 
-import java.security.GeneralSecurityException;
-
 import org.bitseal.R;
-import org.bitseal.database.DatabaseHelper;
+import org.bitseal.core.App;
 
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Dialog;
@@ -42,7 +38,7 @@ import android.widget.Toast;
  * 
  * @author Jonathan Coe
  */
-public class SecurityActivity extends Activity implements ICacheWordSubscriber
+public class SecurityActivity extends Activity
 {
     private CheckBox databaseEncryptionCheckbox;
     
@@ -57,6 +53,8 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
     private Button passphraseSaveButton;
     private Button passphraseCancelButton;
     
+    private CacheWordHandler mCacheWordHandler;
+    
     /** The minimum length we will allow for a database encryption passphrase */
     private static final int MINIMUM_PASSPHRASE_LENGTH = 8;
     
@@ -67,9 +65,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
     private static final String KEY_DATABASE_ENCRYPTION_ENABLED = "databaseEncryptionEnabled";
     
     private static final String KEY_DATABASE_PASSPHRASE_SAVED = "databasePassphraseSaved";
-    
-    private CacheWordHandler mCacheWord;
-	
+    	
 	private static final String TAG = "SECURITY_ACTIVITY";
 	
 	@Override
@@ -78,10 +74,8 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_security);
 		
-		// Connect to the CacheWord service
-        mCacheWord = new CacheWordHandler(getApplicationContext(), this);
-        mCacheWord.connectToService();
-		
+		mCacheWordHandler = new CacheWordHandler(App.getContext());
+				
 		enterPassphraseLabelTextView = (TextView) findViewById(R.id.security_enter_passphrase_label_textview);
 		confirmPassphraseLabelTextView = (TextView) findViewById(R.id.security_confirm_passphrase_label_textview);
 		
@@ -374,7 +368,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 	{
 		try
 		{
-			mCacheWord.changePassphrase((PassphraseSecrets) mCacheWord.getCachedSecrets(), newPassphrase.toCharArray());
+			mCacheWordHandler.changePassphrase((PassphraseSecrets) mCacheWordHandler.getCachedSecrets(), newPassphrase.toCharArray());
 		}
 		catch (Exception e)
 		{
@@ -487,48 +481,5 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 	    }
 
 	    return true;
-	}
-
-	@SuppressLint("InlinedApi")
-	@Override
-	public void onCacheWordLocked()
-	{
-		// Start the 'lock screen' activity
-        Intent intent = new Intent(getBaseContext(), LockScreenActivity.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later
-        {
-        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
-        }
-        startActivityForResult(intent, 0);
-	}
-
-	@Override
-	public void onCacheWordOpened()
-	{
-		// This should be handled automatically by the DatabaseHelper class, which is a subclass of SQLCipherOpenHelper
-	}
-
-	@Override
-	public void onCacheWordUninitialized()
-	{
-	    // Set the default passphrase for the encrypted SQLite database - this is NOT intended to have any security value, but
-	    // rather to give us a convenient default value to use when the user has not yet set a passphrase of their own. 
-	    try
-		{
-			mCacheWord.setPassphrase(DatabaseHelper.DEFAULT_DATABASE_PASSPHRASE.toCharArray());
-		}
-		catch (GeneralSecurityException e)
-		{
-			Log.e(TAG, "Attempt to set the default database encryption passphrase failed.\n" + 
-					"The GeneralSecurityException message was: " + e.getMessage());
-		}
-	}
- 	
-	@Override
-	protected void onStop() 
-	{
-	    super.onStop();
-	    
-	    mCacheWord.disconnectFromService();
 	}
 }

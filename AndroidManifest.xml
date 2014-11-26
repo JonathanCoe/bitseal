@@ -23,10 +23,6 @@
             android:name="org.bitseal.activities.InboxActivity"
             android:label="@string/app_name"
             android:windowSoftInputMode="stateHidden" >
-            <intent-filter android:label="@string/app_name" >
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
         
         <activity
@@ -100,19 +96,27 @@
             android:label="@string/activity_lock_screen_title"
             android:windowSoftInputMode="stateHidden"
             android:theme="@android:style/Theme.NoTitleBar" >
+            <intent-filter android:label="@string/app_name" >
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
         
         <service
-            android:name="org.bitseal.services.BackgroundService" >
-        </service>
+            android:name="org.bitseal.services.BackgroundService"
+	        android:exported="false"/>
         
         <service
-            android:name="org.bitseal.services.NotificationsService" >
-        </service>
+            android:name="org.bitseal.services.NotificationsService"
+	        android:exported="false"/>
         
         <service
-            android:name="org.bitseal.services.DatabaseCleaningService" >
-        </service>
+            android:name="org.bitseal.services.DatabaseCleaningService"
+	        android:exported="false"/>
+        
+	    <service
+	        android:name="info.guardianproject.cacheword.CacheWordService"
+	        android:exported="false"/>
         
         <provider
             android:name="org.bitseal.database.DatabaseContentProvider"

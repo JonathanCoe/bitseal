@@ -6,17 +6,12 @@ import android.content.Context;
 
 public class DatabaseHelper extends SQLCipherOpenHelper
 {
-    /** The default passphrase for the database. This is NOT intended to provided any security value, 
-     * but rather to give us an easy default value to work with when the user has chosen not to set
-     * their own passphrase. */
-    public static final String DEFAULT_DATABASE_PASSPHRASE = "myDefaultDatabasePassphrase";
-    
 	private static final String DATABASE_NAME = "bitseal_database.db";
 	private static final int DATABASE_VERSION = 7;
-		
+	
 	public DatabaseHelper(Context context, CacheWordHandler cacheWordHandler) 
 	{
-	   super(cacheWordHandler, context, DATABASE_NAME, null, DATABASE_VERSION);
+		super(cacheWordHandler, context, DATABASE_NAME, null, DATABASE_VERSION);
 	}
 	  
 	// Method is called during creation of the database
