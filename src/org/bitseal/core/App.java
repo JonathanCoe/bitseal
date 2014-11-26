@@ -31,7 +31,7 @@ public class App extends Application implements ICacheWordSubscriber
      * their own passphrase. */
     public static final String DEFAULT_DATABASE_PASSPHRASE = "default123";
     
-    //TODO: private static final int DATABASE_ENCRYPTION_TIMEOUT_SECONDS = 604800; // Currently set to 1 week
+    //TODO: private static final int DATABASE_ENCRYPTION_TIMEOUT_SECONDS = 604800; // Currently set to 1 week 
 
     @Override
     public void onCreate() 
@@ -40,7 +40,7 @@ public class App extends Application implements ICacheWordSubscriber
         sContext = getApplicationContext();
         
         PRNGFixes.apply();
-        
+               
 		// Start and subscribe to the CacheWordService
         mCacheWordHandler = new CacheWordHandler(sContext, this);
         mCacheWordHandler.connectToService();

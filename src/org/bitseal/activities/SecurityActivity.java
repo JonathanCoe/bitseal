@@ -62,8 +62,11 @@ public class SecurityActivity extends Activity
      * has previously been set. This means that we avoid leaking the length of the existing passphrase through the UI. */
     private static final String PLACEHOLDER_PASSPHRASE = "thisIsARelativelyLongString";
     
-    private static final String KEY_DATABASE_ENCRYPTION_ENABLED = "databaseEncryptionEnabled";
+    /** The key for a boolean variable that records whether or not the "enable database encryption" checkbox has been selected
+     * by the user */
+    private static final String KEY_DATABASE_ENCRYPTION_SELECTED = "databaseEncryptionSelected";
     
+    /** The key for a boolean variable that records whether or not a user-defined database encryption passphrase has been saved */
     private static final String KEY_DATABASE_PASSPHRASE_SAVED = "databasePassphraseSaved";
     	
 	private static final String TAG = "SECURITY_ACTIVITY";
@@ -192,7 +195,7 @@ public class SecurityActivity extends Activity
 	            {
 	            	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 	            	SharedPreferences.Editor editor = prefs.edit();
-	    		    editor.putBoolean(KEY_DATABASE_ENCRYPTION_ENABLED, true);
+	    		    editor.putBoolean(KEY_DATABASE_ENCRYPTION_SELECTED, true);
 	    		    editor.commit();
 	    		    
 	    		    showDatabaseEncryptionUI();
@@ -291,7 +294,7 @@ public class SecurityActivity extends Activity
     {
     	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
     	SharedPreferences.Editor editor = prefs.edit();
-	    editor.putBoolean(KEY_DATABASE_ENCRYPTION_ENABLED, false);
+	    editor.putBoolean(KEY_DATABASE_ENCRYPTION_SELECTED, false);
 	    editor.putBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
 	    editor.commit();
     	

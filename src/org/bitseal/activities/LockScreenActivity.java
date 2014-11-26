@@ -10,6 +10,7 @@ import org.bitseal.R;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -64,21 +65,14 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 				// Validate the passphrase entered by the user
 				if (validatePassphrase(enteredPassphrase))
 				{
+					Toast.makeText(getBaseContext(), "Checking passphrase...", Toast.LENGTH_LONG).show();
+					
 					// Attempt to unlock the app using the passphrase entered by the user
-					if (attemptUnlock(enteredPassphrase))
-					{
-	                    // TODO: If the passphrase was correct
-						//Intent intent = new Intent(getBaseContext(), InboxActivity.class);
-	                    //startActivityForResult(intent, 0);
-					}
-					else
-					{
-						Toast.makeText(getApplicationContext(), "Invalid passphrase", Toast.LENGTH_SHORT).show();
-					}
+					new AttemptUnlockTask().execute(new String[]{enteredPassphrase});
 				}
 				else
 				{
-					Toast.makeText(getApplicationContext(), "The passphrase must be at least " + MINIMUM_PASSPHRASE_LENGTH + " characters long", Toast.LENGTH_SHORT).show();
+					Toast.makeText(getBaseContext(), "The passphrase must be at least " + MINIMUM_PASSPHRASE_LENGTH + " characters long", Toast.LENGTH_SHORT).show();
 				}
 
 			}
@@ -110,32 +104,38 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 		}
 		return true;
     }
-	
+    
 	/**
-	 * Attempts to unlock the encrypted database using the passphrase provided
-	 * 
-	 * @param enteredPassphrase - The passphrase entered by the user
-	 * 
-	 * @return A boolean indicating whether or not the passphrase was valid
+	 * Attempts to unlock the encrypted database using the passphrase provided.
 	 */
-	private boolean attemptUnlock(String enteredPassphrase)
-	{
-        Log.d(TAG, "TEMPORARY: LockScreenAcvitity.attemptUnlock() called");
-		
-        try 
+    class AttemptUnlockTask extends AsyncTask<String, Void, Boolean> 
+    {
+        @Override
+    	protected Boolean doInBackground(String... enteredPassphrase)
         {
-        	mCacheWordHandler.connectToService();
-        	mCacheWordHandler.setPassphrase(enteredPassphrase.toCharArray());
-        }
-        catch (GeneralSecurityException e) 
-        {
-            Log.e(TAG, "Cacheword passphrase verification failed: " + e.getMessage());
-            return false;
+        	try 
+            {
+            	mCacheWordHandler.connectToService();
+            	mCacheWordHandler.setPassphrase(enteredPassphrase[0].toCharArray());
+            }
+            catch (GeneralSecurityException e) 
+            {
+                Log.e(TAG, "Cacheword passphrase verification failed: " + e.getMessage());
+                return false;
+            }
+            
+            return true;
         }
         
-        // If the password was valid
-        return true;
-	}
+        @Override
+        protected void onPostExecute(Boolean result) 
+        {
+        	if (result == false)
+        	{
+        		Toast.makeText(getBaseContext(), "Invalid passphrase", Toast.LENGTH_SHORT).show();
+        	}
+        }
+    }
 	
 	@SuppressLint("InlinedApi")
 	@Override
