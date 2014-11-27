@@ -96,7 +96,9 @@ public abstract class SQLCipherOpenHelper extends SQLiteOpenHelper
      */
     public synchronized SQLiteDatabase getWritableDatabase()
     {
-    	Log.d(TAG, "TEMPORARY: SQLCiperOpenHelper.getWritableDatabase() called."); 
+    	Log.d(TAG, "TEMPORARY: SQLCiperOpenHelper.getWritableDatabase() called.");
+    	
+    	mCacheWordHandler.connectToService();
     	
     	if (mCacheWordHandler.isLocked())
         {
@@ -135,7 +137,9 @@ public abstract class SQLCipherOpenHelper extends SQLiteOpenHelper
      */
     public synchronized SQLiteDatabase getReadableDatabase()
     {
-        if (mCacheWordHandler.isLocked())
+    	mCacheWordHandler.connectToService();
+    	
+    	if (mCacheWordHandler.isLocked())
         {
         	throw new SQLiteException("Database locked. Decryption key unavailable.");
         }

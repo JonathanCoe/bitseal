@@ -181,6 +181,7 @@
     <string name="security_database_encryption_checkbox_label">Enable database encryption</string>
     <string name="security_enter_passphrase_label">Enter passphrase</string>
     <string name="security_confirm_passphrase_label">Confirm passphrase</string>
+    <string name="security_change_passphrase_button_hint">Change database passphrase</string>
     <string name="security_save_passphrase_button_hint">Save</string>
     <string name="security_cancel_passphrase_button_hint">Cancel</string>
     <string name="security_disable_database_encryption_confirm_textView_text">Are you sure you want to disable database encryption?</string>

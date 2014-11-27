@@ -1,11 +1,12 @@
 package org.bitseal.activities;
 
 import info.guardianproject.cacheword.CacheWordHandler;
+import info.guardianproject.cacheword.ICacheWordSubscriber;
 import info.guardianproject.cacheword.PassphraseSecrets;
 
 import org.bitseal.R;
-import org.bitseal.core.App;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Dialog;
@@ -38,7 +39,7 @@ import android.widget.Toast;
  * 
  * @author Jonathan Coe
  */
-public class SecurityActivity extends Activity
+public class SecurityActivity extends Activity implements ICacheWordSubscriber
 {
     private CheckBox databaseEncryptionCheckbox;
     
@@ -50,8 +51,9 @@ public class SecurityActivity extends Activity
     
     private TextWatcher passphraseEditTextsWatcher;
     
-    private Button passphraseSaveButton;
-    private Button passphraseCancelButton;
+    private Button changePassphraseButton;
+    private Button savePassphraseButton;
+    private Button cancelPassphraseButton;
     
     private CacheWordHandler mCacheWordHandler;
     
@@ -77,14 +79,9 @@ public class SecurityActivity extends Activity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_security);
 		
-        // Check whether the user has set a database encryption passphrase
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		boolean databasePassphraseSaved= prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
-		if (databasePassphraseSaved)
-		{
-			mCacheWordHandler = new CacheWordHandler(App.getContext());
-			mCacheWordHandler.connectToService();
-		}
+		// Connect to the CacheWordService
+		mCacheWordHandler = new CacheWordHandler(this);
+		mCacheWordHandler.connectToService();
 				
 		enterPassphraseLabelTextView = (TextView) findViewById(R.id.security_enter_passphrase_label_textview);
 		confirmPassphraseLabelTextView = (TextView) findViewById(R.id.security_confirm_passphrase_label_textview);
@@ -121,21 +118,37 @@ public class SecurityActivity extends Activity
 
 			public void onTextChanged(CharSequence s, int start, int before, int count)
 			{
-				passphraseSaveButton.setVisibility(View.VISIBLE);
-			    passphraseCancelButton.setVisibility(View.VISIBLE);
+				savePassphraseButton.setVisibility(View.VISIBLE);
+			    cancelPassphraseButton.setVisibility(View.VISIBLE);
 			}
 		};
 		
 		enterPassphraseEditText.addTextChangedListener(passphraseEditTextsWatcher);
 		confirmPassphraseEditText.addTextChangedListener(passphraseEditTextsWatcher);
 		
-		passphraseSaveButton = (Button) findViewById(R.id.security_save_passphrase_button);
-		passphraseSaveButton.setOnClickListener(new View.OnClickListener()
-		{		
+		changePassphraseButton = (Button) findViewById(R.id.security_change_passphrase_button);
+		changePassphraseButton.setVisibility(View.GONE);
+		changePassphraseButton.setOnClickListener(new View.OnClickListener()
+		{
 			@Override
 			public void onClick(View v)
 			{
-				Log.i(TAG, "Security settings passphrase save button clicked");
+				Log.i(TAG, "Security settings change passphrase button clicked");
+				
+				showDatabaseEncryptionUI();
+				
+				changePassphraseButton.setVisibility(View.GONE);
+			}
+		});
+		
+		savePassphraseButton = (Button) findViewById(R.id.security_save_passphrase_button);
+		savePassphraseButton.setOnClickListener(new View.OnClickListener()
+		{		
+			@SuppressLint("InlinedApi")
+			@Override
+			public void onClick(View v)
+			{
+				Log.i(TAG, "Security settings save passphrase button clicked");
 				
 				String enteredPassphrase = enterPassphraseEditText.getText().toString();
 				String confirmedPassphrase = confirmPassphraseEditText.getText().toString();
@@ -166,8 +179,8 @@ public class SecurityActivity extends Activity
 						Log.d(TAG, "TEMPORARY: About to run close keyboard routine");
 						closeKeyboardIfOpen();
 						
-					    passphraseSaveButton.setVisibility(View.GONE);
-					    passphraseCancelButton.setVisibility(View.GONE);
+					    savePassphraseButton.setVisibility(View.GONE);
+					    cancelPassphraseButton.setVisibility(View.GONE);
 					}
 					else
 					{
@@ -177,23 +190,21 @@ public class SecurityActivity extends Activity
 			}
 		});
 		
-		passphraseCancelButton = (Button) findViewById(R.id.security_cancel_passphrase_button);
-		passphraseCancelButton.setOnClickListener(new View.OnClickListener()
+		cancelPassphraseButton = (Button) findViewById(R.id.security_cancel_passphrase_button);
+		cancelPassphraseButton.setOnClickListener(new View.OnClickListener()
 		{		
 			@Override
 			public void onClick(View v)
 			{
-				Log.i(TAG, "Security settings passphrase cancel button clicked");
+				Log.i(TAG, "Security settings cancel passphrase button clicked");
 				
         		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         		boolean databasePassphraseSaved= prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
         		if (databasePassphraseSaved)
         		{
-        			enterPassphraseEditText.setText(PLACEHOLDER_PASSPHRASE);
-        			confirmPassphraseEditText.setText(PLACEHOLDER_PASSPHRASE);
-        			
-				    passphraseSaveButton.setVisibility(View.GONE);
-				    passphraseCancelButton.setVisibility(View.GONE);
+    				hideDatabaseEncryptionUI();
+    				
+    				changePassphraseButton.setVisibility(View.VISIBLE);
 				    
 				    closeKeyboardIfOpen();
         		}
@@ -236,20 +247,18 @@ public class SecurityActivity extends Activity
         });
 		
 		// Read the Shared Preferences to determine whether or not the database encryption settings should be visible
-		databasePassphraseSaved = prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		boolean databasePassphraseSaved = prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
 		Log.i(TAG, "Database passphrase saved is set to " + databasePassphraseSaved);
 		if (databasePassphraseSaved == true)
 		{
-			showDatabaseEncryptionUI();
+			changePassphraseButton.setVisibility(View.VISIBLE);
 			
 			databaseEncryptionCheckbox.setChecked(true);
 			databaseEncryptionCheckbox.setText("Database encryption enabled");
 			
 			enterPassphraseEditText.setText(PLACEHOLDER_PASSPHRASE);
 			confirmPassphraseEditText.setText(PLACEHOLDER_PASSPHRASE);
-			
-		    passphraseSaveButton.setVisibility(View.GONE);
-		    passphraseCancelButton.setVisibility(View.GONE);
 		}
 		else
 		{		
@@ -257,6 +266,8 @@ public class SecurityActivity extends Activity
 			
 			databaseEncryptionCheckbox.setChecked(false);
 		}
+		
+		hideDatabaseEncryptionUI();
 	}
     
 	/**
@@ -325,8 +336,8 @@ public class SecurityActivity extends Activity
 		
 		clearPassphraseEditTexts();
 		
-		passphraseSaveButton.setVisibility(View.GONE);
-	    passphraseCancelButton.setVisibility(View.GONE);
+		savePassphraseButton.setVisibility(View.GONE);
+	    cancelPassphraseButton.setVisibility(View.GONE);
     }
 	
 	private void showDatabaseEncryptionUI()
@@ -335,8 +346,8 @@ public class SecurityActivity extends Activity
 	    confirmPassphraseLabelTextView.setVisibility(View.VISIBLE);
 	    enterPassphraseEditText.setVisibility(View.VISIBLE);
 	    confirmPassphraseEditText.setVisibility(View.VISIBLE);
-	    passphraseSaveButton.setVisibility(View.VISIBLE);
-	    passphraseCancelButton.setVisibility(View.VISIBLE);
+	    savePassphraseButton.setVisibility(View.VISIBLE);
+	    cancelPassphraseButton.setVisibility(View.VISIBLE);
 	}
 	
 	private void hideDatabaseEncryptionUI()
@@ -345,8 +356,8 @@ public class SecurityActivity extends Activity
 	    confirmPassphraseLabelTextView.setVisibility(View.GONE);
 	    enterPassphraseEditText.setVisibility(View.GONE);
 	    confirmPassphraseEditText.setVisibility(View.GONE);
-	    passphraseSaveButton.setVisibility(View.GONE);
-	    passphraseCancelButton.setVisibility(View.GONE);
+	    savePassphraseButton.setVisibility(View.GONE);
+	    cancelPassphraseButton.setVisibility(View.GONE);
 	}
 	
 	/**
@@ -390,7 +401,6 @@ public class SecurityActivity extends Activity
 	{
 		try
 		{
-			mCacheWordHandler = new CacheWordHandler(App.getContext());
 			mCacheWordHandler.connectToService();
 			mCacheWordHandler.setPassphrase(newPassphrase.toCharArray());
 		}
@@ -420,6 +430,7 @@ public class SecurityActivity extends Activity
 	{
 		try
 		{
+			mCacheWordHandler.connectToService();
 			mCacheWordHandler.changePassphrase((PassphraseSecrets) mCacheWordHandler.getCachedSecrets(), newPassphrase.toCharArray());
 		}
 		catch (Exception e)
@@ -535,5 +546,47 @@ public class SecurityActivity extends Activity
 	    }
 
 	    return true;
+	}
+	
+    @Override
+    protected void onStop()
+    {
+    	super.onStop();
+    	mCacheWordHandler.disconnectFromService();
+     }
+	
+	@SuppressLint("InlinedApi")
+	@Override
+	public void onCacheWordLocked()
+	{
+		Log.d(TAG, "TEMPORARY: SecurityActivity.onCacheWordLocked() called.");
+		
+		// Redirect to the lock screen activity
+        Intent intent = new Intent(getBaseContext(), LockScreenActivity.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
+        {
+        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
+        }
+        else
+        {
+        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        }
+        startActivity(intent);
+	}
+
+	@Override
+	public void onCacheWordOpened()
+	{
+		Log.d(TAG, "TEMPORARY: SecurityActivity.onCacheWordOpened() called.");
+		
+		// Nothing to do here currently
+	}
+	
+	@Override
+	public void onCacheWordUninitialized()
+	{
+		Log.d(TAG, "TEMPORARY: SecurityActivity.onCacheWordUninitialized() called.");
+		
+		// Database encryption is currently not enabled by default, so there is nothing to do here
 	}
 }

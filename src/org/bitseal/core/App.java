@@ -3,32 +3,24 @@ package org.bitseal.core;
 import info.guardianproject.cacheword.CacheWordHandler;
 import info.guardianproject.cacheword.ICacheWordSubscriber;
 
-import org.bitseal.activities.LockScreenActivity;
 import org.bitseal.crypt.PRNGFixes;
 
 import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.os.Build;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 public class App extends Application implements ICacheWordSubscriber 
 {
     /**
-     * Keeps a reference of the application context
+     * Keeps a reference of the application context 
      */
     private static Context sContext;
-    
-    /** The key for a boolean variable that records whether or not a user-defined database encryption passphrase has been saved */
-    private static final String KEY_DATABASE_PASSPHRASE_SAVED = "databasePassphraseSaved";
     
     private CacheWordHandler mCacheWordHandler;
     
     private static final String TAG = "APP";
-
+    
     @Override
     public void onCreate() 
     {
@@ -37,15 +29,9 @@ public class App extends Application implements ICacheWordSubscriber
         
         PRNGFixes.apply();
         
-        // Check whether the user has set a database encryption passphrase
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		boolean databasePassphraseSaved= prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
-		if (databasePassphraseSaved)
-		{
-			// Start and subscribe to the CacheWordService
-	        mCacheWordHandler = new CacheWordHandler(sContext, this);
-	        mCacheWordHandler.connectToService();
-		}
+		// Start and subscribe to the CacheWordService
+        mCacheWordHandler = new CacheWordHandler(sContext, this);
+        mCacheWordHandler.connectToService();
     }
 
     /**
@@ -68,17 +54,8 @@ public class App extends Application implements ICacheWordSubscriber
 	{
 		Log.d(TAG, "TEMPORARY: App.onCacheWordLocked() called.");
 			
-		// Start the 'lock screen' activity
-        Intent intent = new Intent(sContext, LockScreenActivity.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later
-        {
-        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
-        }
-        else
-        {
-        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        }
-        sContext.startActivity(intent);
+		// We don't want to do anything here - if we do then the lock screen activity is always launched as soon
+		// as the user's device finishes booting
 	}
 
 	@Override
