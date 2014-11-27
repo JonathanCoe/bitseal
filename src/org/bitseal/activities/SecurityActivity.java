@@ -401,7 +401,6 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 	{
 		try
 		{
-			mCacheWordHandler.connectToService();
 			mCacheWordHandler.setPassphrase(newPassphrase.toCharArray());
 		}
 		catch (Exception e)
@@ -413,7 +412,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 		
     	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
     	SharedPreferences.Editor editor = prefs.edit();
-	    editor.putBoolean(KEY_DATABASE_PASSPHRASE_SAVED, true);
+	    editor.putBoolean(KEY_DATABASE_PASSPHRASE_SAVED, true); 
 	    editor.commit();
 	    
 		Toast.makeText(this, "Database encryption passphrase set successfully", Toast.LENGTH_LONG).show();
@@ -430,7 +429,6 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 	{
 		try
 		{
-			mCacheWordHandler.connectToService();
 			mCacheWordHandler.changePassphrase((PassphraseSecrets) mCacheWordHandler.getCachedSecrets(), newPassphrase.toCharArray());
 		}
 		catch (Exception e)
@@ -552,8 +550,11 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
     protected void onStop()
     {
     	super.onStop();
-    	mCacheWordHandler.disconnectFromService();
-     }
+    	if (mCacheWordHandler != null)
+    	{
+        	mCacheWordHandler.disconnectFromService();
+    	}
+    }
 	
 	@SuppressLint("InlinedApi")
 	@Override

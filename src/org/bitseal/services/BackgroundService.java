@@ -1,8 +1,12 @@
 package org.bitseal.services;
+import info.guardianproject.cacheword.CacheWordHandler;
+import info.guardianproject.cacheword.ICacheWordSubscriber;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 
+import org.bitseal.activities.LockScreenActivity;
 import org.bitseal.controllers.TaskController;
 import org.bitseal.core.App;
 import org.bitseal.core.ObjectProcessor;
@@ -21,13 +25,16 @@ import org.bitseal.database.QueueRecordsTable;
 import org.bitseal.network.NetworkHelper;
 import org.bitseal.util.TimeUtils;
 
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -37,7 +44,7 @@ import android.util.Log;
  * 
  * @author Jonathan Coe
  */
-public class BackgroundService extends IntentService
+public class BackgroundService extends IntentService  implements ICacheWordSubscriber
 {
 	/**
 	 * This constant determines whether or not the app will do
@@ -121,6 +128,8 @@ public class BackgroundService extends IntentService
 	public static final String TASK_SEND_MESSAGE = "sendMessage";
 	public static final String TASK_PROCESS_OUTGOING_MESSAGE = "processOutgoingMessage";
 	public static final String TASK_DISSEMINATE_MESSAGE = "disseminateMessage";
+	
+    private CacheWordHandler mCacheWordHandler;
 			
 	private static final String TAG = "BACKGROUND_SERVICE";
 	
@@ -135,10 +144,31 @@ public class BackgroundService extends IntentService
 	 * @param - An Intent object that has been received by the 
 	 * BackgroundService
 	 */
+	@SuppressLint("InlinedApi")
 	@Override
 	protected void onHandleIntent(Intent i)
 	{
 		Log.i(TAG, "BackgroundService.onHandleIntent() called");
+		
+		// Connect to the CacheWordService
+		mCacheWordHandler = new CacheWordHandler(this);
+		mCacheWordHandler.connectToService();
+		SystemClock.sleep(3000); // We need to allow some extra time to connect to the CacheWordService
+		if (mCacheWordHandler.isLocked())
+		{
+			// Redirect to the lock screen activity
+	        Intent intent = new Intent(this, LockScreenActivity.class);
+	        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
+	        {
+	        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
+	        }
+	        else
+	        {
+	        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+	        }
+	        startActivity(intent);
+	        return;
+		}
 		
 		// Determine whether the intent came from a request for periodic
 		// background processing or from a UI request
@@ -647,5 +677,47 @@ public class BackgroundService extends IntentService
 				return false;
 			}
 		}
+	}
+	
+	@Override
+	public void onDestroy()
+	{
+    	super.onDestroy();
+    	mCacheWordHandler.disconnectFromService();
+	}
+	
+	@SuppressLint("InlinedApi")
+	@Override
+	public void onCacheWordLocked()
+	{
+		Log.d(TAG, "TEMPORARY: BackgroundService.onCacheWordLocked() called.");
+		
+		// Start the 'lock screen' activity
+        Intent intent = new Intent(this, LockScreenActivity.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later
+        {
+        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
+        }
+        else
+        {
+        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        }
+        startActivity(intent);
+	}
+
+	@Override
+	public void onCacheWordOpened()
+	{
+		Log.d(TAG, "TEMPORARY: BackgroundService.onCacheWordOpened() called.");
+		
+		// Nothing to do here currently
+	}
+	
+	@Override
+	public void onCacheWordUninitialized()
+	{
+		Log.d(TAG, "TEMPORARY: BackgroundService.onCacheWordUninitialized() called.");
+		
+		// Database encryption is currently not enabled by default, so there is nothing to do here
 	}
 }

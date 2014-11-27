@@ -79,13 +79,6 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 			}
 		});
 	}
-	
-    @Override
-    protected void onStop()
-    {
-    	super.onStop();
-    	mCacheWordHandler.disconnectFromService();
-     }
     
     /**
      * Validates a passphrase entered by the user
@@ -116,7 +109,6 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
         {
         	try 
             {
-            	mCacheWordHandler.connectToService();
             	mCacheWordHandler.setPassphrase(enteredPassphrase[0].toCharArray());
             }
             catch (GeneralSecurityException e) 
@@ -137,6 +129,16 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
         	}
         }
     }
+    
+    @Override
+    protected void onStop()
+    {
+    	super.onStop();
+    	if (mCacheWordHandler != null)
+    	{
+        	mCacheWordHandler.disconnectFromService();
+    	}
+     }
 	
 	@SuppressLint("InlinedApi")
 	@Override

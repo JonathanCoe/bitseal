@@ -1,5 +1,8 @@
 package org.bitseal.activities;
 
+import info.guardianproject.cacheword.CacheWordHandler;
+import info.guardianproject.cacheword.ICacheWordSubscriber;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -7,19 +10,18 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+
 import org.bitseal.R;
-import org.bitseal.crypt.AddressGenerator;
-import org.bitseal.data.Address;
 import org.bitseal.data.AddressBookRecord;
 import org.bitseal.data.Message;
 import org.bitseal.database.AddressBookRecordProvider;
 import org.bitseal.database.AddressBookRecordsTable;
-import org.bitseal.database.AddressProvider;
 import org.bitseal.database.MessageProvider;
 import org.bitseal.database.MessagesTable;
 import org.bitseal.services.BackgroundService;
 import org.bitseal.services.NotificationsService;
 import org.bitseal.util.ColourCalculator;
+
 import android.annotation.SuppressLint;
 import android.app.ListActivity;
 import android.content.BroadcastReceiver;
@@ -46,7 +48,7 @@ import android.widget.TextView;
  * 
  * @author Jonathan Coe
  */
-public class InboxActivity extends ListActivity
+public class InboxActivity extends ListActivity implements ICacheWordSubscriber
 {
     private ArrayList<Message> mMessages;
     
@@ -84,7 +86,9 @@ public class InboxActivity extends ListActivity
 	private static final int INBOX_COLOURS_ALPHA_VALUE = 70;
 	
     /** The key for a boolean variable that records whether or not a user-defined database encryption passphrase has been saved */
-    private static final String KEY_DATABASE_PASSPHRASE_SAVED = "databasePassphraseSaved";
+    private static final String KEY_DATABASE_PASSPHRASE_SAVED = "databasePassphraseSaved"; 
+    
+    private CacheWordHandler mCacheWordHandler;
     	
     private static final String TAG = "INBOX_ACTIVITY";
     
@@ -99,23 +103,18 @@ public class InboxActivity extends ListActivity
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false))
 		{
-			if (getIntent().hasExtra(LockScreenActivity.EXTRA_DATABASE_UNLOCKED) == false)
+			if (getIntent().hasCategory(Intent.CATEGORY_LAUNCHER))
 			{
-				// Redirect to the lock screen activity
-		        Intent intent = new Intent(this, LockScreenActivity.class);
-		        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
-		        {
-		        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
-		        }
-		        else
-		        {
-		        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		        }
-		        startActivity(intent);
-		        
-		        return;
+				Log.d(TAG, "TEMPORARY: InboxActivity's starting intent had Category_Launcher set");
+				onCacheWordLocked();
+				return;
 			}
-			else
+			
+			// Connect to the CacheWordService
+			mCacheWordHandler = new CacheWordHandler(this);
+			mCacheWordHandler.connectToService();
+			
+			if (getIntent().hasExtra(LockScreenActivity.EXTRA_DATABASE_UNLOCKED))
 			{
 				// Start the BackgroundService
 				Intent firstStartIntent = new Intent(this, BackgroundService.class);
@@ -534,4 +533,49 @@ public class InboxActivity extends ListActivity
 			return convertView;
         }
     }
+    
+    @Override
+    protected void onStop()
+    {
+    	super.onStop();
+    	if (mCacheWordHandler != null)
+    	{
+        	mCacheWordHandler.disconnectFromService();
+    	}
+     }
+	
+	@SuppressLint("InlinedApi")
+	@Override
+	public void onCacheWordLocked()
+	{
+		Log.d(TAG, "TEMPORARY: InboxActivity.onCacheWordLocked() called.");
+		
+		// Redirect to the lock screen activity
+        Intent intent = new Intent(getBaseContext(), LockScreenActivity.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
+        {
+        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
+        }
+        else
+        {
+        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        }
+        startActivity(intent);
+	}
+
+	@Override
+	public void onCacheWordOpened()
+	{
+		Log.d(TAG, "TEMPORARY: InboxActivity.onCacheWordOpened() called.");
+		
+		// Nothing to do here currently
+	}
+	
+	@Override
+	public void onCacheWordUninitialized()
+	{
+		Log.d(TAG, "TEMPORARY: InboxActivity.onCacheWordUninitialized() called.");
+		
+		// Database encryption is currently not enabled by default, so there is nothing to do here
+	}
 }

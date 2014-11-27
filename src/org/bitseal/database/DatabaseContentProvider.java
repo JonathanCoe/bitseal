@@ -92,8 +92,6 @@ public class DatabaseContentProvider extends ContentProvider
     public boolean onCreate() 
     {
     	mContext = getContext();
-    	mCacheWordHandler = new CacheWordHandler(mContext);
-	    mDatabaseHelper = new DatabaseHelper(mContext, mCacheWordHandler); 
 	    return false;
     }
     
@@ -105,6 +103,10 @@ public class DatabaseContentProvider extends ContentProvider
     private SQLiteDatabase getDatabase()
     {
     	SQLiteDatabase.loadLibs(mContext);
+    	
+    	mCacheWordHandler = new CacheWordHandler(mContext);
+    	mCacheWordHandler.connectToService();
+	    mDatabaseHelper = new DatabaseHelper(mContext, mCacheWordHandler);
     	
         // Check whether the user has set a database encryption passphrase
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
