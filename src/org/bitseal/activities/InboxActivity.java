@@ -98,7 +98,7 @@ public class InboxActivity extends ListActivity implements ICacheWordSubscriber
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_inbox);
-        
+		
         // Check whether the user has set a database encryption passphrase
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false))

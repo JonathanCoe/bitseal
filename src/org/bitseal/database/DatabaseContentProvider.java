@@ -1,29 +1,39 @@
 package org.bitseal.database;
 
 import info.guardianproject.cacheword.CacheWordHandler;
+import info.guardianproject.cacheword.ICacheWordSubscriber;
 
 import java.util.Arrays;
 import java.util.HashSet;
 
 import net.sqlcipher.database.SQLiteDatabase;
 import net.sqlcipher.database.SQLiteQueryBuilder;
+
+import org.bitseal.activities.LockScreenActivity;
+
+import android.annotation.SuppressLint;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
+import android.util.Log;
 
-public class DatabaseContentProvider extends ContentProvider
+public class DatabaseContentProvider extends ContentProvider implements ICacheWordSubscriber
 {
 	private DatabaseHelper mDatabaseHelper;
 	private Context mContext;
 	private CacheWordHandler mCacheWordHandler;
 	
 	private static SQLiteDatabase sDatabase;
+	
+	public static boolean databaseAvailable;
 	
     /** The key for a boolean variable that records whether or not a user-defined database encryption passphrase has been saved */
     private static final String KEY_DATABASE_PASSPHRASE_SAVED = "databasePassphraseSaved";
@@ -65,6 +75,8 @@ public class DatabaseContentProvider extends ContentProvider
     public static final Uri CONTENT_URI_SERVER_RECORDS = Uri.parse("content://" + AUTHORITY + "/" + PATH_SERVER_RECORDS);
 	  
     private static final UriMatcher sURIMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+    
+    private static final String TAG = "DATABASE_CONTENT_PROVIDER";
             	  
     static 
     {
@@ -90,12 +102,24 @@ public class DatabaseContentProvider extends ContentProvider
     	sURIMatcher.addURI(AUTHORITY, PATH_SERVER_RECORDS + "/#", SERVER_RECORD_ID);
     }
 
-    @Override
+    @SuppressLint("InlinedApi")
+	@Override
     public boolean onCreate() 
     {
     	mContext = getContext();
-    	getDatabase();
-	    return false;
+    	
+    	Log.i(TAG, "Database content provider onCreate() called");
+    	
+    	mCacheWordHandler = new CacheWordHandler(mContext, this);
+    	mCacheWordHandler.connectToService();
+    	
+        // Check whether the user has set a database encryption passphrase
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false) == false)
+		{
+			getDatabase();
+		}
+		return false;
     }
     
     /**
@@ -103,12 +127,10 @@ public class DatabaseContentProvider extends ContentProvider
      * 
      * @return The SQLiteDatabase object
      */
-    private SQLiteDatabase getDatabase()
+    public SQLiteDatabase getDatabase()
     {
     	SQLiteDatabase.loadLibs(mContext);
-    	
-    	mCacheWordHandler = new CacheWordHandler(mContext);
-    	mCacheWordHandler.connectToService();
+
 	    mDatabaseHelper = new DatabaseHelper(mContext, mCacheWordHandler);
     	
         // Check whether the user has set a database encryption passphrase
@@ -122,6 +144,8 @@ public class DatabaseContentProvider extends ContentProvider
 		{
 			sDatabase = mDatabaseHelper.getUnencryptedDatabase();
 		}
+		
+		databaseAvailable = true;
 		
 		return sDatabase;
     }
@@ -207,7 +231,7 @@ public class DatabaseContentProvider extends ContentProvider
 	  @Override
 	  public Uri insert(Uri uri, ContentValues values)
 	  {
-	    int uriType = sURIMatcher.match(uri);
+		int uriType = sURIMatcher.match(uri);
 	    long id = 0;
 	    String path;
 	    
@@ -259,7 +283,7 @@ public class DatabaseContentProvider extends ContentProvider
 	  @Override
 	  public int delete(Uri uri, String selection, String[] selectionArgs) 
 	  {
-	    int uriType = sURIMatcher.match(uri);
+		int uriType = sURIMatcher.match(uri);
 	    int rowsDeleted = 0;
 	    String id;
 	    
@@ -380,7 +404,7 @@ public class DatabaseContentProvider extends ContentProvider
 	  @Override
 	  public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) 
 	  {
-	    int uriType = sURIMatcher.match(uri);
+		int uriType = sURIMatcher.match(uri);
 	    int rowsUpdated = 0;
 	    String id;
 	    
@@ -576,4 +600,39 @@ public class DatabaseContentProvider extends ContentProvider
 		    	 throw new IllegalArgumentException("Unknown URI Type: " + uriType + " Exception occurred in DatabaseContentProvider.getAvailable()");
 		    }
 	  }
+	  
+	@SuppressLint("InlinedApi")
+	@Override
+	public void onCacheWordLocked()
+	{
+		Log.d(TAG, "DatabaseContenProvider.onCacheWordLocked() called.");
+			
+		// Redirect to the lock screen activity
+        Intent intent = new Intent(mContext, LockScreenActivity.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
+        {
+        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
+        }
+        else
+        {
+        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        }
+        mContext.startActivity(intent);
+	}
+
+	@Override
+	public void onCacheWordOpened()
+	{
+		Log.d(TAG, "DatabaseContenProvider.onCacheWordOpened() called.");
+		
+		getDatabase();
+	}
+
+	@Override
+	public void onCacheWordUninitialized()
+	{
+		Log.d(TAG, "DatabaseContenProvider.onCacheWordUninitialized() called.");
+		
+	    // Database encryption is currently not enabled by default, so there is nothing to do here
+	}
 }

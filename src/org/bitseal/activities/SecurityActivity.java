@@ -208,7 +208,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
         	@Override
 			public void onClick(View v) 
         	{
-	            if (databaseEncryptionCheckbox.isChecked()) 
+	            if (databaseEncryptionCheckbox.isChecked())
 	            {
 	            	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 	            	SharedPreferences.Editor editor = prefs.edit();
@@ -216,6 +216,8 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 	    		    editor.commit();
 	    		    
 	    		    showDatabaseEncryptionUI();
+	    		    
+	    		    enterPassphraseEditText.requestFocus();
 	            } 
 	            else 
 	            {

@@ -6,12 +6,14 @@ import info.guardianproject.cacheword.ICacheWordSubscriber;
 import java.security.GeneralSecurityException;
 
 import org.bitseal.R;
+import org.bitseal.database.DatabaseContentProvider;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -152,6 +154,12 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 	public void onCacheWordOpened()
 	{
 		Log.i(TAG, "LockScreenActivity.onCacheWordOpened() called.");
+		
+		// Wait for the database to be decrypted
+		while (DatabaseContentProvider.databaseAvailable == false)
+		{
+			SystemClock.sleep(200);
+		}
 		
 		// Open the Inbox Activity
 		Intent intent = new Intent(getBaseContext(), InboxActivity.class);

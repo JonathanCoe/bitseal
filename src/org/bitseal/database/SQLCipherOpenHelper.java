@@ -100,7 +100,7 @@ public abstract class SQLCipherOpenHelper extends SQLiteOpenHelper
         {
     		throw new SQLiteException("Database locked. Decryption key unavailable.");
         }
-        
+            	
         return super.getWritableDatabase(encodeRawKey(mCacheWordHandler.getEncryptionKey()));
     }
     
