@@ -86,6 +86,15 @@ public class IdentitiesActivity extends ListActivity implements ICacheWordSubscr
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_identities);
 		
+        // Check whether the user has set a database encryption passphrase
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false))
+		{
+			// Connect to the CacheWordService
+			mCacheWordHandler = new CacheWordHandler(this);
+			mCacheWordHandler.connectToService();
+		}
+		
 		// Get all Addresses from the application's database
 		AddressProvider addProv = AddressProvider.get(getApplicationContext());
 		addProv = AddressProvider.get(getApplicationContext());
@@ -98,7 +107,6 @@ public class IdentitiesActivity extends ListActivity implements ICacheWordSubscr
         setListAdapter(adapter);
 		
         // Check whether this is the first time the identities activity has been opened - if so then let's create a new address for them
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		if (prefs.getBoolean(IDENTITIES_FIRST_OPEN, true))
 		{
 			runFirstOpenRoutine();

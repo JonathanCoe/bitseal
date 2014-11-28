@@ -129,6 +129,9 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 	public static final String TASK_PROCESS_OUTGOING_MESSAGE = "processOutgoingMessage";
 	public static final String TASK_DISSEMINATE_MESSAGE = "disseminateMessage";
 	
+    /** The key for a boolean variable that records whether or not a user-defined database encryption passphrase has been saved */
+    private static final String KEY_DATABASE_PASSPHRASE_SAVED = "databasePassphraseSaved"; 
+	
     private CacheWordHandler mCacheWordHandler;
 			
 	private static final String TAG = "BACKGROUND_SERVICE";
@@ -150,24 +153,29 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 	{
 		Log.i(TAG, "BackgroundService.onHandleIntent() called");
 		
-		// Connect to the CacheWordService
-		mCacheWordHandler = new CacheWordHandler(this);
-		mCacheWordHandler.connectToService();
-		SystemClock.sleep(3000); // We need to allow some extra time to connect to the CacheWordService
-		if (mCacheWordHandler.isLocked())
-		{
-			// Redirect to the lock screen activity
-	        Intent intent = new Intent(this, LockScreenActivity.class);
-	        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
-	        {
-	        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
-	        }
-	        else
-	        {
-	        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-	        }
-	        startActivity(intent);
-	        return;
+        // Check whether the user has set a database encryption passphrase
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false))
+		{	
+			// Connect to the CacheWordService
+			mCacheWordHandler = new CacheWordHandler(this);
+			mCacheWordHandler.connectToService();
+			SystemClock.sleep(3000); // We need to allow some extra time to connect to the CacheWordService
+			if (mCacheWordHandler.isLocked())
+			{
+				// Redirect to the lock screen activity
+		        Intent intent = new Intent(this, LockScreenActivity.class);
+		        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
+		        {
+		        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
+		        }
+		        else
+		        {
+		        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		        }
+		        startActivity(intent);
+		        return;
+			}
 		}
 		
 		// Determine whether the intent came from a request for periodic
@@ -690,7 +698,7 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 	@Override
 	public void onCacheWordLocked()
 	{
-		Log.d(TAG, "TEMPORARY: BackgroundService.onCacheWordLocked() called.");
+		Log.i(TAG, "BackgroundService.onCacheWordLocked() called.");
 		
 		// Start the 'lock screen' activity
         Intent intent = new Intent(this, LockScreenActivity.class);
@@ -708,7 +716,7 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 	@Override
 	public void onCacheWordOpened()
 	{
-		Log.d(TAG, "TEMPORARY: BackgroundService.onCacheWordOpened() called.");
+		Log.i(TAG, "BackgroundService.onCacheWordOpened() called.");
 		
 		// Nothing to do here currently
 	}
@@ -716,7 +724,7 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 	@Override
 	public void onCacheWordUninitialized()
 	{
-		Log.d(TAG, "TEMPORARY: BackgroundService.onCacheWordUninitialized() called.");
+		Log.i(TAG, "BackgroundService.onCacheWordUninitialized() called.");
 		
 		// Database encryption is currently not enabled by default, so there is nothing to do here
 	}

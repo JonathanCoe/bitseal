@@ -66,6 +66,15 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_servers);
 		
+        // Check whether the user has set a database encryption passphrase
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false))
+		{
+			// Connect to the CacheWordService
+			mCacheWordHandler = new CacheWordHandler(this);
+			mCacheWordHandler.connectToService();
+		}
+		
 		// Set up the data for this activity
 		ServerRecordProvider servProv = ServerRecordProvider.get(getApplicationContext());
 		mServerRecords = servProv.getAllServerRecords();

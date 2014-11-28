@@ -69,6 +69,15 @@ public class ExportAddressesActivity extends ListActivity implements ICacheWordS
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_export_addresses);
 		
+        // Check whether the user has set a database encryption passphrase
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false))
+		{
+			// Connect to the CacheWordService
+			mCacheWordHandler = new CacheWordHandler(this);
+			mCacheWordHandler.connectToService();
+		}
+		
 		// Get all Addresses from the application's database
 		AddressProvider addProv = AddressProvider.get(getApplicationContext());
 		addProv = AddressProvider.get(getApplicationContext());

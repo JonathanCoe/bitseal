@@ -60,6 +60,15 @@ public class ImportOrExportActivity extends Activity implements ICacheWordSubscr
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_import_or_export);
 		
+        // Check whether the user has set a database encryption passphrase
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false))
+		{
+			// Connect to the CacheWordService
+			mCacheWordHandler = new CacheWordHandler(this);
+			mCacheWordHandler.connectToService();
+		}
+		
 		mImportAddressButton = (Button) findViewById(R.id.import_or_export_import_address_button);
 		mImportAddressButton.setOnClickListener(new View.OnClickListener()
 		{		

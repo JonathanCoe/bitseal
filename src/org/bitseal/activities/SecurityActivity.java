@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Rect;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -56,7 +57,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
     private Button cancelPassphraseButton;
     
     private CacheWordHandler mCacheWordHandler;
-    
+    	
     /** The minimum length we will allow for a database encryption passphrase */
     private static final int MINIMUM_PASSPHRASE_LENGTH = 8;
     
@@ -155,36 +156,22 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 				
 				if (validateDatabasePassphrase(enteredPassphrase, confirmedPassphrase))
 				{
-					boolean passphraseModificationSuccessful;
-					
 					// Check whether this is the first time that the user has set a database passphrase
 					SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 					boolean databasePassphraseSaved= prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
 					if (databasePassphraseSaved)
 					{
+						Toast.makeText(getBaseContext(), "Changing the database passphrase...", Toast.LENGTH_LONG).show();
+						
 						// Change the database passphrase
-						passphraseModificationSuccessful = changeDatabasePassphrase(enteredPassphrase);
+						new ChangePassphraseTask().execute(enteredPassphrase);
 					}
 					else
 					{
+						Toast.makeText(getBaseContext(), "Encrypting the database...", Toast.LENGTH_LONG).show();
+						
 						// Set the database passphrase for the first time
-						passphraseModificationSuccessful = setDatabasePassphrase(enteredPassphrase);
-					}
-					
-					if (passphraseModificationSuccessful)
-					{
-						databaseEncryptionCheckbox.setChecked(true);
-						databaseEncryptionCheckbox.setText("Database encryption enabled");
-						
-						Log.d(TAG, "TEMPORARY: About to run close keyboard routine");
-						closeKeyboardIfOpen();
-						
-					    savePassphraseButton.setVisibility(View.GONE);
-					    cancelPassphraseButton.setVisibility(View.GONE);
-					}
-					else
-					{
-						Toast.makeText(getBaseContext(), "An error occurred while attempting to set the database passphrase", Toast.LENGTH_LONG).show();
+						new SetPassphraseTask().execute(enteredPassphrase);
 					}
 				}
 			}
@@ -393,60 +380,107 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 	}
 	
 	/**
-	 * Sets the passphrase of the encrypted database
-	 * 
-	 * @param passphrase - The new passphrase
+	 * Attempts to encrypt the database, using the passphrase entered by the user.
 	 */
-	private boolean setDatabasePassphrase(String newPassphrase)
-	{
-		try
-		{
-			mCacheWordHandler.setPassphrase(newPassphrase.toCharArray());
-		}
-		catch (Exception e)
-		{
-			Log.e(TAG, "Attempt to set the database encryption passphrase failed.\n" + 
-					"The exception message was: " + e.getMessage());
-			return false;
-		}
-		
-    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-    	SharedPreferences.Editor editor = prefs.edit();
-	    editor.putBoolean(KEY_DATABASE_PASSPHRASE_SAVED, true); 
-	    editor.commit();
-	    
-		Toast.makeText(this, "Database encryption passphrase set successfully", Toast.LENGTH_LONG).show();
-	    
-	    return true;
-	}
-	
+    class SetPassphraseTask extends AsyncTask<String, Void, Boolean> 
+    {
+        @Override
+    	protected Boolean doInBackground(String... enteredPassphrase)
+        {
+        	try
+    		{
+    			mCacheWordHandler.setPassphrase(enteredPassphrase[0].toCharArray());
+    		}
+    		catch (Exception e)
+    		{
+    			Log.e(TAG, "Attempt to set the database encryption passphrase failed.\n" + 
+    					"The exception message was: " + e.getMessage());
+    			return false;
+    		}
+            
+            return true;
+        }
+        
+        @Override
+        protected void onPostExecute(Boolean success) 
+        {
+        	if (success)
+        	{
+        		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            	SharedPreferences.Editor editor = prefs.edit();
+        	    editor.putBoolean(KEY_DATABASE_PASSPHRASE_SAVED, true); 
+        	    editor.commit();
+        	    
+        		Toast.makeText(getBaseContext(), "Database encryption passphrase set successfully", Toast.LENGTH_LONG).show();
+        	}
+        	
+        	onPassphraseModificationResult(success);
+        }
+    }
+    
 	/**
-	 * Changes the passphrase of the encrypted database
-	 * 
-	 * @param passphrase - The new passphrase
+	 * Attempts change the database encryption passphrase.
 	 */
-	private boolean changeDatabasePassphrase(String newPassphrase)
-	{
-		try
-		{
-			mCacheWordHandler.changePassphrase((PassphraseSecrets) mCacheWordHandler.getCachedSecrets(), newPassphrase.toCharArray());
+    class ChangePassphraseTask extends AsyncTask<String, Void, Boolean> 
+    {
+        @Override
+    	protected Boolean doInBackground(String... enteredPassphrase)
+        {
+    		try
+    		{
+    			mCacheWordHandler.changePassphrase((PassphraseSecrets) mCacheWordHandler.getCachedSecrets(), enteredPassphrase[0].toCharArray());
+    		}
+    		catch (Exception e)
+    		{
+    			Log.e(TAG, "Attempt to change the database encryption passphrase failed.\n" + 
+    					"The exception message was: " + e.getMessage());
+    			return false;
+    		}
+            
+            return true;
+        }
+        
+        @Override
+        protected void onPostExecute(Boolean success) 
+        {
+        	if (success)
+        	{
+            	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            	SharedPreferences.Editor editor = prefs.edit();
+        	    editor.putBoolean(KEY_DATABASE_PASSPHRASE_SAVED, true);
+        	    editor.commit();
+        	    
+        	    Toast.makeText(getBaseContext(), "Database encryption passphrase changed successfully", Toast.LENGTH_LONG).show();
+        	}
+        	
+        	onPassphraseModificationResult(success);
+        }
+    }
+    
+    /**
+     * A routine to be run after we have attempted to set or change the database
+     * encryption passphrase
+     * 
+     * @param success - Whether the attempt to modify the passphrase was successful
+     */
+    private void onPassphraseModificationResult(boolean success)
+    {
+    	if (success)
+    	{
+    		databaseEncryptionCheckbox.setChecked(true);
+			databaseEncryptionCheckbox.setText("Database encryption enabled");
+			
+			Log.d(TAG, "TEMPORARY: About to run close keyboard routine");
+			closeKeyboardIfOpen();
+			
+		    savePassphraseButton.setVisibility(View.GONE);
+		    cancelPassphraseButton.setVisibility(View.GONE);
 		}
-		catch (Exception e)
+		else
 		{
-			Log.e(TAG, "Attempt to change the database encryption passphrase failed.\n" + 
-					"The exception message was: " + e.getMessage());
-			return false;
+			Toast.makeText(getBaseContext(), "An error occurred while attempting to set the database passphrase", Toast.LENGTH_LONG).show();
 		}
-		
-    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-    	SharedPreferences.Editor editor = prefs.edit();
-	    editor.putBoolean(KEY_DATABASE_PASSPHRASE_SAVED, true);
-	    editor.commit();
-	    
-	    Toast.makeText(this, "Database encryption passphrase changed successfully", Toast.LENGTH_LONG).show();
-	    
-	    return true;
-	}
+    }
 	
 	/**
 	 * Clears the 'enter passphrase' and 'confirm passphrase' edit texts.
@@ -496,55 +530,84 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 		}
 	}
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu)
-	{
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.options_menu, menu);
-		return true;
-	}
+  	@Override
+  	public boolean onCreateOptionsMenu(Menu menu) 
+  	{
+  		// Inflate the menu; this adds items to the action bar if it is present.
+  		getMenuInflater().inflate(R.menu.options_menu, menu);
+  		return true;
+  	}
+      
+      @Override
+      public boolean onPrepareOptionsMenu(Menu menu)
+      {
+      	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+      	if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false) == false)
+  		{
+  			menu.removeItem(R.id.menu_item_lock);
+  		}
+          return super.onPrepareOptionsMenu(menu);
+      }
+  	
+  	@SuppressLint("InlinedApi")
+  	@Override
+  	public boolean onOptionsItemSelected(MenuItem item) 
+  	{
+  	    switch(item.getItemId()) 
+  	    {
+  		    case R.id.menu_item_inbox:
+  		        Intent intent1 = new Intent(this, InboxActivity.class);
+  		        startActivity(intent1);
+  		        break;
+  		        
+  		    case R.id.menu_item_sent:
+  		        Intent intent2 = new Intent(this, SentActivity.class);
+  		        startActivity(intent2);
+  		        break;  
+  		        
+  		    case R.id.menu_item_compose:
+  		        Intent intent3 = new Intent(this, ComposeActivity.class);
+  		        startActivity(intent3);
+  		        break;
+  		        
+  		    case R.id.menu_item_identities:
+  		        Intent intent4 = new Intent(this, IdentitiesActivity.class);
+  		        startActivity(intent4);
+  		        break;
+  		        
+  		    case R.id.menu_item_addressBook:
+  		        Intent intent5 = new Intent(this, AddressBookActivity.class);
+  		        startActivity(intent5);
+  		        break;
+  		        
+  		    case R.id.menu_item_settings:
+  		        Intent intent6 = new Intent(this, SettingsActivity.class);
+  		        startActivity(intent6);
+  		        break;
+  		        
+  		    case R.id.menu_item_lock:
+  		    	// Lock the database
+  		    	mCacheWordHandler.lock();
+  		    	
+  		    	// Open the lock screen activity
+  		        Intent intent = new Intent(getBaseContext(), LockScreenActivity.class);
+  		        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
+  		        {
+  		        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
+  		        }
+  		        else
+  		        {
+  		        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+  		        }
+  		        startActivity(intent);
+  		        break;
+  		        
+  		    default:
+  		        return super.onOptionsItemSelected(item);
+  	    }
 
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) 
-	{
-	    switch(item.getItemId()) 
-	    {
-		    case R.id.menu_item_inbox:
-		        Intent intent1 = new Intent(this, InboxActivity.class);
-		        this.startActivity(intent1);
-		        break;
-		        
-		    case R.id.menu_item_sent:
-		        Intent intent2 = new Intent(this, SentActivity.class);
-		        this.startActivity(intent2);
-		        break;  
-		        
-		    case R.id.menu_item_compose:
-		        Intent intent3 = new Intent(this, ComposeActivity.class);
-		        this.startActivity(intent3);
-		        break;
-		        
-		    case R.id.menu_item_identities:
-		        Intent intent4 = new Intent(this, IdentitiesActivity.class);
-		        this.startActivity(intent4);
-		        break;
-		        
-		    case R.id.menu_item_addressBook:
-		        Intent intent5 = new Intent(this, AddressBookActivity.class);
-		        this.startActivity(intent5);
-		        break;
-		        
-		    case R.id.menu_item_settings:
-		        Intent intent6 = new Intent(this, SettingsActivity.class);
-		        this.startActivity(intent6);
-		        break;
-		        
-		    default:
-		        return super.onOptionsItemSelected(item);
-	    }
-
-	    return true;
-	}
+  	    return true;
+  	}
 	
     @Override
     protected void onStop()

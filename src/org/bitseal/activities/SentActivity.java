@@ -75,6 +75,15 @@ public class SentActivity extends ListActivity implements ICacheWordSubscriber
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_sent);
 		
+        // Check whether the user has set a database encryption passphrase
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false))
+		{
+			// Connect to the CacheWordService
+			mCacheWordHandler = new CacheWordHandler(this);
+			mCacheWordHandler.connectToService();
+		}
+		
 		// Get all 'sent' Messages from the database
 		MessageProvider msgProv = MessageProvider.get(getApplicationContext());
 		mMessages =msgProv.searchMessages(MessagesTable.COLUMN_BELONGS_TO_ME, String.valueOf(1)); // 1 stands for "true" in the database

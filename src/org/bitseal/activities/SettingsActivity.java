@@ -60,6 +60,15 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_settings);
 		
+        // Check whether the user has set a database encryption passphrase
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false))
+		{
+			// Connect to the CacheWordService
+			mCacheWordHandler = new CacheWordHandler(this);
+			mCacheWordHandler.connectToService();
+		}
+		
 		mTimeBehindNetworkTextView = (TextView) findViewById(R.id.settings_time_behind_network_textview);
 		mTimeBehindNetworkTextView.setText(TimeUtils.getTimeBehindNetworkMessage());
 		
@@ -162,7 +171,6 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 		});
 		
 		// Read the Shared Preferences to determine whether or not the settings should be visible
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		boolean showSettings = prefs.getBoolean(KEY_SHOW_SETTINGS, false);
 		Log.i(TAG, "Show settings is set to " + showSettings);
 		if (showSettings == true)
