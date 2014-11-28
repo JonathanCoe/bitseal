@@ -23,9 +23,11 @@ public class DatabaseContentProvider extends ContentProvider
 	private Context mContext;
 	private CacheWordHandler mCacheWordHandler;
 	
+	private static SQLiteDatabase sDatabase;
+	
     /** The key for a boolean variable that records whether or not a user-defined database encryption passphrase has been saved */
     private static final String KEY_DATABASE_PASSPHRASE_SAVED = "databasePassphraseSaved";
-	  
+    
 	// Used by the URI Matcher
 	private static final int ADDRESSES = 10;
 	private static final int ADDRESS_ID = 20;
@@ -92,6 +94,7 @@ public class DatabaseContentProvider extends ContentProvider
     public boolean onCreate() 
     {
     	mContext = getContext();
+    	getDatabase();
 	    return false;
     }
     
@@ -113,12 +116,14 @@ public class DatabaseContentProvider extends ContentProvider
 		boolean databasePassphraseSaved= prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
 		if (databasePassphraseSaved)
 		{
-			return mDatabaseHelper.getWritableDatabase();
+			sDatabase =  mDatabaseHelper.getWritableDatabase();
 		}
 		else
 		{
-			return mDatabaseHelper.getUnencryptedDatabase();
+			sDatabase = mDatabaseHelper.getUnencryptedDatabase();
 		}
+		
+		return sDatabase;
     }
     
     @Override
@@ -193,8 +198,7 @@ public class DatabaseContentProvider extends ContentProvider
 		    	throw new IllegalArgumentException("Unknown URI: " + uri + " Exception occurred in DatabaseContentProvider.query()");
 	    }
 	    
-	    SQLiteDatabase database = getDatabase();
-	    Cursor cursor = queryBuilder.query(database, projection, selection, selectionArgs, null, null, sortOrder);
+	    Cursor cursor = queryBuilder.query(sDatabase, projection, selection, selectionArgs, null, null, sortOrder);
 	    // make sure that potential listeners are getting notified
 	    cursor.setNotificationUri(mContext.getContentResolver(), uri);
 	    return cursor;
@@ -207,42 +211,40 @@ public class DatabaseContentProvider extends ContentProvider
 	    long id = 0;
 	    String path;
 	    
-	    SQLiteDatabase database = getDatabase();
-	    
 	    switch (uriType) 
 	    {
 		    case ADDRESSES:
-			      id = database.insert(AddressesTable.TABLE_ADDRESSES, null, values);
+			      id = sDatabase.insert(AddressesTable.TABLE_ADDRESSES, null, values);
 			      path = PATH_ADDRESSES;
 			      break;
 		      
 		    case ADDRESS_BOOK_RECORDS:
-			      id = database.insert(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, null, values);
+			      id = sDatabase.insert(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, null, values);
 			      path = PATH_ADDRESS_BOOK_RECORDS;
 			      break;
 			      
 		    case MESSAGES:
-			      id = database.insert(MessagesTable.TABLE_MESSAGES, null, values);
+			      id = sDatabase.insert(MessagesTable.TABLE_MESSAGES, null, values);
 			      path = PATH_MESSAGES;
 			      break;
 			      
 		    case QUEUE_RECORDS:
-			      id = database.insert(QueueRecordsTable.TABLE_QUEUE_RECORDS, null, values);
+			      id = sDatabase.insert(QueueRecordsTable.TABLE_QUEUE_RECORDS, null, values);
 			      path = PATH_QUEUE_RECORDS;
 			      break;
 			      
 		    case PAYLOADS:
-			      id = database.insert(PayloadsTable.TABLE_PAYLOADS, null, values);
+			      id = sDatabase.insert(PayloadsTable.TABLE_PAYLOADS, null, values);
 			      path = PATH_PAYLOADS;
 			      break;
 			      
 		    case PUBKEYS:
-			      id = database.insert(PubkeysTable.TABLE_PUBKEYS, null, values);
+			      id = sDatabase.insert(PubkeysTable.TABLE_PUBKEYS, null, values);
 			      path = PATH_PUBKEYS;
 			      break;
 			      
 		    case SERVER_RECORDS:
-			      id = database.insert(ServerRecordsTable.TABLE_SERVER_RECORDS, null, values);
+			      id = sDatabase.insert(ServerRecordsTable.TABLE_SERVER_RECORDS, null, values);
 			      path = PATH_SERVER_RECORDS;
 			      break;
 		      
@@ -261,112 +263,110 @@ public class DatabaseContentProvider extends ContentProvider
 	    int rowsDeleted = 0;
 	    String id;
 	    
-	    SQLiteDatabase database = getDatabase();
-	    
 	    switch (uriType)
 	    {
 		    case ADDRESSES:
-			      rowsDeleted = database.delete(AddressesTable.TABLE_ADDRESSES, selection, selectionArgs);
+			      rowsDeleted = sDatabase.delete(AddressesTable.TABLE_ADDRESSES, selection, selectionArgs);
 			      break;      
 		    case ADDRESS_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsDeleted = database.delete(AddressesTable.TABLE_ADDRESSES, AddressesTable.COLUMN_ID + "=" + id, null);
+			    	  rowsDeleted = sDatabase.delete(AddressesTable.TABLE_ADDRESSES, AddressesTable.COLUMN_ID + "=" + id, null);
 			      }
 			      else 
 			      {
-			    	  rowsDeleted = database.delete(AddressesTable.TABLE_ADDRESSES, AddressesTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
+			    	  rowsDeleted = sDatabase.delete(AddressesTable.TABLE_ADDRESSES, AddressesTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case ADDRESS_BOOK_RECORDS:
-			      rowsDeleted = database.delete(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, selection, selectionArgs);
+			      rowsDeleted = sDatabase.delete(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, selection, selectionArgs);
 			      break;      
 		    case ADDRESS_BOOK_RECORD_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsDeleted = database.delete(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, AddressBookRecordsTable.COLUMN_ID + "=" + id, null);
+			    	  rowsDeleted = sDatabase.delete(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, AddressBookRecordsTable.COLUMN_ID + "=" + id, null);
 			      }
 			      else 
 			      {
-			    	  rowsDeleted = database.delete(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, AddressBookRecordsTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
+			    	  rowsDeleted = sDatabase.delete(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, AddressBookRecordsTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case MESSAGES:
-			      rowsDeleted = database.delete(MessagesTable.TABLE_MESSAGES, selection, selectionArgs);
+			      rowsDeleted = sDatabase.delete(MessagesTable.TABLE_MESSAGES, selection, selectionArgs);
 			      break;      
 		    case MESSAGE_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsDeleted = database.delete(MessagesTable.TABLE_MESSAGES, MessagesTable.COLUMN_ID + "=" + id, null);
+			    	  rowsDeleted = sDatabase.delete(MessagesTable.TABLE_MESSAGES, MessagesTable.COLUMN_ID + "=" + id, null);
 			      }
 			      else 
 			      {
-			    	  rowsDeleted = database.delete(MessagesTable.TABLE_MESSAGES, MessagesTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
+			    	  rowsDeleted = sDatabase.delete(MessagesTable.TABLE_MESSAGES, MessagesTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case QUEUE_RECORDS:
-			      rowsDeleted = database.delete(QueueRecordsTable.TABLE_QUEUE_RECORDS, selection, selectionArgs);
+			      rowsDeleted = sDatabase.delete(QueueRecordsTable.TABLE_QUEUE_RECORDS, selection, selectionArgs);
 			      break;      
 		    case QUEUE_RECORD_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsDeleted = database.delete(QueueRecordsTable.TABLE_QUEUE_RECORDS, QueueRecordsTable.COLUMN_ID + "=" + id, null);
+			    	  rowsDeleted = sDatabase.delete(QueueRecordsTable.TABLE_QUEUE_RECORDS, QueueRecordsTable.COLUMN_ID + "=" + id, null);
 			      }
 			      else 
 			      {
-			    	  rowsDeleted = database.delete(QueueRecordsTable.TABLE_QUEUE_RECORDS, QueueRecordsTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
+			    	  rowsDeleted = sDatabase.delete(QueueRecordsTable.TABLE_QUEUE_RECORDS, QueueRecordsTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case PAYLOADS:
-			      rowsDeleted = database.delete(PayloadsTable.TABLE_PAYLOADS, selection, selectionArgs);
+			      rowsDeleted = sDatabase.delete(PayloadsTable.TABLE_PAYLOADS, selection, selectionArgs);
 			      break;      
 		    case PAYLOAD_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsDeleted = database.delete(PayloadsTable.TABLE_PAYLOADS, PayloadsTable.COLUMN_ID + "=" + id, null);
+			    	  rowsDeleted = sDatabase.delete(PayloadsTable.TABLE_PAYLOADS, PayloadsTable.COLUMN_ID + "=" + id, null);
 			      }
 			      else 
 			      {
-			    	  rowsDeleted = database.delete(PayloadsTable.TABLE_PAYLOADS, PayloadsTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
+			    	  rowsDeleted = sDatabase.delete(PayloadsTable.TABLE_PAYLOADS, PayloadsTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case PUBKEYS:
-			      rowsDeleted = database.delete(PubkeysTable.TABLE_PUBKEYS, selection, selectionArgs);
+			      rowsDeleted = sDatabase.delete(PubkeysTable.TABLE_PUBKEYS, selection, selectionArgs);
 			      break;      
 		    case PUBKEY_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsDeleted = database.delete(PubkeysTable.TABLE_PUBKEYS, PubkeysTable.COLUMN_ID + "=" + id, null);
+			    	  rowsDeleted = sDatabase.delete(PubkeysTable.TABLE_PUBKEYS, PubkeysTable.COLUMN_ID + "=" + id, null);
 			      }
 			      else 
 			      {
-			    	  rowsDeleted = database.delete(PubkeysTable.TABLE_PUBKEYS, PubkeysTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
+			    	  rowsDeleted = sDatabase.delete(PubkeysTable.TABLE_PUBKEYS, PubkeysTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case SERVER_RECORDS:
-			      rowsDeleted = database.delete(ServerRecordsTable.TABLE_SERVER_RECORDS, selection, selectionArgs);
+			      rowsDeleted = sDatabase.delete(ServerRecordsTable.TABLE_SERVER_RECORDS, selection, selectionArgs);
 			      break;      
 		    case SERVER_RECORD_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsDeleted = database.delete(ServerRecordsTable.TABLE_SERVER_RECORDS, ServerRecordsTable.COLUMN_ID + "=" + id, null);
+			    	  rowsDeleted = sDatabase.delete(ServerRecordsTable.TABLE_SERVER_RECORDS, ServerRecordsTable.COLUMN_ID + "=" + id, null);
 			      }
 			      else 
 			      {
-			    	  rowsDeleted = database.delete(ServerRecordsTable.TABLE_SERVER_RECORDS, ServerRecordsTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
+			    	  rowsDeleted = sDatabase.delete(ServerRecordsTable.TABLE_SERVER_RECORDS, ServerRecordsTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
@@ -384,112 +384,110 @@ public class DatabaseContentProvider extends ContentProvider
 	    int rowsUpdated = 0;
 	    String id;
 	    
-	    SQLiteDatabase database = getDatabase();
-	    
 	    switch (uriType)
 	    {
 		    case ADDRESSES:
-			      rowsUpdated = database.update(AddressesTable.TABLE_ADDRESSES, values, selection, selectionArgs);
+			      rowsUpdated = sDatabase.update(AddressesTable.TABLE_ADDRESSES, values, selection, selectionArgs);
 			      break;
 		    case ADDRESS_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsUpdated = database.update(AddressesTable.TABLE_ADDRESSES, values, AddressesTable.COLUMN_ID + "=" + id, null);
+			    	  rowsUpdated = sDatabase.update(AddressesTable.TABLE_ADDRESSES, values, AddressesTable.COLUMN_ID + "=" + id, null);
 			      } 
 			      else 
 			      {
-			    	  rowsUpdated = database.update(AddressesTable.TABLE_ADDRESSES, values, AddressesTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
+			    	  rowsUpdated = sDatabase.update(AddressesTable.TABLE_ADDRESSES, values, AddressesTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case ADDRESS_BOOK_RECORDS:
-			      rowsUpdated = database.update(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, values, selection, selectionArgs);
+			      rowsUpdated = sDatabase.update(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, values, selection, selectionArgs);
 			      break;
 		    case ADDRESS_BOOK_RECORD_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsUpdated = database.update(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, values, AddressBookRecordsTable.COLUMN_ID + "=" + id, null);
+			    	  rowsUpdated = sDatabase.update(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, values, AddressBookRecordsTable.COLUMN_ID + "=" + id, null);
 			      } 
 			      else 
 			      {
-			    	  rowsUpdated = database.update(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, values, AddressBookRecordsTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
+			    	  rowsUpdated = sDatabase.update(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, values, AddressBookRecordsTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case MESSAGES:
-			      rowsUpdated = database.update(MessagesTable.TABLE_MESSAGES, values, selection, selectionArgs);
+			      rowsUpdated = sDatabase.update(MessagesTable.TABLE_MESSAGES, values, selection, selectionArgs);
 			      break;
 		    case MESSAGE_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsUpdated = database.update(MessagesTable.TABLE_MESSAGES, values, MessagesTable.COLUMN_ID + "=" + id, null);
+			    	  rowsUpdated = sDatabase.update(MessagesTable.TABLE_MESSAGES, values, MessagesTable.COLUMN_ID + "=" + id, null);
 			      } 
 			      else 
 			      {
-			    	  rowsUpdated = database.update(MessagesTable.TABLE_MESSAGES, values, MessagesTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
+			    	  rowsUpdated = sDatabase.update(MessagesTable.TABLE_MESSAGES, values, MessagesTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
 			      }
 			      break;
 
 		    case QUEUE_RECORDS:
-			      rowsUpdated = database.update(QueueRecordsTable.TABLE_QUEUE_RECORDS, values, selection, selectionArgs);
+			      rowsUpdated = sDatabase.update(QueueRecordsTable.TABLE_QUEUE_RECORDS, values, selection, selectionArgs);
 			      break;
 		    case QUEUE_RECORD_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsUpdated = database.update(QueueRecordsTable.TABLE_QUEUE_RECORDS, values, QueueRecordsTable.COLUMN_ID + "=" + id, null);
+			    	  rowsUpdated = sDatabase.update(QueueRecordsTable.TABLE_QUEUE_RECORDS, values, QueueRecordsTable.COLUMN_ID + "=" + id, null);
 			      } 
 			      else 
 			      {
-			    	  rowsUpdated = database.update(QueueRecordsTable.TABLE_QUEUE_RECORDS, values, QueueRecordsTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
+			    	  rowsUpdated = sDatabase.update(QueueRecordsTable.TABLE_QUEUE_RECORDS, values, QueueRecordsTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case PAYLOADS:
-			      rowsUpdated = database.update(PayloadsTable.TABLE_PAYLOADS, values, selection, selectionArgs);
+			      rowsUpdated = sDatabase.update(PayloadsTable.TABLE_PAYLOADS, values, selection, selectionArgs);
 			      break;
 		    case PAYLOAD_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsUpdated = database.update(PayloadsTable.TABLE_PAYLOADS, values, PayloadsTable.COLUMN_ID + "=" + id, null);
+			    	  rowsUpdated = sDatabase.update(PayloadsTable.TABLE_PAYLOADS, values, PayloadsTable.COLUMN_ID + "=" + id, null);
 			      }
 			      else 
 			      {
-			    	  rowsUpdated = database.update(PayloadsTable.TABLE_PAYLOADS, values, PayloadsTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
+			    	  rowsUpdated = sDatabase.update(PayloadsTable.TABLE_PAYLOADS, values, PayloadsTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case PUBKEYS:
-			      rowsUpdated = database.update(PubkeysTable.TABLE_PUBKEYS, values, selection, selectionArgs);
+			      rowsUpdated = sDatabase.update(PubkeysTable.TABLE_PUBKEYS, values, selection, selectionArgs);
 			      break;
 		    case PUBKEY_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsUpdated = database.update(PubkeysTable.TABLE_PUBKEYS, values, PubkeysTable.COLUMN_ID + "=" + id, null);
+			    	  rowsUpdated = sDatabase.update(PubkeysTable.TABLE_PUBKEYS, values, PubkeysTable.COLUMN_ID + "=" + id, null);
 			      } 
 			      else 
 			      {
-			    	  rowsUpdated = database.update(PubkeysTable.TABLE_PUBKEYS, values, PubkeysTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
+			    	  rowsUpdated = sDatabase.update(PubkeysTable.TABLE_PUBKEYS, values, PubkeysTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case SERVER_RECORDS:
-			      rowsUpdated = database.update(ServerRecordsTable.TABLE_SERVER_RECORDS, values, selection, selectionArgs);
+			      rowsUpdated = sDatabase.update(ServerRecordsTable.TABLE_SERVER_RECORDS, values, selection, selectionArgs);
 			      break;
 		    case SERVER_RECORD_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsUpdated = database.update(ServerRecordsTable.TABLE_SERVER_RECORDS, values, ServerRecordsTable.COLUMN_ID + "=" + id, null);
+			    	  rowsUpdated = sDatabase.update(ServerRecordsTable.TABLE_SERVER_RECORDS, values, ServerRecordsTable.COLUMN_ID + "=" + id, null);
 			      } 
 			      else 
 			      {
-			    	  rowsUpdated = database.update(ServerRecordsTable.TABLE_SERVER_RECORDS, values, ServerRecordsTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
+			    	  rowsUpdated = sDatabase.update(ServerRecordsTable.TABLE_SERVER_RECORDS, values, ServerRecordsTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
 			      }
 			      break;
 		      

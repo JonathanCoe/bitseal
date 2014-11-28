@@ -17,7 +17,6 @@ import android.util.Log;
  * 
  * @author Jonathan Coe
  */
-
 public class MessageProvider
 {
 	/** 
@@ -421,7 +420,7 @@ public class MessageProvider
     	// Build the String[] of selection arguments we will use
     	String[] selectionArgs = new String[]{toAddress, fromAddress, subject, body, receivedSinceString};
     	
-        // Specify which colums from the table we are interested in
+        // Specify which columns from the table we are interested in
 		String[] projection = {
 				MessagesTable.COLUMN_ID, 
 				MessagesTable.COLUMN_MSG_PAYLOAD_ID,

@@ -20,7 +20,7 @@
     <string name="menu_item_label_identities">My Addresses</string>
     <string name="menu_item_label_addressBook">Address Book</string>
     <string name="menu_item_label_settings">Settings</string>
-    <string name="menu_item_label_servers">Servers</string>
+    <string name="menu_item_label_lock">Lock</string>
 
     <!-- Inbox Activity: -->
     <string name="inbox_activity_title">Inbox</string>

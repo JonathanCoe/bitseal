@@ -144,15 +144,14 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 	@Override
 	public void onCacheWordLocked()
 	{
-		Log.d(TAG, "TEMPORARY: LockScreenActivity.onCacheWordLocked() called.");
-		
+		Log.i(TAG, "LockScreenActivity.onCacheWordLocked() called.");
 		// We are already at the lock screen activity, so there's nothing to do here
 	}
 
 	@Override
 	public void onCacheWordOpened()
 	{
-		Log.d(TAG, "TEMPORARY: LockScreenActivity.onCacheWordOpened() called.");
+		Log.i(TAG, "LockScreenActivity.onCacheWordOpened() called.");
 		
 		// Open the Inbox Activity
 		Intent intent = new Intent(getBaseContext(), InboxActivity.class);
@@ -163,8 +162,6 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 	@Override
 	public void onCacheWordUninitialized()
 	{
-		Log.d(TAG, "TEMPORARY: LockScreenActivity.onCacheWordUninitialized() called.");
-		
 		// Database encryption is currently not enabled by default, so there is nothing to do here
 	}
 }
