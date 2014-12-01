@@ -48,6 +48,11 @@ public class NotificationsService extends IntentService
 	{
 		return NEW_MESSAGES_NOTIFICATION_ID;
 	}
+	
+	public static int getUnlockNotificationId()
+	{
+		return UNLOCK_NOTIFICATION_ID;
+	}
 
 	@Override
 	protected void onHandleIntent(Intent intent)

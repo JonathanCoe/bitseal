@@ -163,18 +163,8 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 			SystemClock.sleep(3000); // We need to allow some extra time to connect to the CacheWordService
 			if (mCacheWordHandler.isLocked())
 			{
-				// Redirect to the lock screen activity
-		        Intent intent = new Intent(this, LockScreenActivity.class);
-		        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
-		        {
-		        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
-		        }
-		        else
-		        {
-		        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		        }
-		        startActivity(intent);
-		        return;
+				scheduleRestart();
+				return;
 			}
 		}
 		
@@ -265,6 +255,14 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 			Log.e(TAG, "BackgroundService.onHandleIntent() was called without a valid extra to specify what the service should do.");
 		}
 		
+		scheduleRestart();
+	}
+	
+	/**
+	 * Schedules a restart of the BackgroundService
+	 */
+	private void scheduleRestart()
+	{
 		// Create a new intent that will be used to run processTasks() again after a period of time
 		Intent intent = new Intent(getApplicationContext(), BackgroundService.class);
 		intent.putExtra(BackgroundService.PERIODIC_BACKGROUND_PROCESSING_REQUEST, BackgroundService.BACKGROUND_PROCESSING_REQUEST);

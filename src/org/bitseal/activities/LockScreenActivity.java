@@ -7,9 +7,12 @@ import java.security.GeneralSecurityException;
 
 import org.bitseal.R;
 import org.bitseal.database.DatabaseContentProvider;
+import org.bitseal.services.NotificationsService;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -158,8 +161,13 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 		// Wait for the database to be decrypted
 		while (DatabaseContentProvider.databaseAvailable == false)
 		{
+			Log.i(TAG, "Waiting 200ms for database to be available");
 			SystemClock.sleep(200);
 		}
+		
+		// Clear any 'unlock' notifications
+		NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+		notificationManager.cancel(NotificationsService.getUnlockNotificationId());
 		
 		// Open the Inbox Activity
 		Intent intent = new Intent(getBaseContext(), InboxActivity.class);

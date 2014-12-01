@@ -70,15 +70,14 @@ public abstract class SQLCipherOpenHelper extends SQLiteOpenHelper
     {
         super(context, name, factory, version, new SQLCipherV3MigrationHook(context));
         
+        Log.d(TAG, "TEMPORARY: SQLCipherOpenHelper constructor method called");
+        
         if (cacheWordHandler == null)
         {
         	throw new IllegalArgumentException("CacheWordHandler is null");
         }
         
 		mCacheWordHandler = cacheWordHandler;
-		mCacheWordHandler.connectToService();
-	    
-		Log.d(TAG, "TEMPORARY: SQLCipherOpenHelper constructor method called");
     }
 
     /**
@@ -100,7 +99,7 @@ public abstract class SQLCipherOpenHelper extends SQLiteOpenHelper
         {
     		throw new SQLiteException("Database locked. Decryption key unavailable.");
         }
-            	
+        
         return super.getWritableDatabase(encodeRawKey(mCacheWordHandler.getEncryptionKey()));
     }
     

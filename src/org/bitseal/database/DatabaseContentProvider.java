@@ -8,19 +8,14 @@ import java.util.HashSet;
 
 import net.sqlcipher.database.SQLiteDatabase;
 import net.sqlcipher.database.SQLiteQueryBuilder;
-
-import org.bitseal.activities.LockScreenActivity;
-
 import android.annotation.SuppressLint;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -105,45 +100,53 @@ public class DatabaseContentProvider extends ContentProvider implements ICacheWo
     @SuppressLint("InlinedApi")
 	@Override
     public boolean onCreate() 
-    {
-    	mContext = getContext();
-    	
+    {    	
     	Log.i(TAG, "Database content provider onCreate() called");
+    	
+    	mContext = getContext();
     	
     	mCacheWordHandler = new CacheWordHandler(mContext, this);
     	mCacheWordHandler.connectToService();
+    	
+    	mDatabaseHelper = new DatabaseHelper(mContext, mCacheWordHandler);
     	
         // Check whether the user has set a database encryption passphrase
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
 		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false) == false)
 		{
-			getDatabase();
+			openUnencryptedDatabase();
 		}
 		return false;
     }
     
     /**
-     * Gets a writable SQLiteDatabase object for the encrypted database
+     * Gets a writable SQLiteDatabase object when the database is NOT encrypted
      * 
      * @return The SQLiteDatabase object
      */
-    public SQLiteDatabase getDatabase()
+    public SQLiteDatabase openUnencryptedDatabase()
     {
-    	SQLiteDatabase.loadLibs(mContext);
-
-	    mDatabaseHelper = new DatabaseHelper(mContext, mCacheWordHandler);
+    	Log.i(TAG, "DatabaseContentProvider.openUnencryptedDatabase() called");
     	
-        // Check whether the user has set a database encryption passphrase
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-		boolean databasePassphraseSaved= prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
-		if (databasePassphraseSaved)
-		{
-			sDatabase =  mDatabaseHelper.getWritableDatabase();
-		}
-		else
-		{
-			sDatabase = mDatabaseHelper.getUnencryptedDatabase();
-		}
+    	SQLiteDatabase.loadLibs(mContext);
+		sDatabase = mDatabaseHelper.getUnencryptedDatabase();
+		
+		databaseAvailable = true;
+		
+		return sDatabase;
+    }
+    
+    /**
+     * Gets a writable SQLiteDatabase object when the database is encrypted
+     * 
+     * @return The SQLiteDatabase object
+     */
+    public SQLiteDatabase openEncryptedDatabase()
+    {
+    	Log.i(TAG, "DatabaseContentProvider.openEncryptedDatabase() called");
+    	
+    	SQLiteDatabase.loadLibs(mContext);
+		sDatabase = mDatabaseHelper.getWritableDatabase();
 		
 		databaseAvailable = true;
 		
@@ -606,18 +609,8 @@ public class DatabaseContentProvider extends ContentProvider implements ICacheWo
 	public void onCacheWordLocked()
 	{
 		Log.d(TAG, "DatabaseContenProvider.onCacheWordLocked() called.");
-			
-		// Redirect to the lock screen activity
-        Intent intent = new Intent(mContext, LockScreenActivity.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
-        {
-        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
-        }
-        else
-        {
-        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        }
-        mContext.startActivity(intent);
+		
+		databaseAvailable = false;
 	}
 
 	@Override
@@ -625,7 +618,7 @@ public class DatabaseContentProvider extends ContentProvider implements ICacheWo
 	{
 		Log.d(TAG, "DatabaseContenProvider.onCacheWordOpened() called.");
 		
-		getDatabase();
+		openEncryptedDatabase();
 	}
 
 	@Override
