@@ -375,6 +375,13 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 			return false;
 		}
 		
+		if (enteredPassphrase.equals(PLACEHOLDER_PASSPHRASE))
+		{
+			Toast.makeText(this, "You have not changed the passphrase", Toast.LENGTH_LONG).show();
+			Log.e(TAG, "Prevented the user from saving the placeholder string as the database passphrase");
+			return false;
+		}
+		
 		// The passphrases entered appear to match and be valid
 		return true;
 	}
@@ -466,8 +473,6 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
         	    editor.commit();
             	
         	    hideDatabaseEncryptionUI();
-        	    
-        		closeKeyboardIfOpen();
         		
         		clearPassphraseEditTexts();	
         		
@@ -494,11 +499,13 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
     private void onPassphraseModificationResult(boolean success)
     {
     	if (success)
-    	{			
-			Log.d(TAG, "TEMPORARY: About to run close keyboard routine");
+    	{
 			closeKeyboardIfOpen();
-			
 		    savePassphraseButton.setVisibility(View.GONE);
+		    cancelPassphraseButton.setVisibility(View.GONE);
+		    
+		    // For some reason the cancel button was failing to disappear. Finding it again seems to fix this
+		    cancelPassphraseButton = (Button) findViewById(R.id.security_cancel_passphrase_button);
 		    cancelPassphraseButton.setVisibility(View.GONE);
 		}
 		else
@@ -534,14 +541,10 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 				    Rect rect = new Rect();
 				    // rect will be populated with the coordinates of your view that area still visible.
 				    activityRootView.getWindowVisibleDisplayFrame(rect);
-				    
-				    Log.d(TAG, "TEMPORARY: About to check height diff");
 	
 				    int heightDiff = activityRootView.getRootView().getHeight() - (rect.bottom - rect.top);
 				    if (heightDiff > 100)
 				    {
-				    	Log.d(TAG, "TEMPORARY: Found a height diff of more than 100 pixels");
-				    	
 				    	// If the difference is more than 100 pixels, it's probably caused by the soft keyboard being open. Now we want to close it.
 						InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 						imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0); // Toggle the soft keyboard. 
@@ -567,12 +570,9 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
   	@Override
     public boolean onPrepareOptionsMenu(Menu menu)
     {
-  		Log.i(TAG, "TEMPORARY: SecurityActivity.onPrepareOptionsMenu() called");
-  		
   		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
       	if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false) == false)
   		{
-  			Log.i(TAG, "Removing lock option from menu");
       		menu.removeItem(R.id.menu_item_lock);
       	}
         return super.onPrepareOptionsMenu(menu);

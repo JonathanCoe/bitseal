@@ -12,10 +12,13 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import org.bitseal.R;
+import org.bitseal.crypt.AddressGenerator;
+import org.bitseal.data.Address;
 import org.bitseal.data.AddressBookRecord;
 import org.bitseal.data.Message;
 import org.bitseal.database.AddressBookRecordProvider;
 import org.bitseal.database.AddressBookRecordsTable;
+import org.bitseal.database.AddressProvider;
 import org.bitseal.database.MessageProvider;
 import org.bitseal.database.MessagesTable;
 import org.bitseal.services.BackgroundService;
@@ -33,7 +36,6 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
@@ -258,30 +260,30 @@ public class InboxActivity extends ListActivity implements ICacheWordSubscriber
 		// Generate a new Bitmessage address
 	    try
 	    {
-//	    	AddressGenerator addGen = new AddressGenerator();
-//	    	Address firstAddress = addGen.generateAndSaveNewAddress();
-//	    	firstAddress.setLabel(FIRST_ADDRESS_LABEL);
-//	    	AddressProvider addProv = AddressProvider.get(getApplicationContext());
-//	    	addProv.updateAddress(firstAddress);
-//	    	
-//	    	// Set the 'last msg check time' to the current time - otherwise the app will start checking for msgs sent
-//	    	// within the last 2.5 days, which makes no sense as our address has only just been generated.
-//	    	long currentTime = System.currentTimeMillis() / 1000;
-//		    editor.putLong(LAST_MSG_CHECK_TIME, currentTime);
-//		    editor.commit();
-//			Log.i(TAG, "Updated the 'last successful msg check time' value stored in SharedPreferences to " + currentTime);
-//			
-//	    	// Set the 'last msg processed time' to the current time. As above, we do not have any addresses yet, so we
-//			// cannot have been sent a message yet. 
-//		    editor.putLong(LAST_PROCESSED_MSG_TIME, currentTime);
-//		    editor.commit();
-//		    Log.i(TAG, "Updated the 'last processed msg time' value stored in SharedPreferences to " + currentTime);
-//	    	
-//	    	// Start the BackgroundService in order to complete the 'create new identity' task
-//		    Intent intent = new Intent(getBaseContext(), BackgroundService.class);
-//		    intent.putExtra(BackgroundService.UI_REQUEST, BackgroundService.UI_REQUEST_CREATE_IDENTITY);
-//		    intent.putExtra(BackgroundService.ADDRESS_ID, firstAddress.getId());
-//	    	startService(intent);
+	    	AddressGenerator addGen = new AddressGenerator();
+	    	Address firstAddress = addGen.generateAndSaveNewAddress();
+	    	firstAddress.setLabel(FIRST_ADDRESS_LABEL);
+	    	AddressProvider addProv = AddressProvider.get(getApplicationContext());
+	    	addProv.updateAddress(firstAddress);
+	    	
+	    	// Set the 'last msg check time' to the current time - otherwise the app will start checking for msgs sent
+	    	// within the last 2.5 days, which makes no sense as our address has only just been generated.
+	    	long currentTime = System.currentTimeMillis() / 1000;
+		    editor.putLong(LAST_MSG_CHECK_TIME, currentTime);
+		    editor.commit();
+			Log.i(TAG, "Updated the 'last successful msg check time' value stored in SharedPreferences to " + currentTime);
+			
+	    	// Set the 'last msg processed time' to the current time. As above, we do not have any addresses yet, so we
+			// cannot have been sent a message yet. 
+		    editor.putLong(LAST_PROCESSED_MSG_TIME, currentTime);
+		    editor.commit();
+		    Log.i(TAG, "Updated the 'last processed msg time' value stored in SharedPreferences to " + currentTime);
+	    	
+	    	// Start the BackgroundService in order to complete the 'create new identity' task
+		    Intent intent = new Intent(getBaseContext(), BackgroundService.class);
+		    intent.putExtra(BackgroundService.UI_REQUEST, BackgroundService.UI_REQUEST_CREATE_IDENTITY);
+		    intent.putExtra(BackgroundService.ADDRESS_ID, firstAddress.getId());
+	    	startService(intent);
 	    	
 	    	Log.i(TAG, "Starting BackgroundService for the first time");
 	    }

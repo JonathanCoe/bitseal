@@ -285,7 +285,7 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 	 */
 	private void closeDatabaseIfLocked()
 	{
-		if (mCacheWordHandler.isLocked())
+		if (mCacheWordHandler != null && mCacheWordHandler.isLocked())
 		{
 			DatabaseContentProvider.closeDatabase();
 		}
