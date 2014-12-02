@@ -2,9 +2,9 @@ package org.bitseal.activities;
 
 import info.guardianproject.cacheword.CacheWordHandler;
 import info.guardianproject.cacheword.ICacheWordSubscriber;
-import info.guardianproject.cacheword.PassphraseSecrets;
 
 import org.bitseal.R;
+import org.bitseal.database.DatabaseContentProvider;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -121,6 +121,9 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 			{
 				savePassphraseButton.setVisibility(View.VISIBLE);
 			    cancelPassphraseButton.setVisibility(View.VISIBLE);
+			    
+				savePassphraseButton.setEnabled(true);
+				cancelPassphraseButton.setEnabled(true);
 			}
 		};
 		
@@ -135,6 +138,12 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 			public void onClick(View v)
 			{
 				Log.i(TAG, "Security settings change passphrase button clicked");
+				
+				enterPassphraseEditText.setText(PLACEHOLDER_PASSPHRASE);
+				confirmPassphraseEditText.setText(PLACEHOLDER_PASSPHRASE);
+				
+				enterPassphraseEditText.addTextChangedListener(passphraseEditTextsWatcher);
+				confirmPassphraseEditText.addTextChangedListener(passphraseEditTextsWatcher);
 				
 				showDatabaseEncryptionUI();
 				
@@ -163,6 +172,11 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 					{
 						Toast.makeText(getBaseContext(), "Changing the database passphrase...", Toast.LENGTH_LONG).show();
 						
+						savePassphraseButton = (Button) v;
+						savePassphraseButton.setEnabled(false);
+						cancelPassphraseButton = (Button) v;
+						cancelPassphraseButton.setEnabled(false);
+						
 						// Change the database passphrase
 						new ChangePassphraseTask().execute(enteredPassphrase);
 					}
@@ -190,14 +204,15 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
         		if (databasePassphraseSaved)
         		{
     				hideDatabaseEncryptionUI();
-    				
     				changePassphraseButton.setVisibility(View.VISIBLE);
-				    
 				    closeKeyboardIfOpen();
         		}
         		else
         		{
-        			disableDatabaseEncryptionRoutine();
+        			clearPassphraseEditTexts();
+        			hideDatabaseEncryptionUI();
+    				databaseEncryptionCheckbox.setChecked(false);
+				    closeKeyboardIfOpen();
         		}
 			}
 		});
@@ -208,7 +223,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
         	@Override
 			public void onClick(View v) 
         	{
-	            if (databaseEncryptionCheckbox.isChecked())
+	            if (databaseEncryptionCheckbox.isChecked()) // If the user has just checked the checkbox
 	            {
 	            	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 	            	SharedPreferences.Editor editor = prefs.edit();
@@ -219,7 +234,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 	    		    
 	    		    enterPassphraseEditText.requestFocus();
 	            } 
-	            else 
+	            else // If the user has just unchecked the checkbox
 	            {
 	        		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 	        		boolean databasePassphraseSaved= prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
@@ -229,7 +244,10 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 	        		}
 	        		else
 	        		{
-	        			disableDatabaseEncryptionRoutine();
+	        			clearPassphraseEditTexts();
+	        			hideDatabaseEncryptionUI();
+	    				databaseEncryptionCheckbox.setChecked(false);
+					    closeKeyboardIfOpen();
 	        		}
 	            }
         	}
@@ -285,7 +303,9 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 			{
 				Log.i(TAG, "Security settings screen enable database encryption confirm button pressed");
 				
-				disableDatabaseEncryptionRoutine();
+				Toast.makeText(getBaseContext(), "Disabling database encryption...", Toast.LENGTH_LONG).show();
+				
+				new RestoreDefaultPassphraseTask().execute();
 				
 				disableEncryptionConfirmDialog.dismiss();
 			}
@@ -304,30 +324,6 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 			}
 		});
 	}
-    
-    /**
-     * A small collection of things to be done when the user disables database encryption
-     */
-    private void disableDatabaseEncryptionRoutine()
-    {
-    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-    	SharedPreferences.Editor editor = prefs.edit();
-	    editor.putBoolean(KEY_DATABASE_ENCRYPTION_SELECTED, false);
-	    editor.putBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
-	    editor.commit();
-    	
-	    hideDatabaseEncryptionUI();
-	    
-	    databaseEncryptionCheckbox.setChecked(false);
-	    databaseEncryptionCheckbox.setText("Enable database encryption");
-	    
-		closeKeyboardIfOpen();
-		
-		clearPassphraseEditTexts();
-		
-		savePassphraseButton.setVisibility(View.GONE);
-	    cancelPassphraseButton.setVisibility(View.GONE);
-    }
 	
 	private void showDatabaseEncryptionUI()
 	{
@@ -341,7 +337,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 	
 	private void hideDatabaseEncryptionUI()
 	{
-	    enterPassphraseLabelTextView.setVisibility(View.GONE);
+		enterPassphraseLabelTextView.setVisibility(View.GONE);
 	    confirmPassphraseLabelTextView.setVisibility(View.GONE);
 	    enterPassphraseEditText.setVisibility(View.GONE);
 	    confirmPassphraseEditText.setVisibility(View.GONE);
@@ -389,18 +385,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
         @Override
     	protected Boolean doInBackground(String... enteredPassphrase)
         {
-        	try
-    		{
-    			mCacheWordHandler.setPassphrase(enteredPassphrase[0].toCharArray());
-    		}
-    		catch (Exception e)
-    		{
-    			Log.e(TAG, "Attempt to set the database encryption passphrase failed.\n" + 
-    					"The exception message was: " + e.getMessage());
-    			return false;
-    		}
-            
-            return true;
+    		return DatabaseContentProvider.changeDatabasePassphrase(enteredPassphrase[0]);
         }
         
         @Override
@@ -412,6 +397,9 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
             	SharedPreferences.Editor editor = prefs.edit();
         	    editor.putBoolean(KEY_DATABASE_PASSPHRASE_SAVED, true); 
         	    editor.commit();
+        	    
+        		databaseEncryptionCheckbox.setChecked(true);
+    			databaseEncryptionCheckbox.setText("Database encryption enabled");
         	    
         		Toast.makeText(getBaseContext(), "Database encryption passphrase set successfully", Toast.LENGTH_LONG).show();
         	}
@@ -428,18 +416,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
         @Override
     	protected Boolean doInBackground(String... enteredPassphrase)
         {
-    		try
-    		{
-    			mCacheWordHandler.changePassphrase((PassphraseSecrets) mCacheWordHandler.getCachedSecrets(), enteredPassphrase[0].toCharArray());
-    		}
-    		catch (Exception e)
-    		{
-    			Log.e(TAG, "Attempt to change the database encryption passphrase failed.\n" + 
-    					"The exception message was: " + e.getMessage());
-    			return false;
-    		}
-            
-            return true;
+    		return DatabaseContentProvider.changeDatabasePassphrase(enteredPassphrase[0]);
         }
         
         @Override
@@ -452,7 +429,52 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
         	    editor.putBoolean(KEY_DATABASE_PASSPHRASE_SAVED, true);
         	    editor.commit();
         	    
+        		databaseEncryptionCheckbox.setChecked(true);
+    			databaseEncryptionCheckbox.setText("Database encryption enabled");
+        	    
         	    Toast.makeText(getBaseContext(), "Database encryption passphrase changed successfully", Toast.LENGTH_LONG).show();
+        	}
+        	
+        	onPassphraseModificationResult(success);
+        }
+    }
+    
+	/**
+	 * Sets the database passphrase to its default value
+	 */
+    class RestoreDefaultPassphraseTask extends AsyncTask<Void, Void, Boolean> 
+    {
+        @Override
+    	protected Boolean doInBackground(Void... params)
+        {
+    		return DatabaseContentProvider.changeDatabasePassphrase(DatabaseContentProvider.DEFAULT_DATABASE_PASSPHRASE);
+        }
+        
+        @Override
+        protected void onPostExecute(Boolean success) 
+        {
+        	if (success)
+        	{
+            	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            	SharedPreferences.Editor editor = prefs.edit();
+        	    editor.putBoolean(KEY_DATABASE_ENCRYPTION_SELECTED, false);
+        	    editor.putBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
+        	    editor.commit();
+            	
+        	    hideDatabaseEncryptionUI();
+        	    
+        		closeKeyboardIfOpen();
+        		
+        		clearPassphraseEditTexts();	
+        		
+        		changePassphraseButton.setVisibility(View.GONE);
+        		savePassphraseButton.setVisibility(View.GONE);
+        	    cancelPassphraseButton.setVisibility(View.GONE);
+        	    
+        	    databaseEncryptionCheckbox.setText("Enable database encryption");	    
+        	    databaseEncryptionCheckbox.setChecked(false);
+        	    
+        	    Toast.makeText(getBaseContext(), "Database encryption disabled", Toast.LENGTH_LONG).show();
         	}
         	
         	onPassphraseModificationResult(success);
@@ -468,10 +490,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
     private void onPassphraseModificationResult(boolean success)
     {
     	if (success)
-    	{
-    		databaseEncryptionCheckbox.setChecked(true);
-			databaseEncryptionCheckbox.setText("Database encryption enabled");
-			
+    	{			
 			Log.d(TAG, "TEMPORARY: About to run close keyboard routine");
 			closeKeyboardIfOpen();
 			
@@ -540,16 +559,16 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
   		return true;
   	}
       
-      @Override
-      public boolean onPrepareOptionsMenu(Menu menu)
-      {
-      	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+  	@Override
+    public boolean onPrepareOptionsMenu(Menu menu)
+    {
+  		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
       	if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false) == false)
   		{
   			menu.removeItem(R.id.menu_item_lock);
   		}
-          return super.onPrepareOptionsMenu(menu);
-      }
+        return super.onPrepareOptionsMenu(menu);
+    }
   	
   	@SuppressLint("InlinedApi")
   	@Override

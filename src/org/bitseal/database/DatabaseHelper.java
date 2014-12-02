@@ -6,7 +6,7 @@ import android.content.Context;
 
 public class DatabaseHelper extends SQLCipherOpenHelper
 {
-	private static final String DATABASE_NAME = "bitsealdatabase";
+	protected static final String DATABASE_NAME = "bitseal_database.db";
 	private static final int DATABASE_VERSION = 7;
 	
 	public DatabaseHelper(Context context, CacheWordHandler cacheWordHandler)

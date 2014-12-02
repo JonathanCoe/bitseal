@@ -144,7 +144,7 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 	/**
 	 * Handles requests sent to the BackgroundService via Intents
 	 * 
-	 * @param - An Intent object that has been received by the 
+	 * @param i - An Intent object that has been received by the 
 	 * BackgroundService
 	 */
 	@SuppressLint("InlinedApi")
@@ -689,7 +689,10 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 	public void onDestroy()
 	{
     	super.onDestroy();
-    	mCacheWordHandler.disconnectFromService();
+    	if (mCacheWordHandler != null)
+    	{
+    		mCacheWordHandler.disconnectFromService();
+    	}
 	}
 	
 	@SuppressLint("InlinedApi")

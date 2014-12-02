@@ -6,7 +6,6 @@ import info.guardianproject.cacheword.ICacheWordSubscriber;
 import java.security.GeneralSecurityException;
 
 import org.bitseal.R;
-import org.bitseal.database.DatabaseContentProvider;
 import org.bitseal.services.NotificationsService;
 
 import android.annotation.SuppressLint;
@@ -16,7 +15,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -66,6 +64,8 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 			{
 				Log.i(TAG, "Lock screen unlock button clicked");
 				
+				unlockIcon.setClickable(false);
+				
 				String enteredPassphrase = enterPassphraseEditText.getText().toString();
 				
 				// Validate the passphrase entered by the user
@@ -79,6 +79,7 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 				else
 				{
 					Toast.makeText(getBaseContext(), "The passphrase must be at least " + MINIMUM_PASSPHRASE_LENGTH + " characters long", Toast.LENGTH_SHORT).show();
+					unlockIcon.setClickable(true);
 				}
 
 			}
@@ -131,6 +132,7 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
         	if (result == false)
         	{
         		Toast.makeText(getBaseContext(), "Invalid passphrase", Toast.LENGTH_SHORT).show();
+        		unlockIcon.setClickable(true);
         	}
         }
     }
@@ -157,13 +159,6 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 	public void onCacheWordOpened()
 	{
 		Log.i(TAG, "LockScreenActivity.onCacheWordOpened() called.");
-		
-		// Wait for the database to be decrypted
-		while (DatabaseContentProvider.databaseAvailable == false)
-		{
-			Log.i(TAG, "Waiting 200ms for database to be available");
-			SystemClock.sleep(200);
-		}
 		
 		// Clear any 'unlock' notifications
 		NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);

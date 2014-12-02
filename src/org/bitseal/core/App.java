@@ -68,7 +68,6 @@ public class App extends Application implements ICacheWordSubscriber
 	public void onCacheWordUninitialized()
 	{
 		Log.d(TAG, "TEMPORARY: App.onCacheWordUninitialized() called.");
-		
-	    // Database encryption is currently not enabled by default, so there is nothing to do here
+	    // Nothing to do here currently
 	}
 }

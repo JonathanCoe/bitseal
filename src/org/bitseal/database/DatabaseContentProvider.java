@@ -2,7 +2,9 @@ package org.bitseal.database;
 
 import info.guardianproject.cacheword.CacheWordHandler;
 import info.guardianproject.cacheword.ICacheWordSubscriber;
+import info.guardianproject.cacheword.PassphraseSecrets;
 
+import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.HashSet;
 
@@ -22,16 +24,18 @@ import android.util.Log;
 
 public class DatabaseContentProvider extends ContentProvider implements ICacheWordSubscriber
 {
-	private DatabaseHelper mDatabaseHelper;
-	private Context mContext;
-	private CacheWordHandler mCacheWordHandler;
-	
+	private static DatabaseHelper sDatabaseHelper;
+	private static Context sContext;
+	private static CacheWordHandler sCacheWordHandler;
 	private static SQLiteDatabase sDatabase;
-	
-	public static boolean databaseAvailable;
 	
     /** The key for a boolean variable that records whether or not a user-defined database encryption passphrase has been saved */
     private static final String KEY_DATABASE_PASSPHRASE_SAVED = "databasePassphraseSaved";
+    
+    /** The default passphrase for the database. This is NOT intended to have any security value, but rather to make the
+     * code simpler by always having the database encrypted and therefore not forcing us to switch between encrypted and unencrypted
+     * databases. */
+    public static final String DEFAULT_DATABASE_PASSPHRASE = "myDefaultDatabasePassphrase";
     
 	// Used by the URI Matcher
 	private static final int ADDRESSES = 10;
@@ -103,54 +107,74 @@ public class DatabaseContentProvider extends ContentProvider implements ICacheWo
     {    	
     	Log.i(TAG, "Database content provider onCreate() called");
     	
-    	mContext = getContext();
+    	sContext = getContext();
     	
-    	mCacheWordHandler = new CacheWordHandler(mContext, this);
-    	mCacheWordHandler.connectToService();
+    	sCacheWordHandler = new CacheWordHandler(sContext, this);
+    	sCacheWordHandler.connectToService();
     	
-    	mDatabaseHelper = new DatabaseHelper(mContext, mCacheWordHandler);
-    	
-        // Check whether the user has set a database encryption passphrase
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false) == false)
-		{
-			openUnencryptedDatabase();
-		}
+    	sDatabaseHelper = new DatabaseHelper(sContext, sCacheWordHandler);
+		
 		return false;
     }
     
     /**
-     * Gets a writable SQLiteDatabase object when the database is NOT encrypted
+     * Gets a writable SQLiteDatabase object
      * 
      * @return The SQLiteDatabase object
      */
-    public SQLiteDatabase openUnencryptedDatabase()
+    public static SQLiteDatabase openDatabase()
     {
-    	Log.i(TAG, "DatabaseContentProvider.openUnencryptedDatabase() called");
+    	Log.i(TAG, "DatabaseContentProvider.openDatabase() called");
     	
-    	SQLiteDatabase.loadLibs(mContext);
-		sDatabase = mDatabaseHelper.getUnencryptedDatabase();
-		
-		databaseAvailable = true;
-		
+    	try
+    	{
+    		SQLiteDatabase.loadLibs(sContext);
+    		sDatabase = sDatabaseHelper.getWritableDatabase();
+    	}
+    	catch (Exception e)
+    	{
+    		Log.e(TAG, "Exception occurred while running DatabaseContentProvider.openDatabase(). The exception message was:\n" 
+    				+ e.getMessage());
+    	}
+    	
 		return sDatabase;
     }
     
     /**
-     * Gets a writable SQLiteDatabase object when the database is encrypted
+     * Changes the database passphrase
      * 
-     * @return The SQLiteDatabase object
+     * @param newPassphrase - The new passphrase
+     * 
+     * @return A boolean indicating whether or not the database passphrase was
+     * changed successfully
      */
-    public SQLiteDatabase openEncryptedDatabase()
+    public static boolean changeDatabasePassphrase(String newPassphrase)
     {
-    	Log.i(TAG, "DatabaseContentProvider.openEncryptedDatabase() called");
+    	Log.i(TAG, "DatabaseContentProvider.changeDatabasePassphrase() called");
     	
-    	SQLiteDatabase.loadLibs(mContext);
-		sDatabase = mDatabaseHelper.getWritableDatabase();
-		
-		databaseAvailable = true;
-		
-		return sDatabase;
+    	try
+    	{
+	    	// Get the old encryption key
+    		String oldEncryptionKey = DatabaseHelper.encodeRawKeyToStr(sCacheWordHandler.getEncryptionKey());
+    		
+    		// Set CacheWord to use the new passphrase
+			sCacheWordHandler.changePassphrase((PassphraseSecrets) sCacheWordHandler.getCachedSecrets(), newPassphrase.toCharArray());
+			
+			// Get the new encryption key
+			String newEncryptionKey = DatabaseHelper.encodeRawKeyToStr(sCacheWordHandler.getEncryptionKey());
+	    	
+	    	sDatabase.execSQL("PRAGMA key = \"" + oldEncryptionKey + "\";");
+	    	sDatabase.execSQL("PRAGMA rekey = \"" + newEncryptionKey + "\";");
+	    	
+	    	openDatabase();
+	    	return true;
+    	}
+    	catch (Exception e)
+    	{
+    		Log.e(TAG, "Exception occurred while running DatabaseContentProvider.changeDatabasePassphrase(). The exception message was:\n" + 
+    				e.getMessage());
+    		return false;
+    	}
     }
     
     @Override
@@ -227,7 +251,7 @@ public class DatabaseContentProvider extends ContentProvider implements ICacheWo
 	    
 	    Cursor cursor = queryBuilder.query(sDatabase, projection, selection, selectionArgs, null, null, sortOrder);
 	    // make sure that potential listeners are getting notified
-	    cursor.setNotificationUri(mContext.getContentResolver(), uri);
+	    cursor.setNotificationUri(sContext.getContentResolver(), uri);
 	    return cursor;
 	  }
 
@@ -279,7 +303,7 @@ public class DatabaseContentProvider extends ContentProvider implements ICacheWo
 		    	  throw new IllegalArgumentException("Unknown URI: " + uri + " Exception occurred in DatabaseContentProvider.insert()");
 	    }
 	    
-	    mContext.getContentResolver().notifyChange(uri, null);
+	    sContext.getContentResolver().notifyChange(uri, null);
 	    return Uri.parse(path + "/" + id);
 	  }
 
@@ -400,7 +424,7 @@ public class DatabaseContentProvider extends ContentProvider implements ICacheWo
 		    default:
 		    	  throw new IllegalArgumentException("Unknown URI: " + uri + " Exception occurred in DatabaseContentProvider.delete()");
 	    }
-	    mContext.getContentResolver().notifyChange(uri, null);
+	    sContext.getContentResolver().notifyChange(uri, null);
 	    return rowsDeleted;
 	  }
 
@@ -521,7 +545,7 @@ public class DatabaseContentProvider extends ContentProvider implements ICacheWo
 		    default:
 		    	  throw new IllegalArgumentException("Unknown URI: " + uri + " Exception occurred in DatabaseContentProvider.update()");
 	    }
-	    mContext.getContentResolver().notifyChange(uri, null);
+	    sContext.getContentResolver().notifyChange(uri, null);
 	    return rowsUpdated;
 	  }
 	  
@@ -609,8 +633,7 @@ public class DatabaseContentProvider extends ContentProvider implements ICacheWo
 	public void onCacheWordLocked()
 	{
 		Log.d(TAG, "DatabaseContenProvider.onCacheWordLocked() called.");
-		
-		databaseAvailable = false;
+		// Currently nothing to be done here
 	}
 
 	@Override
@@ -618,14 +641,27 @@ public class DatabaseContentProvider extends ContentProvider implements ICacheWo
 	{
 		Log.d(TAG, "DatabaseContenProvider.onCacheWordOpened() called.");
 		
-		openEncryptedDatabase();
+		openDatabase();
 	}
 
 	@Override
 	public void onCacheWordUninitialized()
 	{
 		Log.d(TAG, "DatabaseContenProvider.onCacheWordUninitialized() called.");
-		
-	    // Database encryption is currently not enabled by default, so there is nothing to do here
+	   
+        // Check whether the user has set a database encryption passphrase
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(sContext);
+		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false) == false)
+		{
+			try
+			{
+				sCacheWordHandler.setPassphrase(DEFAULT_DATABASE_PASSPHRASE.toCharArray());
+			}
+			catch (GeneralSecurityException e)
+			{
+				Log.e(TAG, "GeneralSecurityException occurred in DatabaseContentProvider.onCreate(). The exception message was:\n" 
+					+ e.getMessage());
+			}
+		}
 	}
 }

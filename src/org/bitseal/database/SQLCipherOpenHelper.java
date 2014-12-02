@@ -112,7 +112,7 @@ public abstract class SQLCipherOpenHelper extends SQLiteOpenHelper
      */
     public synchronized SQLiteDatabase getUnencryptedDatabase()
     {
-        return super.getWritableDatabase("");
+    	return super.getWritableDatabase("");
     }
 
     /**
