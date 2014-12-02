@@ -93,7 +93,12 @@
         
         <activity
             android:name="org.bitseal.activities.LockScreenActivity"
-            android:label="@string/activity_lock_screen_title"
+            android:windowSoftInputMode="stateHidden"
+            android:theme="@android:style/Theme.NoTitleBar" >
+        </activity>
+        
+        <activity
+            android:name="org.bitseal.activities.SplashScreenActivity"
             android:windowSoftInputMode="stateHidden"
             android:theme="@android:style/Theme.NoTitleBar" >
             <intent-filter android:label="@string/app_name" >

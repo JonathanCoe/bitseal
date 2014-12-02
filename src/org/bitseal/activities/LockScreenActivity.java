@@ -37,10 +37,8 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
     /** The minimum length we will allow for a database encryption passphrase */
     private static final int MINIMUM_PASSPHRASE_LENGTH = 8;
     
-    /**
-     * Signals to the InboxActivity that the database has just been unlocked, so it should not redirect
-     * the user to the lock screen.
-     */
+    /** Signals to the InboxActivity that the database has just been unlocked, so it should not redirect
+     * the user to the lock screen. */
     public static final String EXTRA_DATABASE_UNLOCKED = "lockScreenActivity.DATABASE_UNLOCKED";
     
     private static final String TAG = "LOCK_SCREEN_ACTIVITY";
@@ -173,6 +171,6 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 	@Override
 	public void onCacheWordUninitialized()
 	{
-		// Database encryption is currently not enabled by default, so there is nothing to do here
+		// Nothing to do here
 	}
 }

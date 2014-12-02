@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 
-import org.bitseal.activities.LockScreenActivity;
 import org.bitseal.controllers.TaskController;
 import org.bitseal.core.App;
 import org.bitseal.core.ObjectProcessor;
@@ -17,6 +16,7 @@ import org.bitseal.data.Payload;
 import org.bitseal.data.Pubkey;
 import org.bitseal.data.QueueRecord;
 import org.bitseal.database.AddressProvider;
+import org.bitseal.database.DatabaseContentProvider;
 import org.bitseal.database.MessageProvider;
 import org.bitseal.database.PayloadProvider;
 import org.bitseal.database.PubkeyProvider;
@@ -32,7 +32,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
@@ -164,6 +163,7 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 			if (mCacheWordHandler.isLocked())
 			{
 				scheduleRestart();
+				closeDatabaseIfLocked();
 				return;
 			}
 		}
@@ -256,6 +256,7 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 		}
 		
 		scheduleRestart();
+		closeDatabaseIfLocked();
 	}
 	
 	/**
@@ -276,6 +277,18 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 	    // Register the pending intent with AlarmManager
 	    AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
 	    am.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), pendingIntent);
+	}
+	
+	/**
+	 * Checks whether CacheWord is locked. If yes, this routine closes
+	 * the database.
+	 */
+	private void closeDatabaseIfLocked()
+	{
+		if (mCacheWordHandler.isLocked())
+		{
+			DatabaseContentProvider.closeDatabase();
+		}
 	}
 	
 	/**
@@ -700,25 +713,13 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 	public void onCacheWordLocked()
 	{
 		Log.i(TAG, "BackgroundService.onCacheWordLocked() called.");
-		
-		// Start the 'lock screen' activity
-        Intent intent = new Intent(this, LockScreenActivity.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later
-        {
-        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
-        }
-        else
-        {
-        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        }
-        startActivity(intent);
+		// Nothing to do here currently
 	}
 
 	@Override
 	public void onCacheWordOpened()
 	{
 		Log.i(TAG, "BackgroundService.onCacheWordOpened() called.");
-		
 		// Nothing to do here currently
 	}
 	
@@ -726,7 +727,6 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 	public void onCacheWordUninitialized()
 	{
 		Log.i(TAG, "BackgroundService.onCacheWordUninitialized() called.");
-		
-		// Database encryption is currently not enabled by default, so there is nothing to do here
+		// Nothing to do here currently
 	}
 }

@@ -177,6 +177,23 @@ public class DatabaseContentProvider extends ContentProvider implements ICacheWo
     	}
     }
     
+	/**
+	 * Closes the SQLiteDatabase object that we use to interact with the
+	 * app's database. This method is intended to be used when the user locks
+	 * the app. 
+	 */
+	public static void closeDatabase()
+	{
+		Log.i(TAG, "DatabaseContentProvider.closeDatabase() called.");
+		if (sDatabase != null)
+		{
+			Log.i(TAG, "About to close database");
+			sDatabase.close();
+			sDatabase = null;
+			System.gc();
+		}
+	}
+    
     @Override
     public String getType(Uri uri) 
     {
@@ -627,13 +644,37 @@ public class DatabaseContentProvider extends ContentProvider implements ICacheWo
 		    	 throw new IllegalArgumentException("Unknown URI Type: " + uriType + " Exception occurred in DatabaseContentProvider.getAvailable()");
 		    }
 	  }
-	  
+	
+	/**
+	 * If the database encryption passphrase is currently set to its default value, 
+	 * this method retrieves the corresponding encryption key and stores it using
+	 * CacheWord. 
+	 */
+	public static void attemptGetDefaultEncryptionKey()
+	{
+      	// Check whether the user has set a database encryption passphrase
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(sContext);
+		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false) == false)
+		{
+			try
+			{
+				sCacheWordHandler.setPassphrase(DEFAULT_DATABASE_PASSPHRASE.toCharArray());
+			}
+			catch (GeneralSecurityException e)
+			{
+				Log.e(TAG, "GeneralSecurityException occurred in DatabaseContentProvider.onCreate(). The exception message was:\n" 
+					+ e.getMessage());
+			}
+		}
+	}
+	
 	@SuppressLint("InlinedApi")
 	@Override
 	public void onCacheWordLocked()
 	{
 		Log.d(TAG, "DatabaseContenProvider.onCacheWordLocked() called.");
-		// Currently nothing to be done here
+		
+		attemptGetDefaultEncryptionKey();
 	}
 
 	@Override
@@ -648,20 +689,6 @@ public class DatabaseContentProvider extends ContentProvider implements ICacheWo
 	public void onCacheWordUninitialized()
 	{
 		Log.d(TAG, "DatabaseContenProvider.onCacheWordUninitialized() called.");
-	   
-        // Check whether the user has set a database encryption passphrase
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(sContext);
-		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false) == false)
-		{
-			try
-			{
-				sCacheWordHandler.setPassphrase(DEFAULT_DATABASE_PASSPHRASE.toCharArray());
-			}
-			catch (GeneralSecurityException e)
-			{
-				Log.e(TAG, "GeneralSecurityException occurred in DatabaseContentProvider.onCreate(). The exception message was:\n" 
-					+ e.getMessage());
-			}
-		}
+	   // Nothing to do here
 	}
 }

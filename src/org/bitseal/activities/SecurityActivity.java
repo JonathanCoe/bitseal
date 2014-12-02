@@ -56,6 +56,8 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
     private Button savePassphraseButton;
     private Button cancelPassphraseButton;
     
+    private Menu mMenu;
+    
     private CacheWordHandler mCacheWordHandler;
     	
     /** The minimum length we will allow for a database encryption passphrase */
@@ -200,7 +202,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 				Log.i(TAG, "Security settings cancel passphrase button clicked");
 				
         		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        		boolean databasePassphraseSaved= prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
+        		boolean databasePassphraseSaved = prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
         		if (databasePassphraseSaved)
         		{
     				hideDatabaseEncryptionUI();
@@ -237,7 +239,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 	            else // If the user has just unchecked the checkbox
 	            {
 	        		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-	        		boolean databasePassphraseSaved= prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
+	        		boolean databasePassphraseSaved = prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
 	        		if (databasePassphraseSaved)
 	        		{
 	        			openDisableEncryptionConfirmDialog();
@@ -378,7 +380,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 	}
 	
 	/**
-	 * Attempts to encrypt the database, using the passphrase entered by the user.
+	 * Sets the database passphrase to one specified by the user.
 	 */
     class SetPassphraseTask extends AsyncTask<String, Void, Boolean> 
     {
@@ -400,6 +402,8 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
         	    
         		databaseEncryptionCheckbox.setChecked(true);
     			databaseEncryptionCheckbox.setText("Database encryption enabled");
+    			
+    			mMenu.add(Menu.NONE, R.id.menu_item_lock, 7, R.string.menu_item_label_lock);
         	    
         		Toast.makeText(getBaseContext(), "Database encryption passphrase set successfully", Toast.LENGTH_LONG).show();
         	}
@@ -555,6 +559,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
   	public boolean onCreateOptionsMenu(Menu menu) 
   	{
   		// Inflate the menu; this adds items to the action bar if it is present.
+  		mMenu = menu;
   		getMenuInflater().inflate(R.menu.options_menu, menu);
   		return true;
   	}
@@ -562,11 +567,14 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
   	@Override
     public boolean onPrepareOptionsMenu(Menu menu)
     {
+  		Log.i(TAG, "TEMPORARY: SecurityActivity.onPrepareOptionsMenu() called");
+  		
   		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
       	if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false) == false)
   		{
-  			menu.removeItem(R.id.menu_item_lock);
-  		}
+  			Log.i(TAG, "Removing lock option from menu");
+      		menu.removeItem(R.id.menu_item_lock);
+      	}
         return super.onPrepareOptionsMenu(menu);
     }
   	

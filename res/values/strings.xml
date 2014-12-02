@@ -189,7 +189,6 @@
     <string name="security_disable_database_encryption_confirm_cancel_button_label">Cancel</string>
     
     <!-- Lock Screen Activity: -->
-    <string name="activity_lock_screen_title">Bitseal</string>
     <string name="lock_screen_enter_passphrase_edittext_hint">Enter passphrase</string>
     
 </resources>
