@@ -21,7 +21,7 @@ Working features
 + Import addresses
 + Export addresses
 + Choose which servers to use (including your own)
-+ Local encryption of the database, using SQLCipher
++ Local encryption of the app's database (using SQLCipher)
 
 
 Roadmap for development (subject to change)
