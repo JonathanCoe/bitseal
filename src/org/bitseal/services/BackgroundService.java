@@ -128,9 +128,6 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 	public static final String TASK_PROCESS_OUTGOING_MESSAGE = "processOutgoingMessage";
 	public static final String TASK_DISSEMINATE_MESSAGE = "disseminateMessage";
 	
-    /** The key for a boolean variable that records whether or not a user-defined database encryption passphrase has been saved */
-    private static final String KEY_DATABASE_PASSPHRASE_SAVED = "databasePassphraseSaved"; 
-	
     private CacheWordHandler mCacheWordHandler;
 			
 	private static final String TAG = "BACKGROUND_SERVICE";
@@ -152,20 +149,15 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 	{
 		Log.i(TAG, "BackgroundService.onHandleIntent() called");
 		
-        // Check whether the user has set a database encryption passphrase
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false))
-		{	
-			// Connect to the CacheWordService
-			mCacheWordHandler = new CacheWordHandler(this);
-			mCacheWordHandler.connectToService();
-			SystemClock.sleep(3000); // We need to allow some extra time to connect to the CacheWordService
-			if (mCacheWordHandler.isLocked())
-			{
-				scheduleRestart();
-				closeDatabaseIfLocked();
-				return;
-			}
+		// Connect to the CacheWordService and check whether it is locked
+		mCacheWordHandler = new CacheWordHandler(this);
+		mCacheWordHandler.connectToService();
+		SystemClock.sleep(5000); // We need to allow some extra time to connect to the CacheWordService
+		if (mCacheWordHandler.isLocked())
+		{
+			scheduleRestart();
+			closeDatabaseIfLocked();
+			return;
 		}
 		
 		// Determine whether the intent came from a request for periodic
