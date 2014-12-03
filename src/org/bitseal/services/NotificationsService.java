@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
@@ -140,13 +141,19 @@ public class NotificationsService extends IntentService
 	 */
 	private void displayNewMessagesNotification(String title, String text)
 	{
-		NotificationCompat.Builder builder =
-		        new NotificationCompat.Builder(this)
-		        .setSmallIcon(R.drawable.notification_icon)
-		        .setContentTitle(title)
-		        .setContentText(text);
-		
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+		builder.setContentTitle(title);
+		builder.setContentText(text);
 		builder.setAutoCancel(true);
+		
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+		{
+			builder.setSmallIcon(R.drawable.notification_icon_lollipop);
+		}
+		else
+		{
+			builder.setSmallIcon(R.drawable.notification_icon);
+		}
 		
 		// Set a sound for the notification
 		Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
