@@ -634,22 +634,18 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 	{
 		Log.i(TAG, "BackgroundService.runCheckIfPubkeyReDisseminationIsDueTask() called");
 		
-		// First check whether an Internet connection is available. If not, we cannot proceed. 
-		if (NetworkHelper.checkInternetAvailability() == true)
-		{		
-			// Only run this task if we have at least one Address!
-			AddressProvider addProv = AddressProvider.get(getApplicationContext());
-			ArrayList<Address> myAddresses = addProv.getAllAddresses();
-			if (myAddresses.size() > 0)
-			{
-				// Attempt to complete the task
-				TaskController taskController = new TaskController();
-				taskController.checkIfPubkeyDisseminationIsDue(DO_POW);
-			}
-			else
-			{
-				Log.i(TAG, "No Addresses were found in the application database, so we will not run the 'Check if pubkey re-dissemination is due' task");
-			}
+		// Only run this task if we have at least one Address!
+		AddressProvider addProv = AddressProvider.get(getApplicationContext());
+		ArrayList<Address> myAddresses = addProv.getAllAddresses();
+		if (myAddresses.size() > 0)
+		{
+			// Attempt to complete the task
+			TaskController taskController = new TaskController();
+			taskController.checkIfPubkeyDisseminationIsDue(DO_POW);
+		}
+		else
+		{
+			Log.i(TAG, "No Addresses were found in the application database, so we will not run the 'Check if pubkey re-dissemination is due' task");
 		}
 	}
 	
