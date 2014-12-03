@@ -149,6 +149,7 @@ public class NotificationsService extends IntentService
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
 		{
 			builder.setSmallIcon(R.drawable.notification_icon_lollipop);
+			builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC); // All we show is the number of new messages received
 		}
 		else
 		{
