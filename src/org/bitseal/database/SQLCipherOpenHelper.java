@@ -70,8 +70,6 @@ public abstract class SQLCipherOpenHelper extends SQLiteOpenHelper
     {
         super(context, name, factory, version, new SQLCipherV3MigrationHook(context));
         
-        Log.d(TAG, "TEMPORARY: SQLCipherOpenHelper constructor method called");
-        
         if (cacheWordHandler == null)
         {
         	throw new IllegalArgumentException("CacheWordHandler is null");
