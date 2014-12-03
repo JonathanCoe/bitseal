@@ -69,9 +69,13 @@ public class InboxActivity extends ListActivity implements ICacheWordSubscriber
     // A welcome message for new users
     protected static final String WELCOME_MESSAGE_TO_ADDRESS = "Me";
     private static final String WELCOME_MESSAGE_FROM_ADDRESS = "BM-NC2oGii7w8UT4igUhsCBGBE7gngvoD83";
-    private static final String WELCOME_MESSAGE_SUBJECT = "Welcome to Bitseal!";
+    private static final String WELCOME_MESSAGE_SUBJECT = "Welcome to Bitseal. Please read this!";
     private static final String WELCOME_MESSAGE_BODY = "Thanks for trying out Bitseal. We really hope you enjoy the app.\n\n" +
-    												   "If you have any feedback, please feel free to send us a message.";
+    												   "If you have any feedback, please feel free to send us a message.\n\n" +
+    												   "Note: When you first run Bitseal, a new Bitmessage address will be generated " +
+    												   "for you. Bitseal will then do proof of work to publish that address " + 
+    												   "to the rest of the network. This will take a few minutes and " + 
+    												   "may cause delays in sending messages until it has been completed.";
     
     private static final String FIRST_ADDRESS_LABEL = "Me";
     
