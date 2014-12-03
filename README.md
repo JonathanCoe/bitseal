@@ -21,12 +21,12 @@ Working features
 + Import addresses
 + Export addresses
 + Choose which servers to use (including your own)
++ Local encryption of the database, using SQLCipher
 
 
 Roadmap for development (subject to change)
 ---------------
 + Lite client message retrieval using prefix filters (credit to Peter Todd for suggesting this)
-+ Local encryption of the database, using SQLCipher
 + SSL for connections between clients and servers
 + POW implemented in C or C++ via the Android NDK
 + Support for broadcasts
