@@ -69,7 +69,7 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 				// Validate the passphrase entered by the user
 				if (validatePassphrase(enteredPassphrase))
 				{
-					Toast.makeText(getBaseContext(), "Checking passphrase...", Toast.LENGTH_LONG).show();
+					Toast.makeText(getBaseContext(), "Checking passphrase...", Toast.LENGTH_SHORT).show();
 					
 					// Attempt to unlock the app using the passphrase entered by the user
 					new AttemptUnlockTask().execute(new String[]{enteredPassphrase});
