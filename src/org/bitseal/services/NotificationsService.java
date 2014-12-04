@@ -145,7 +145,6 @@ public class NotificationsService extends IntentService
 		builder.setContentTitle(title);
 		builder.setContentText(text);
 		builder.setAutoCancel(true);
-		
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
 		{
 			builder.setSmallIcon(R.drawable.notification_icon_lollipop);
@@ -197,17 +196,19 @@ public class NotificationsService extends IntentService
 	 */
 	private void displayUnlockNotification()
 	{
-		NotificationCompat.Builder builder =
-		        new NotificationCompat.Builder(this)
-		        .setSmallIcon(R.drawable.notification_icon)
-		        .setContentTitle(UNLOCK_NOTIFICATION_TITLE)
-		        .setContentText(UNLOCK_NOTIFICATION_TEXT);
-		
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+		builder.setContentTitle(UNLOCK_NOTIFICATION_TITLE);
+		builder.setContentText(UNLOCK_NOTIFICATION_TEXT);
 		builder.setAutoCancel(true);
-		
-		// Set a sound for the notification
-		Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-		builder.setSound(alarmSound);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+		{
+			builder.setSmallIcon(R.drawable.notification_icon_lollipop);
+			builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+		}
+		else
+		{
+			builder.setSmallIcon(R.drawable.notification_icon);
+		}
 		
 		// Creates an intent to open the lock screen activity if the user selects the notification
 		Intent openNotificationIntent = new Intent(this, LockScreenActivity.class);
