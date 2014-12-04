@@ -443,7 +443,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
         		databaseEncryptionCheckbox.setChecked(true);
     			databaseEncryptionCheckbox.setText("Database encryption enabled");
         	    
-        	    Toast.makeText(getBaseContext(), "Database encryption passphrase changed successfully", Toast.LENGTH_LONG).show();
+        	    Toast.makeText(getBaseContext(), "Database encryption passphrase changed", Toast.LENGTH_LONG).show();
         	}
         	
         	onPassphraseModificationResult(success);
