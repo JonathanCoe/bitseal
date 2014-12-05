@@ -103,7 +103,7 @@ public class ServerRecordProvider
     {
     	ArrayList<ServerRecord> matchingRecords = new ArrayList<ServerRecord>();
 
-    	// Specify which colums from the table we are interested in
+    	// Specify which columns from the table we are interested in
 		String[] projection = {
 				ServerRecordsTable.COLUMN_ID,
 				ServerRecordsTable.COLUMN_URL,
@@ -141,11 +141,11 @@ public class ServerRecordProvider
 		else
 		{
 			Log.i(TAG, "Unable to find any ServerRecords with the value " + searchString + " in the " + columnName + " column");
+			cursor.close();
 			return matchingRecords;
 		}
 		
 		cursor.close();
-	
     	return matchingRecords;
      }
     
@@ -183,7 +183,7 @@ public class ServerRecordProvider
     {
     	ArrayList<ServerRecord> serverRecords = new ArrayList<ServerRecord>();
     	
-        // Specify which colums from the table we are interested in
+        // Specify which columns from the table we are interested in
 		String[] projection = {
 				ServerRecordsTable.COLUMN_ID,
 				ServerRecordsTable.COLUMN_URL,
@@ -218,6 +218,7 @@ public class ServerRecordProvider
     	   while (cursor.moveToNext());
     	}
     	
+		cursor.close();
     	return serverRecords;
     }
     

@@ -1,6 +1,7 @@
 package org.bitseal.pow;
 
 import java.math.BigInteger;
+import java.text.NumberFormat;
 
 import org.bitseal.crypt.SHA512;
 import org.bitseal.util.ByteUtils;
@@ -71,11 +72,11 @@ public class POWProcessor
 		powCalc.setTargetLoad(1);
 		
 		Log.d(TAG, "Doing POW calculations for a payload.\n" +
-				"Payload length        : " + payload.length + " bytes\n" +
-				"Nonce trials per byte : " + nonceTrialsPerByte + "\n" +
-				"Extra bytes           : " + extraBytes + "\n" +
+				"Payload length        : " + NumberFormat.getIntegerInstance().format(payload.length) + " bytes\n" +
+				"Nonce trials per byte : " + NumberFormat.getIntegerInstance().format(nonceTrialsPerByte) + "\n" +
+				"Extra bytes           : " + NumberFormat.getIntegerInstance().format(extraBytes) + "\n" +
 				"Time to live          : " + TimeUtils.getTimeMessage(timeToLive) + "\n" +
-				"Target                : " + powTarget);
+				"Target                : " + NumberFormat.getIntegerInstance().format(powTarget));
 		
 		return powCalc.execute(MAX_TIME_ALLOWED);
 	}

@@ -35,5 +35,11 @@
         android:orderInCategory="6"
         android:showAsAction="never"
         android:title="@string/menu_item_label_settings"  />
+    
+    <item
+        android:id="@+id/menu_item_lock"
+        android:orderInCategory="7"
+        android:showAsAction="never"
+        android:title="@string/menu_item_label_lock"  />
 
 </menu>

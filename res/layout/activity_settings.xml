@@ -6,34 +6,29 @@
   android:layout_height="wrap_content"
   android:orientation="vertical"
   >
-	    
-      <TextView
-        android:id="@+id/settings_server_section_separator"
-	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:text="@string/settings_server_section_label" 
-	    style="?android:listSeparatorTextViewStyle"
-	    />
     
+	  <Button 
+	    android:id="@+id/settings_security_settings_button"
+	    android:textSize="20sp"
+	    android:layout_width="match_parent"
+	    android:layout_height="50dp"
+	    android:layout_marginTop="20dp"
+	    android:layout_marginBottom="20dp"
+	    android:layout_marginLeft="16dp"
+	    android:layout_marginRight="16dp"
+	    android:hint="@string/settings_security_settings_button_label"
+	    />
+      
 	  <Button 
 	    android:id="@+id/settings_server_settings_button"
 	    android:textSize="20sp"
 	    android:layout_width="match_parent"
 	    android:layout_height="50dp"
-	    android:layout_marginTop="10dp"
-	    android:layout_marginBottom="2dp"
+	    android:layout_marginTop="20dp"
+	    android:layout_marginBottom="20dp"
 	    android:layout_marginLeft="16dp"
 	    android:layout_marginRight="16dp"
 	    android:hint="@string/settings_server_settings_button_label"
-	    />
-	  
-	  <TextView
-	    android:id="@+id/settings_data_section_separator"
-	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:layout_marginTop="15dp"
-	    android:text="@string/settings_data_section_label" 
-	    style="?android:listSeparatorTextViewStyle"
 	    />
 	  
 	  <Button 
@@ -41,20 +36,11 @@
 	    android:textSize="20sp"
 	    android:layout_width="match_parent"
 	    android:layout_height="50dp"
-	    android:layout_marginTop="10dp"
-	    android:layout_marginBottom="2dp"
+	    android:layout_marginTop="20dp"
+	    android:layout_marginBottom="20dp"
 	    android:layout_marginLeft="16dp"
 	    android:layout_marginRight="16dp"
 	    android:hint="@string/settings_import_or_export_button_label"
-	    />
-	  
-	  <TextView
-	    android:id="@+id/settings_other_section_separator"
-	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:layout_marginTop="15dp"
-	    android:text="@string/settings_other_section_label" 
-	    style="?android:listSeparatorTextViewStyle"
 	    />
 	  
 	  <Button 
@@ -62,8 +48,8 @@
 	    android:textSize="20sp"
 	    android:layout_width="match_parent"
 	    android:layout_height="50dp"
-	    android:layout_marginTop="10dp"
-	    android:layout_marginBottom="10dp"
+	    android:layout_marginTop="20dp"
+	    android:layout_marginBottom="20dp"
 	    android:layout_marginLeft="16dp"
 	    android:layout_marginRight="16dp"
 	    android:hint="@string/settings_restart_background_service_button_label"
@@ -74,7 +60,7 @@
 	    android:layout_width="match_parent"
 	    android:layout_height="wrap_content"
 	    android:layout_marginTop="25dp"
-	    android:layout_marginBottom="30dp"
+	    android:layout_marginBottom="10dp"
 	    android:layout_marginLeft="16dp"
 	    android:layout_marginRight="16dp"
 	    android:gravity="center_horizontal"
@@ -82,12 +68,12 @@
 	    />
 
 	  <CheckBox
-	      android:id="@+id/settings_show_settings_checkbox"
-	      android:layout_width="wrap_content"
-	      android:layout_height="wrap_content"
-	      android:layout_marginTop="10dp"
-	      android:layout_marginLeft="6dp"
-	      android:text="@string/settings_show_settings_textbox_label" 
-	      />
+	    android:id="@+id/settings_show_settings_checkbox"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_marginTop="10dp"
+	    android:layout_marginLeft="6dp"
+	    android:text="@string/settings_show_settings_textbox_label" 
+	    />
 	  
 </LinearLayout>

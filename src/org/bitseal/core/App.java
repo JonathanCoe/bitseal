@@ -1,17 +1,26 @@
 package org.bitseal.core;
 
+import info.guardianproject.cacheword.CacheWordHandler;
+import info.guardianproject.cacheword.ICacheWordSubscriber;
+
 import org.bitseal.crypt.PRNGFixes;
 
+import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
+import android.util.Log;
 
-public class App extends Application 
+public class App extends Application implements ICacheWordSubscriber 
 {
     /**
-     * Keeps a reference of the application context
+     * Keeps a reference of the application context 
      */
     private static Context sContext;
-
+    
+    private CacheWordHandler mCacheWordHandler;
+    
+    private static final String TAG = "APP";
+    
     @Override
     public void onCreate() 
     {
@@ -19,6 +28,10 @@ public class App extends Application
         sContext = getApplicationContext();
         
         PRNGFixes.apply();
+        
+		// Start and subscribe to the CacheWordService
+        mCacheWordHandler = new CacheWordHandler(sContext, this);
+        mCacheWordHandler.connectToService();
     }
 
     /**
@@ -34,4 +47,27 @@ public class App extends Application
     {
         return sContext;
     }
+    
+	@SuppressLint("InlinedApi")
+	@Override
+	public void onCacheWordLocked()
+	{
+		Log.d(TAG, "TEMPORARY: App.onCacheWordLocked() called.");
+			
+		// We don't want to do anything here - if we do then the lock screen activity is always launched as soon
+		// as the user's device finishes booting
+	}
+
+	@Override
+	public void onCacheWordOpened()
+	{
+		Log.d(TAG, "TEMPORARY: App.onCacheWordOpened() called.");
+	}
+
+	@Override
+	public void onCacheWordUninitialized()
+	{
+		Log.d(TAG, "TEMPORARY: App.onCacheWordUninitialized() called.");
+	    // Nothing to do here currently
+	}
 }

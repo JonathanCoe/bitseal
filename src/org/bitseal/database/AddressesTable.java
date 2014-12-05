@@ -1,6 +1,6 @@
 package org.bitseal.database;
 
-import android.database.sqlite.SQLiteDatabase;
+import net.sqlcipher.database.SQLiteDatabase;
 import android.util.Log;
 
 public class AddressesTable 

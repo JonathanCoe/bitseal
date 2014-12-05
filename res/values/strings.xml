@@ -20,7 +20,7 @@
     <string name="menu_item_label_identities">My Addresses</string>
     <string name="menu_item_label_addressBook">Address Book</string>
     <string name="menu_item_label_settings">Settings</string>
-    <string name="menu_item_label_servers">Servers</string>
+    <string name="menu_item_label_lock">Lock</string>
 
     <!-- Inbox Activity: -->
     <string name="inbox_activity_title">Inbox</string>
@@ -116,12 +116,9 @@
     
     <!-- Settings Activity: -->
     <string name="activity_settings_title">Settings</string>
-    <string name="settings_options_list_section_label">Server Settings</string>
-    <string name="settings_server_section_label">Server Settings</string>
+    <string name="settings_security_settings_button_label">Security Settings</string>
     <string name="settings_server_settings_button_label">Server Settings</string>
-    <string name="settings_data_section_label">Data settings</string>
     <string name="settings_import_or_export_button_label">Import or export data</string>
-    <string name="settings_other_section_label">Other settings</string>
     <string name="settings_restart_background_service_button_label">Restart background service</string>
     <string name="settings_show_settings_textbox_label">Show settings (for advanced users only)</string>
     
@@ -177,5 +174,21 @@
     <string name="import_address_dialog_private_encryption_key_label_title">Private Encryption Key</string>
     <string name="import_address_dialog_private_encryption_key_scan_qr_code_button_label">Scan QR Code</string>
     <string name="import_address_dialog_import_button_label">Import</string>
-     
+    
+    <!-- Security Settings Activity: -->
+    <string name="activity_security_title">Security Settings</string>
+    <string name="security_database_encryption_section_label">Database Encryption</string>
+    <string name="security_database_encryption_checkbox_label">Enable database encryption</string>
+    <string name="security_enter_passphrase_label">Enter passphrase</string>
+    <string name="security_confirm_passphrase_label">Confirm passphrase</string>
+    <string name="security_change_passphrase_button_hint">Change database passphrase</string>
+    <string name="security_save_passphrase_button_hint">Save</string>
+    <string name="security_cancel_passphrase_button_hint">Cancel</string>
+    <string name="security_disable_database_encryption_confirm_textView_text">Are you sure you want to disable database encryption?</string>
+    <string name="security_disable_database_encryption_confirm_confirm_button_label">Confirm</string>
+    <string name="security_disable_database_encryption_confirm_cancel_button_label">Cancel</string>
+    
+    <!-- Lock Screen Activity: -->
+    <string name="lock_screen_enter_passphrase_edittext_hint">Enter passphrase</string>
+    
 </resources>

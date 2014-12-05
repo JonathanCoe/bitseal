@@ -1,5 +1,8 @@
 package org.bitseal.activities;
 
+import info.guardianproject.cacheword.CacheWordHandler;
+import info.guardianproject.cacheword.ICacheWordSubscriber;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -25,6 +28,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
@@ -42,7 +46,7 @@ import android.widget.TextView;
  * 
  * @author Jonathan Coe
  */
-public class SentActivity extends ListActivity
+public class SentActivity extends ListActivity implements ICacheWordSubscriber
 {
 	private ArrayList<Message> mMessages;
     
@@ -56,7 +60,12 @@ public class SentActivity extends ListActivity
 	public static final String UI_NOTIFICATION = "uiNotification";
 	
 	private static final int SENT_COLOURS_ALPHA_VALUE = 70;
+	
+    /** The key for a boolean variable that records whether or not a user-defined database encryption passphrase has been saved */
+    private static final String KEY_DATABASE_PASSPHRASE_SAVED = "databasePassphraseSaved"; 
     
+    private CacheWordHandler mCacheWordHandler;
+	
     private static final String TAG = "SENT_ACTIVITY";
 
 	@SuppressLint("NewApi")
@@ -65,6 +74,15 @@ public class SentActivity extends ListActivity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_sent);
+		
+        // Check whether the user has set a database encryption passphrase
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false))
+		{
+			// Connect to the CacheWordService
+			mCacheWordHandler = new CacheWordHandler(this);
+			mCacheWordHandler.connectToService();
+		}
 		
 		// Get all 'sent' Messages from the database
 		MessageProvider msgProv = MessageProvider.get(getApplicationContext());
@@ -149,56 +167,6 @@ public class SentActivity extends ListActivity
 		// Restore previous state (including selected item index and scroll position)
 		mSentListView.onRestoreInstanceState(state);
     }
-	
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) 
-	{
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.options_menu, menu);
-		return true;
-	}
-	
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) 
-	{
-	    switch(item.getItemId()) 
-	    {
-		    case R.id.menu_item_inbox:
-		        Intent intent1 = new Intent(this, InboxActivity.class);
-		        this.startActivity(intent1);
-		        break;
-		        
-		    case R.id.menu_item_sent:
-		        Intent intent2 = new Intent(this, SentActivity.class);
-		        this.startActivity(intent2);
-		        break;  
-		        
-		    case R.id.menu_item_compose:
-		        Intent intent3 = new Intent(this, ComposeActivity.class);
-		        this.startActivity(intent3);
-		        break;
-		        
-		    case R.id.menu_item_identities:
-		        Intent intent4 = new Intent(this, IdentitiesActivity.class);
-		        this.startActivity(intent4);
-		        break;
-		        
-		    case R.id.menu_item_addressBook:
-		        Intent intent5 = new Intent(this, AddressBookActivity.class);
-		        this.startActivity(intent5);
-		        break;
-		        
-		    case R.id.menu_item_settings:
-		        Intent intent6 = new Intent(this, SettingsActivity.class);
-		        this.startActivity(intent6);
-		        break;
-		        
-		    default:
-		        return super.onOptionsItemSelected(item);
-	    }
-
-	    return true;
-	}
 	
 	/**
 	 * A ViewHolder used to speed up this activity's listview.
@@ -378,4 +346,122 @@ public class SentActivity extends ListActivity
 			return convertView;
         }
     }
+    
+ 	@Override
+ 	public boolean onCreateOptionsMenu(Menu menu) 
+ 	{
+ 		// Inflate the menu; this adds items to the action bar if it is present.
+ 		getMenuInflater().inflate(R.menu.options_menu, menu);
+ 		return true;
+ 	}
+     
+     @Override
+     public boolean onPrepareOptionsMenu(Menu menu)
+     {
+     	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+     	if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false) == false)
+ 		{
+ 			menu.removeItem(R.id.menu_item_lock);
+ 		}
+         return super.onPrepareOptionsMenu(menu);
+     }
+ 	
+ 	@SuppressLint("InlinedApi")
+ 	@Override
+ 	public boolean onOptionsItemSelected(MenuItem item) 
+ 	{
+ 	    switch(item.getItemId()) 
+ 	    {
+ 		    case R.id.menu_item_inbox:
+ 		        Intent intent1 = new Intent(this, InboxActivity.class);
+ 		        startActivity(intent1);
+ 		        break;
+ 		        
+ 		    case R.id.menu_item_sent:
+ 		        Intent intent2 = new Intent(this, SentActivity.class);
+ 		        startActivity(intent2);
+ 		        break;  
+ 		        
+ 		    case R.id.menu_item_compose:
+ 		        Intent intent3 = new Intent(this, ComposeActivity.class);
+ 		        startActivity(intent3);
+ 		        break;
+ 		        
+ 		    case R.id.menu_item_identities:
+ 		        Intent intent4 = new Intent(this, IdentitiesActivity.class);
+ 		        startActivity(intent4);
+ 		        break;
+ 		        
+ 		    case R.id.menu_item_addressBook:
+ 		        Intent intent5 = new Intent(this, AddressBookActivity.class);
+ 		        startActivity(intent5);
+ 		        break;
+ 		        
+ 		    case R.id.menu_item_settings:
+ 		        Intent intent6 = new Intent(this, SettingsActivity.class);
+ 		        startActivity(intent6);
+ 		        break;
+ 		        
+ 		    case R.id.menu_item_lock:
+ 		    	// Lock the database
+ 		    	mCacheWordHandler.lock();
+ 		    	
+ 		    	// Open the lock screen activity
+ 		        Intent intent = new Intent(getBaseContext(), LockScreenActivity.class);
+ 		        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
+ 		        {
+ 		        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
+ 		        }
+ 		        else
+ 		        {
+ 		        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+ 		        }
+ 		        startActivity(intent);
+ 		        break;
+ 		        
+ 		    default:
+ 		        return super.onOptionsItemSelected(item);
+ 	    }
+
+ 	    return true;
+ 	}
+     
+     @Override
+     protected void onStop()
+     {
+     	super.onStop();
+     	if (mCacheWordHandler != null)
+     	{
+         	mCacheWordHandler.disconnectFromService();
+     	}
+      }
+ 	
+ 	@SuppressLint("InlinedApi")
+ 	@Override
+ 	public void onCacheWordLocked()
+ 	{
+ 		// Redirect to the lock screen activity
+         Intent intent = new Intent(getBaseContext(), LockScreenActivity.class);
+         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
+         {
+         	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
+         }
+         else
+         {
+         	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+         }
+         startActivity(intent);
+ 	}
+
+ 	@Override
+ 	public void onCacheWordOpened()
+ 	{
+ 		// Nothing to do here currently
+ 	}
+ 	
+ 	@Override
+ 	public void onCacheWordUninitialized()
+ 	{
+ 		// Database encryption is currently not enabled by default, so there is nothing to do here
+ 	}
 }

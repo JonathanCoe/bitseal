@@ -1,4 +1,7 @@
 package org.bitseal.services;
+import info.guardianproject.cacheword.CacheWordHandler;
+import info.guardianproject.cacheword.ICacheWordSubscriber;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -13,6 +16,7 @@ import org.bitseal.data.Payload;
 import org.bitseal.data.Pubkey;
 import org.bitseal.data.QueueRecord;
 import org.bitseal.database.AddressProvider;
+import org.bitseal.database.DatabaseContentProvider;
 import org.bitseal.database.MessageProvider;
 import org.bitseal.database.PayloadProvider;
 import org.bitseal.database.PubkeyProvider;
@@ -21,6 +25,7 @@ import org.bitseal.database.QueueRecordsTable;
 import org.bitseal.network.NetworkHelper;
 import org.bitseal.util.TimeUtils;
 
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.PendingIntent;
@@ -28,6 +33,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -37,7 +43,7 @@ import android.util.Log;
  * 
  * @author Jonathan Coe
  */
-public class BackgroundService extends IntentService
+public class BackgroundService extends IntentService  implements ICacheWordSubscriber
 {
 	/**
 	 * This constant determines whether or not the app will do
@@ -121,6 +127,8 @@ public class BackgroundService extends IntentService
 	public static final String TASK_SEND_MESSAGE = "sendMessage";
 	public static final String TASK_PROCESS_OUTGOING_MESSAGE = "processOutgoingMessage";
 	public static final String TASK_DISSEMINATE_MESSAGE = "disseminateMessage";
+	
+    private CacheWordHandler mCacheWordHandler;
 			
 	private static final String TAG = "BACKGROUND_SERVICE";
 	
@@ -132,13 +140,25 @@ public class BackgroundService extends IntentService
 	/**
 	 * Handles requests sent to the BackgroundService via Intents
 	 * 
-	 * @param - An Intent object that has been received by the 
+	 * @param i - An Intent object that has been received by the 
 	 * BackgroundService
 	 */
+	@SuppressLint("InlinedApi")
 	@Override
 	protected void onHandleIntent(Intent i)
 	{
 		Log.i(TAG, "BackgroundService.onHandleIntent() called");
+		
+		// Connect to the CacheWordService and check whether it is locked
+		mCacheWordHandler = new CacheWordHandler(this);
+		mCacheWordHandler.connectToService();
+		SystemClock.sleep(5000); // We need to allow some extra time to connect to the CacheWordService
+		if (mCacheWordHandler.isLocked())
+		{
+			scheduleRestart();
+			closeDatabaseIfLocked();
+			return;
+		}
 		
 		// Determine whether the intent came from a request for periodic
 		// background processing or from a UI request
@@ -227,6 +247,15 @@ public class BackgroundService extends IntentService
 			Log.e(TAG, "BackgroundService.onHandleIntent() was called without a valid extra to specify what the service should do.");
 		}
 		
+		scheduleRestart();
+		closeDatabaseIfLocked();
+	}
+	
+	/**
+	 * Schedules a restart of the BackgroundService
+	 */
+	private void scheduleRestart()
+	{
 		// Create a new intent that will be used to run processTasks() again after a period of time
 		Intent intent = new Intent(getApplicationContext(), BackgroundService.class);
 		intent.putExtra(BackgroundService.PERIODIC_BACKGROUND_PROCESSING_REQUEST, BackgroundService.BACKGROUND_PROCESSING_REQUEST);
@@ -240,6 +269,18 @@ public class BackgroundService extends IntentService
 	    // Register the pending intent with AlarmManager
 	    AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
 	    am.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), pendingIntent);
+	}
+	
+	/**
+	 * Checks whether CacheWord is locked. If yes, this routine closes
+	 * the database.
+	 */
+	private void closeDatabaseIfLocked()
+	{
+		if (mCacheWordHandler != null && mCacheWordHandler.isLocked())
+		{
+			DatabaseContentProvider.closeDatabase();
+		}
 	}
 	
 	/**
@@ -593,22 +634,18 @@ public class BackgroundService extends IntentService
 	{
 		Log.i(TAG, "BackgroundService.runCheckIfPubkeyReDisseminationIsDueTask() called");
 		
-		// First check whether an Internet connection is available. If not, we cannot proceed. 
-		if (NetworkHelper.checkInternetAvailability() == true)
-		{		
-			// Only run this task if we have at least one Address!
-			AddressProvider addProv = AddressProvider.get(getApplicationContext());
-			ArrayList<Address> myAddresses = addProv.getAllAddresses();
-			if (myAddresses.size() > 0)
-			{
-				// Attempt to complete the task
-				TaskController taskController = new TaskController();
-				taskController.checkIfPubkeyDisseminationIsDue(DO_POW);
-			}
-			else
-			{
-				Log.i(TAG, "No Addresses were found in the application database, so we will not run the 'Check if pubkey re-dissemination is due' task");
-			}
+		// Only run this task if we have at least one Address!
+		AddressProvider addProv = AddressProvider.get(getApplicationContext());
+		ArrayList<Address> myAddresses = addProv.getAllAddresses();
+		if (myAddresses.size() > 0)
+		{
+			// Attempt to complete the task
+			TaskController taskController = new TaskController();
+			taskController.checkIfPubkeyDisseminationIsDue(DO_POW);
+		}
+		else
+		{
+			Log.i(TAG, "No Addresses were found in the application database, so we will not run the 'Check if pubkey re-dissemination is due' task");
 		}
 	}
 	
@@ -647,5 +684,37 @@ public class BackgroundService extends IntentService
 				return false;
 			}
 		}
+	}
+	
+	@Override
+	public void onDestroy()
+	{
+    	super.onDestroy();
+    	if (mCacheWordHandler != null)
+    	{
+    		mCacheWordHandler.disconnectFromService();
+    	}
+	}
+	
+	@SuppressLint("InlinedApi")
+	@Override
+	public void onCacheWordLocked()
+	{
+		Log.i(TAG, "BackgroundService.onCacheWordLocked() called.");
+		// Nothing to do here currently
+	}
+
+	@Override
+	public void onCacheWordOpened()
+	{
+		Log.i(TAG, "BackgroundService.onCacheWordOpened() called.");
+		// Nothing to do here currently
+	}
+	
+	@Override
+	public void onCacheWordUninitialized()
+	{
+		Log.i(TAG, "BackgroundService.onCacheWordUninitialized() called.");
+		// Nothing to do here currently
 	}
 }

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.bitseal"
-    android:versionCode="9"
-    android:versionName="0.4.1" >
+    android:versionCode="10"
+    android:versionName="0.5" >
 
     <uses-sdk
-        android:minSdkVersion="8"
+        android:minSdkVersion="9"
         android:targetSdkVersion="21" />
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -13,20 +13,16 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
-        android:name="org.bitseal.core.App" 
+        android:name="org.bitseal.core.App"
         android:allowBackup="false"
-        android:icon="@drawable/bitseal_icon"
+        android:icon="@drawable/bitseal_logo"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" > 
         
         <activity
             android:name="org.bitseal.activities.InboxActivity"
             android:label="@string/app_name"
-            android:windowSoftInputMode="stateHidden" >
-            <intent-filter android:label="@string/app_name" >
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            android:windowSoftInputMode="stateHidden">
         </activity>
         
         <activity
@@ -89,17 +85,43 @@
             android:windowSoftInputMode="stateUnchanged" >
         </activity>
         
-        <service
-            android:name="org.bitseal.services.BackgroundService" >
-        </service>
+        <activity
+            android:name="org.bitseal.activities.SecurityActivity"
+            android:label="@string/activity_security_title"
+            android:windowSoftInputMode="stateHidden" >
+        </activity>
+        
+        <activity
+            android:name="org.bitseal.activities.LockScreenActivity"
+            android:windowSoftInputMode="stateHidden"
+            android:theme="@android:style/Theme.NoTitleBar" >
+        </activity>
+        
+        <activity
+            android:name="org.bitseal.activities.SplashScreenActivity"
+            android:windowSoftInputMode="stateHidden"
+            android:theme="@android:style/Theme.NoTitleBar" >
+            <intent-filter android:label="@string/app_name" >
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         
         <service
-            android:name="org.bitseal.services.NotificationsService" >
-        </service>
+            android:name="org.bitseal.services.BackgroundService"
+	        android:exported="false"/>
         
         <service
-            android:name="org.bitseal.services.DatabaseCleaningService" >
-        </service>
+            android:name="org.bitseal.services.NotificationsService"
+	        android:exported="false"/>
+        
+        <service
+            android:name="org.bitseal.services.DatabaseCleaningService"
+	        android:exported="false"/>
+        
+	    <service
+	        android:name="info.guardianproject.cacheword.CacheWordService"
+	        android:exported="false"/>
         
         <provider
             android:name="org.bitseal.database.DatabaseContentProvider"

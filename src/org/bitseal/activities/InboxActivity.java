@@ -1,5 +1,8 @@
 package org.bitseal.activities;
 
+import info.guardianproject.cacheword.CacheWordHandler;
+import info.guardianproject.cacheword.ICacheWordSubscriber;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -22,6 +25,7 @@ import org.bitseal.services.BackgroundService;
 import org.bitseal.services.NotificationsService;
 import org.bitseal.util.ColourCalculator;
 
+import android.annotation.SuppressLint;
 import android.app.ListActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -29,6 +33,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
@@ -40,13 +45,14 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * The Activity class for the app's inbox. 
  * 
  * @author Jonathan Coe
  */
-public class InboxActivity extends ListActivity
+public class InboxActivity extends ListActivity implements ICacheWordSubscriber
 {
     private ArrayList<Message> mMessages;
     
@@ -64,9 +70,13 @@ public class InboxActivity extends ListActivity
     // A welcome message for new users
     protected static final String WELCOME_MESSAGE_TO_ADDRESS = "Me";
     private static final String WELCOME_MESSAGE_FROM_ADDRESS = "BM-NC2oGii7w8UT4igUhsCBGBE7gngvoD83";
-    private static final String WELCOME_MESSAGE_SUBJECT = "Welcome to Bitseal!";
+    private static final String WELCOME_MESSAGE_SUBJECT = "Welcome to Bitseal. Please read this!";
     private static final String WELCOME_MESSAGE_BODY = "Thanks for trying out Bitseal. We really hope you enjoy the app.\n\n" +
-    												   "If you have any feedback, please feel free to send us a message.";
+    												   "If you have any feedback, please feel free to send us a message.\n\n" +
+    												   "Note: When you first run Bitseal, a new Bitmessage address will be generated " +
+    												   "for you. Bitseal will then do proof of work to publish that address " + 
+    												   "to the rest of the network. This will take a few minutes and " + 
+    												   "may cause delays in sending messages until it has been completed.";
     
     private static final String FIRST_ADDRESS_LABEL = "Me";
     
@@ -83,34 +93,91 @@ public class InboxActivity extends ListActivity
 	
 	private static final int INBOX_COLOURS_ALPHA_VALUE = 70;
 	
+    /** The key for a boolean variable that records whether or not a user-defined database encryption passphrase has been saved */
+    private static final String KEY_DATABASE_PASSPHRASE_SAVED = "databasePassphraseSaved"; 
+    
+    private CacheWordHandler mCacheWordHandler;
+    	
     private static final String TAG = "INBOX_ACTIVITY";
     
+	@SuppressLint("InlinedApi")
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_inbox);
 		
-		MessageProvider msgProv = MessageProvider.get(getApplicationContext());
-		mMessages =msgProv.searchMessages(MessagesTable.COLUMN_BELONGS_TO_ME, String.valueOf(0)); // 0 stands for "false" in the database
+        // Check whether the user has set a database encryption passphrase
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false))
+		{
+			Log.i(TAG, "We detected that the user has a database encryption passphrase set");
+			
+			// If Bitseal is being launched (rather than re-opened)
+			if (getIntent().hasCategory(Intent.CATEGORY_LAUNCHER))
+			{
+				Log.i(TAG, "InboxActivity's starting intent had Category_Launcher set");
+				onCacheWordLocked();
+				return;
+			}
+			
+			// Connect to the CacheWordService
+			mCacheWordHandler = new CacheWordHandler(this);
+			mCacheWordHandler.connectToService();
+			
+			if (getIntent().hasExtra(LockScreenActivity.EXTRA_DATABASE_UNLOCKED))
+			{
+				// Start the BackgroundService
+				Intent firstStartIntent = new Intent(this, BackgroundService.class);
+				firstStartIntent.putExtra(BackgroundService.PERIODIC_BACKGROUND_PROCESSING_REQUEST, BackgroundService.BACKGROUND_PROCESSING_REQUEST);
+				this.startService(firstStartIntent);
+			}
+		}
+		else
+		{
+			Log.i(TAG, "We detected that the user does NOT have a database encryption passphrase set");
+		}
 		
         // Check whether this is the first time the inbox activity has been opened - if so then run the 'first launch' routine
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		if (prefs.getBoolean(INBOX_FIRST_RUN, true))
 		{
 			runFirstLaunchRoutine();
 		}
-					
-        // Sort the messages so that the most recent are displayed first
-        Collections.sort(mMessages);
         
         mInboxListView = new ListView(this);
         mInboxListView = (ListView)findViewById(android.R.id.list);
         
         setTitle(getResources().getString(R.string.inbox_activity_title));
         
-        MessageAdapter adapter = new MessageAdapter(mMessages);  
-        setListAdapter(adapter);
+        // Sometimes the CacheWordService will take too long to initialize, and as a result we will fail to detect 
+        // that the app is locked. Therefore if our attempt to access the database fails and the user has a database
+        // passphrase set, we will redirect to the lock screen.
+        try
+        {
+    		MessageProvider msgProv = MessageProvider.get(this);
+    		mMessages =msgProv.searchMessages(MessagesTable.COLUMN_BELONGS_TO_ME, String.valueOf(0)); // 0 stands for "false" in the database
+    		
+            // Sort the messages so that the most recent are displayed first
+            Collections.sort(mMessages);
+            
+            MessageAdapter adapter = new MessageAdapter(mMessages);  
+            setListAdapter(adapter);
+        }
+        catch (Exception e)
+        {
+        	Log.e(TAG, "While running InboxActivity.onCreate, our attempt to access the database failed.");
+        	
+        	if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false))
+        	{
+        		Log.e(TAG, "The user has a database passphrase set. Calling onCacheWordLocked().");
+        		onCacheWordLocked();
+        	}
+        	else
+        	{
+        		Toast.makeText(getBaseContext(), "An unknown error occurred while trying to access the database", Toast.LENGTH_LONG).show();
+        		Log.e(TAG, "Unknown exception occurred in InboxActivity.onCreate");
+        	}
+        }
 	}
 	
 	@Override
@@ -146,14 +213,6 @@ public class InboxActivity extends ListActivity
 		    editor.putBoolean(InboxMessageActivity.FLAG_INBOX_MESSAGE_DELETED, false);
 		    editor.commit();
 		}
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) 
-	{
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.options_menu, menu);
-		return true;
 	}
 	
 	@Override
@@ -194,7 +253,7 @@ public class InboxActivity extends ListActivity
 	 * the inbox, generates a new Bitmessage address for the user, and starts the
 	 * BackgroundService for the first time.
 	 */
-	private void runFirstLaunchRoutine()
+	private void runFirstLaunchRoutine() 
 	{
 	    // Set a flag in SharedPreferences so that this will not be called again
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -211,7 +270,7 @@ public class InboxActivity extends ListActivity
 		addressBookEntry1.setLabel(ADDRESS_BOOK_ENTRY_1_LABEL);
 		addressBookEntry1.setAddress(ADDRESS_BOOK_ENTRY_1_ADDRESS);
 		
-		AddressBookRecordProvider addBookProv = AddressBookRecordProvider.get(getApplicationContext());
+		AddressBookRecordProvider addBookProv = AddressBookRecordProvider.get(this);
 		addBookProv.addAddressBookRecord(addressBookEntry0);
 		addBookProv.addAddressBookRecord(addressBookEntry1);
 	    
@@ -227,6 +286,7 @@ public class InboxActivity extends ListActivity
 		MessageProvider msgProv = MessageProvider.get(getApplicationContext());
 		long msg0Id = msgProv.addMessage(welcomeMessage);
 		welcomeMessage.setId(msg0Id);
+		mMessages = new ArrayList<Message>();
 		mMessages.add(welcomeMessage);
 		
 		// Generate a new Bitmessage address
@@ -288,48 +348,6 @@ public class InboxActivity extends ListActivity
 		// Restore previous state (including selected item index and scroll position)
 		mInboxListView.onRestoreInstanceState(state);
     }
-	
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) 
-	{
-	    switch(item.getItemId()) 
-	    {
-		    case R.id.menu_item_inbox:
-		        Intent intent1 = new Intent(this, InboxActivity.class);
-		        this.startActivity(intent1);
-		        break;
-		        
-		    case R.id.menu_item_sent:
-		        Intent intent2 = new Intent(this, SentActivity.class);
-		        this.startActivity(intent2);
-		        break;  
-		        
-		    case R.id.menu_item_compose:
-		        Intent intent3 = new Intent(this, ComposeActivity.class);
-		        this.startActivity(intent3);
-		        break;
-		        
-		    case R.id.menu_item_identities:
-		        Intent intent4 = new Intent(this, IdentitiesActivity.class);
-		        this.startActivity(intent4);
-		        break;
-		        
-		    case R.id.menu_item_addressBook:
-		        Intent intent5 = new Intent(this, AddressBookActivity.class);
-		        this.startActivity(intent5);
-		        break;
-		        
-		    case R.id.menu_item_settings:
-		        Intent intent6 = new Intent(this, SettingsActivity.class);
-		        this.startActivity(intent6);
-		        break;
-		        
-		    default:
-		        return super.onOptionsItemSelected(item);
-	    }
-
-	    return true;
-	}
 	
 	/**
 	 * A ViewHolder used to speed up this activity's ListView.
@@ -501,4 +519,124 @@ public class InboxActivity extends ListActivity
 			return convertView;
         }
     }
+    
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) 
+	{
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.options_menu, menu);
+		return true;
+	}
+    
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu)
+    {
+    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+    	if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false) == false)
+		{
+			menu.removeItem(R.id.menu_item_lock);
+		}
+        return super.onPrepareOptionsMenu(menu);
+    }
+	
+	@SuppressLint("InlinedApi")
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) 
+	{
+	    switch(item.getItemId()) 
+	    {
+		    case R.id.menu_item_inbox:
+		        Intent intent1 = new Intent(this, InboxActivity.class);
+		        startActivity(intent1);
+		        break;
+		        
+		    case R.id.menu_item_sent:
+		        Intent intent2 = new Intent(this, SentActivity.class);
+		        startActivity(intent2);
+		        break;  
+		        
+		    case R.id.menu_item_compose:
+		        Intent intent3 = new Intent(this, ComposeActivity.class);
+		        startActivity(intent3);
+		        break;
+		        
+		    case R.id.menu_item_identities:
+		        Intent intent4 = new Intent(this, IdentitiesActivity.class);
+		        startActivity(intent4);
+		        break;
+		        
+		    case R.id.menu_item_addressBook:
+		        Intent intent5 = new Intent(this, AddressBookActivity.class);
+		        startActivity(intent5);
+		        break;
+		        
+		    case R.id.menu_item_settings:
+		        Intent intent6 = new Intent(this, SettingsActivity.class);
+		        startActivity(intent6);
+		        break;
+		        
+		    case R.id.menu_item_lock:
+		    	// Lock the database
+		    	mCacheWordHandler.lock();
+		    	
+		    	// Open the lock screen activity
+		        Intent intent = new Intent(getBaseContext(), LockScreenActivity.class);
+		        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
+		        {
+		        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
+		        }
+		        else
+		        {
+		        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		        }
+		        startActivity(intent);
+		        break;
+		        
+		    default:
+		        return super.onOptionsItemSelected(item);
+	    }
+
+	    return true;
+	}
+    
+    @Override
+    protected void onStop()
+    {
+    	super.onStop();
+    	if (mCacheWordHandler != null)
+    	{
+        	mCacheWordHandler.disconnectFromService();
+    	}
+     }
+	
+	@SuppressLint("InlinedApi")
+	@Override
+	public void onCacheWordLocked()
+	{
+		Log.i(TAG, "InboxActivity.onCacheWordLocked() called");
+		
+		// Redirect to the lock screen activity
+        Intent intent = new Intent(getBaseContext(), LockScreenActivity.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
+        {
+        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
+        }
+        else
+        {
+        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        }
+        startActivity(intent);
+	}
+
+	@Override
+	public void onCacheWordOpened()
+	{
+		// Nothing to do here currently
+	}
+	
+	@Override
+	public void onCacheWordUninitialized()
+	{
+		// Database encryption is currently not enabled by default, so there is nothing to do here
+	}
 }

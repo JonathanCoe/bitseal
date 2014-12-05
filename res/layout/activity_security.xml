@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout 
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:orientation="vertical"
+  >
+  
+ 	  <TextView
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:text="@string/security_database_encryption_section_label" 
+	    style="?android:listSeparatorTextViewStyle"
+	    />
+ 	  
+ 	  <TextView
+	    android:id="@+id/security_enter_passphrase_label_textview"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_weight="1"
+	    android:layout_marginTop="10dp"
+	    android:layout_marginLeft="6dp"
+	    android:layout_marginStart="6dp"
+	    android:text="@string/security_enter_passphrase_label"
+	    android:textSize="16sp"
+	    android:textStyle="bold"
+	    />
+	  
+	  <EditText 
+	    android:id="@+id/security_enter_passphrase_edittext"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_marginTop="2dp"
+	    android:layout_marginLeft="3dp"
+	    android:layout_marginRight="3dp"
+	    android:layout_weight="7"
+	    android:imeOptions="actionNext"
+	    android:singleLine="true"
+	    android:textSize="16sp"
+    	android:inputType="textPassword"
+	    />
+	  
+	  <TextView
+	    android:id="@+id/security_confirm_passphrase_label_textview"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_weight="1"
+	    android:layout_marginTop="15dp"
+	    android:layout_marginLeft="6dp"
+	    android:layout_marginStart="6dp"
+	    android:text="@string/security_confirm_passphrase_label"
+	    android:textSize="16sp"
+	    android:textStyle="bold"
+	    />
+	  
+	  <EditText 
+	    android:id="@+id/security_confirm_passphrase_edittext"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_marginTop="2dp"
+	    android:layout_marginLeft="3dp"
+	    android:layout_marginRight="3dp"
+	    android:layout_weight="7"
+	    android:imeOptions="actionNext"
+	    android:singleLine="true"
+	    android:textSize="16sp"
+    	android:inputType="textPassword"
+	    />
+	  
+  	  <Button 
+	    android:id="@+id/security_change_passphrase_button"
+	    android:layout_width="300dp"
+	    android:layout_height="50dp"
+	    android:layout_weight="1"
+	    android:layout_marginTop="20dp"
+	    android:layout_marginBottom="10dp"
+	    android:layout_marginLeft="2dp"
+	    android:layout_marginRight="6dp"
+	   	android:layout_marginStart="2dp"
+	    android:layout_marginEnd="6dp"
+	    android:textSize="16sp"
+	    android:layout_gravity="center"
+	    android:hint="@string/security_change_passphrase_button_hint"
+	    />
+	  
+	  <LinearLayout 
+ 	    android:layout_width="match_parent"
+ 	    android:layout_height="wrap_content"
+	    android:orientation="horizontal"
+ 	    >
+  
+		  <Button 
+		    android:id="@+id/security_save_passphrase_button"
+		    android:layout_width="70dp"
+		    android:layout_height="40dp"
+		    android:layout_weight="1"
+		    android:layout_marginTop="20dp"
+		    android:layout_marginBottom="30dp"
+		    android:layout_marginLeft="6dp"
+		    android:layout_marginRight="2dp"
+		    android:layout_marginStart="6dp"
+		    android:layout_marginEnd="2dp"
+		    android:textSize="16sp"
+		    android:hint="@string/security_save_passphrase_button_hint" 
+		    />
+	  
+		  <Button 
+		    android:id="@+id/security_cancel_passphrase_button"
+		    android:layout_width="70dp"
+		    android:layout_height="40dp"
+		    android:layout_weight="1"
+		    android:layout_marginTop="20dp"
+		    android:layout_marginBottom="30dp"
+		    android:layout_marginLeft="2dp"
+		    android:layout_marginRight="6dp"
+		   	android:layout_marginStart="2dp"
+		    android:layout_marginEnd="6dp"
+		    android:textSize="16sp"
+		    android:hint="@string/security_cancel_passphrase_button_hint"
+		    />
+	  
+	  </LinearLayout>
+      
+	  <CheckBox
+	    android:id="@+id/security_database_encryption_checkbox"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_marginTop="10dp"
+	    android:layout_marginLeft="6dp"
+	    android:layout_marginStart="6dp"
+	    android:text="@string/security_database_encryption_checkbox_label" 
+	    />
+	 
+</LinearLayout>

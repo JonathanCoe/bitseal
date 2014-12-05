@@ -1,5 +1,8 @@
 package org.bitseal.activities;
 
+import info.guardianproject.cacheword.CacheWordHandler;
+import info.guardianproject.cacheword.ICacheWordSubscriber;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -7,10 +10,12 @@ import org.bitseal.R;
 import org.bitseal.services.BackgroundService;
 import org.bitseal.util.TimeUtils;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -27,15 +32,12 @@ import android.widget.Toast;
  * 
  * @author Jonathan Coe
  */
-public class SettingsActivity extends Activity
+public class SettingsActivity extends Activity implements ICacheWordSubscriber
 {	   
-    private Button mServerSettingsButton;
+	private Button mSecuritySettingsButton;
+	private Button mServerSettingsButton;
     private Button mImportOrExportButton;
     private Button mRestartBackgroundServiceButton;
-    
-    private TextView mSectionSeparatorServer;
-    private TextView mSectionSeparatorData;
-    private TextView mSectionSeparatorOther;
     
     private TextView mTimeBehindNetworkTextView;
     
@@ -45,6 +47,11 @@ public class SettingsActivity extends Activity
     
     private static final long UPDATE_FREQUENCY_MILLISECONDS = 1000;
     
+    /** The key for a boolean variable that records whether or not a user-defined database encryption passphrase has been saved */
+    private static final String KEY_DATABASE_PASSPHRASE_SAVED = "databasePassphraseSaved"; 
+    
+    private CacheWordHandler mCacheWordHandler;
+    
     private static final String TAG = "SETTINGS_ACTIVITY";
 	
 	@Override
@@ -53,9 +60,14 @@ public class SettingsActivity extends Activity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_settings);
 		
-		mSectionSeparatorServer = (TextView) findViewById(R.id.settings_server_section_separator);
-		mSectionSeparatorData = (TextView) findViewById(R.id.settings_data_section_separator);
-		mSectionSeparatorOther = (TextView) findViewById(R.id.settings_other_section_separator);
+        // Check whether the user has set a database encryption passphrase
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false))
+		{
+			// Connect to the CacheWordService
+			mCacheWordHandler = new CacheWordHandler(this);
+			mCacheWordHandler.connectToService();
+		}
 		
 		mTimeBehindNetworkTextView = (TextView) findViewById(R.id.settings_time_behind_network_textview);
 		mTimeBehindNetworkTextView.setText(TimeUtils.getTimeBehindNetworkMessage());
@@ -76,6 +88,19 @@ public class SettingsActivity extends Activity
 	        }
 	    }, 0, UPDATE_FREQUENCY_MILLISECONDS);
 		
+	    mSecuritySettingsButton = (Button) findViewById(R.id.settings_security_settings_button);
+	    mSecuritySettingsButton.setOnClickListener(new View.OnClickListener()
+		{		
+			@Override
+			public void onClick(View v)
+			{
+				Log.i(TAG, "Security settings button clicked");
+				
+		        Intent i = new Intent(getBaseContext(), SecurityActivity.class); // CHANGE!
+		        startActivityForResult(i, 0);
+			}
+		});
+	    
 		mServerSettingsButton = (Button) findViewById(R.id.settings_server_settings_button);
 		mServerSettingsButton.setOnClickListener(new View.OnClickListener()
 		{		
@@ -115,13 +140,7 @@ public class SettingsActivity extends Activity
 	    		    editor.putBoolean(KEY_SHOW_SETTINGS, true);
 	    		    editor.commit();
 	    		    
-	    			mServerSettingsButton.setVisibility(View.VISIBLE);
-	    			mImportOrExportButton.setVisibility(View.VISIBLE);
-	    			mRestartBackgroundServiceButton.setVisibility(View.VISIBLE);
-	    			mSectionSeparatorServer.setVisibility(View.VISIBLE);
-	    			mSectionSeparatorData.setVisibility(View.VISIBLE);
-	    			mSectionSeparatorOther.setVisibility(View.VISIBLE);
-	    			mTimeBehindNetworkTextView.setVisibility(View.VISIBLE);
+	    		    showSettings();
 	            } 
 	            else 
 	            {
@@ -130,13 +149,7 @@ public class SettingsActivity extends Activity
 	    		    editor.putBoolean(KEY_SHOW_SETTINGS, false);
 	    		    editor.commit();
 	            	
-	    			mServerSettingsButton.setVisibility(View.GONE);
-	    			mImportOrExportButton.setVisibility(View.GONE);
-	    			mRestartBackgroundServiceButton.setVisibility(View.GONE);
-	    			mSectionSeparatorServer.setVisibility(View.GONE);
-	    			mSectionSeparatorData.setVisibility(View.GONE);
-	    			mSectionSeparatorOther.setVisibility(View.GONE);
-	    			mTimeBehindNetworkTextView.setVisibility(View.GONE);
+	    		    hideSettings();
 	            }
         	}
         });
@@ -158,82 +171,155 @@ public class SettingsActivity extends Activity
 		});
 		
 		// Read the Shared Preferences to determine whether or not the settings should be visible
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		boolean showSettings = prefs.getBoolean(KEY_SHOW_SETTINGS, false);
 		Log.i(TAG, "Show settings is set to " + showSettings);
 		if (showSettings == true)
 		{
-			mServerSettingsButton.setVisibility(View.VISIBLE);
-			mImportOrExportButton.setVisibility(View.VISIBLE);
-			mRestartBackgroundServiceButton.setVisibility(View.VISIBLE);
-			mSectionSeparatorServer.setVisibility(View.VISIBLE);
-			mSectionSeparatorData.setVisibility(View.VISIBLE);
-			mSectionSeparatorOther.setVisibility(View.VISIBLE);
-			mTimeBehindNetworkTextView.setVisibility(View.VISIBLE);
+			showSettings();
 			
 			mShowSettingsCheckbox.setChecked(true);
 		}
 		else
 		{		
-			mServerSettingsButton.setVisibility(View.GONE);
-			mImportOrExportButton.setVisibility(View.GONE);
-			mRestartBackgroundServiceButton.setVisibility(View.GONE);
-			mSectionSeparatorServer.setVisibility(View.GONE);
-			mSectionSeparatorData.setVisibility(View.GONE);
-			mSectionSeparatorOther.setVisibility(View.GONE);
-			mTimeBehindNetworkTextView.setVisibility(View.GONE);
+			hideSettings();
 			
 			mShowSettingsCheckbox.setChecked(false);
 		}
 	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu)
+	
+	private void showSettings()
 	{
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.options_menu, menu);
-		return true;
+	    mSecuritySettingsButton.setVisibility(View.VISIBLE);
+		mServerSettingsButton.setVisibility(View.VISIBLE);
+		mImportOrExportButton.setVisibility(View.VISIBLE);
+		mRestartBackgroundServiceButton.setVisibility(View.VISIBLE);
+		mTimeBehindNetworkTextView.setVisibility(View.VISIBLE);
 	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) 
+	
+	private void hideSettings()
 	{
-	    switch(item.getItemId()) 
-	    {
-		    case R.id.menu_item_inbox:
-		        Intent intent1 = new Intent(this, InboxActivity.class);
-		        this.startActivity(intent1);
-		        break;
-		        
-		    case R.id.menu_item_sent:
-		        Intent intent2 = new Intent(this, SentActivity.class);
-		        this.startActivity(intent2);
-		        break;  
-		        
-		    case R.id.menu_item_compose:
-		        Intent intent3 = new Intent(this, ComposeActivity.class);
-		        this.startActivity(intent3);
-		        break;
-		        
-		    case R.id.menu_item_identities:
-		        Intent intent4 = new Intent(this, IdentitiesActivity.class);
-		        this.startActivity(intent4);
-		        break;
-		        
-		    case R.id.menu_item_addressBook:
-		        Intent intent5 = new Intent(this, AddressBookActivity.class);
-		        this.startActivity(intent5);
-		        break;
-		        
-		    case R.id.menu_item_settings:
-		        Intent intent6 = new Intent(this, SettingsActivity.class);
-		        this.startActivity(intent6);
-		        break;
-		        
-		    default:
-		        return super.onOptionsItemSelected(item);
-	    }
-
-	    return true;
+	    mSecuritySettingsButton.setVisibility(View.GONE);
+		mServerSettingsButton.setVisibility(View.GONE);
+		mImportOrExportButton.setVisibility(View.GONE);
+		mRestartBackgroundServiceButton.setVisibility(View.GONE);
+		mTimeBehindNetworkTextView.setVisibility(View.GONE);
 	}
+	
+ 	@Override
+ 	public boolean onCreateOptionsMenu(Menu menu) 
+ 	{
+ 		// Inflate the menu; this adds items to the action bar if it is present.
+ 		getMenuInflater().inflate(R.menu.options_menu, menu);
+ 		return true;
+ 	}
+     
+     @Override
+     public boolean onPrepareOptionsMenu(Menu menu)
+     {
+     	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+     	if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false) == false)
+ 		{
+ 			menu.removeItem(R.id.menu_item_lock);
+ 		}
+         return super.onPrepareOptionsMenu(menu);
+     }
+ 	
+ 	@SuppressLint("InlinedApi")
+ 	@Override
+ 	public boolean onOptionsItemSelected(MenuItem item) 
+ 	{
+ 	    switch(item.getItemId()) 
+ 	    {
+ 		    case R.id.menu_item_inbox:
+ 		        Intent intent1 = new Intent(this, InboxActivity.class);
+ 		        startActivity(intent1);
+ 		        break;
+ 		        
+ 		    case R.id.menu_item_sent:
+ 		        Intent intent2 = new Intent(this, SentActivity.class);
+ 		        startActivity(intent2);
+ 		        break;  
+ 		        
+ 		    case R.id.menu_item_compose:
+ 		        Intent intent3 = new Intent(this, ComposeActivity.class);
+ 		        startActivity(intent3);
+ 		        break;
+ 		        
+ 		    case R.id.menu_item_identities:
+ 		        Intent intent4 = new Intent(this, IdentitiesActivity.class);
+ 		        startActivity(intent4);
+ 		        break;
+ 		        
+ 		    case R.id.menu_item_addressBook:
+ 		        Intent intent5 = new Intent(this, AddressBookActivity.class);
+ 		        startActivity(intent5);
+ 		        break;
+ 		        
+ 		    case R.id.menu_item_settings:
+ 		        Intent intent6 = new Intent(this, SettingsActivity.class);
+ 		        startActivity(intent6);
+ 		        break;
+ 		        
+ 		    case R.id.menu_item_lock:
+ 		    	// Lock the database
+ 		    	mCacheWordHandler.lock();
+ 		    	
+ 		    	// Open the lock screen activity
+ 		        Intent intent = new Intent(getBaseContext(), LockScreenActivity.class);
+ 		        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
+ 		        {
+ 		        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
+ 		        }
+ 		        else
+ 		        {
+ 		        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+ 		        }
+ 		        startActivity(intent);
+ 		        break;
+ 		        
+ 		    default:
+ 		        return super.onOptionsItemSelected(item);
+ 	    }
+
+ 	    return true;
+ 	}
+     
+     @Override
+     protected void onStop()
+     {
+     	super.onStop();
+     	if (mCacheWordHandler != null)
+     	{
+         	mCacheWordHandler.disconnectFromService();
+     	}
+      }
+ 	
+ 	@SuppressLint("InlinedApi")
+ 	@Override
+ 	public void onCacheWordLocked()
+ 	{
+ 		// Redirect to the lock screen activity
+         Intent intent = new Intent(getBaseContext(), LockScreenActivity.class);
+         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
+         {
+         	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
+         }
+         else
+         {
+         	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+         }
+         startActivity(intent);
+ 	}
+
+ 	@Override
+ 	public void onCacheWordOpened()
+ 	{
+ 		// Nothing to do here currently
+ 	}
+ 	
+ 	@Override
+ 	public void onCacheWordUninitialized()
+ 	{
+ 		// Database encryption is currently not enabled by default, so there is nothing to do here
+ 	}
 }

@@ -104,7 +104,7 @@ public class AddressBookRecordProvider
     {
     	ArrayList<AddressBookRecord> matchingRecords = new ArrayList<AddressBookRecord>();
 
-    	// Specify which colums from the table we are interested in
+    	// Specify which columns from the table we are interested in
 		String[] projection = {
 				AddressBookRecordsTable.COLUMN_ID, 
 				AddressBookRecordsTable.COLUMN_COLOUR_R,
@@ -143,15 +143,14 @@ public class AddressBookRecordProvider
     	        matchingRecords.add(a);
     	    } 
     	    while (cursor.moveToNext());
-    	}
-			
+    	}	
 		else
 		{
+			cursor.close();
 			return matchingRecords;
 		}
 		
 		cursor.close();
-	
     	return matchingRecords;
      }
     
@@ -230,6 +229,7 @@ public class AddressBookRecordProvider
     	   while (cursor.moveToNext());
     	}
     	
+		cursor.close();
     	return addressBookRecords;
     }
     

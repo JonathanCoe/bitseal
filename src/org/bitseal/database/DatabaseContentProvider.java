@@ -1,101 +1,209 @@
 package org.bitseal.database;
 
+import info.guardianproject.cacheword.CacheWordHandler;
+import info.guardianproject.cacheword.ICacheWordSubscriber;
+import info.guardianproject.cacheword.PassphraseSecrets;
+
+import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import net.sqlcipher.database.SQLiteDatabase;
+import net.sqlcipher.database.SQLiteQueryBuilder;
+import android.annotation.SuppressLint;
 import android.content.ContentProvider;
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.UriMatcher;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
+import android.util.Log;
 
-public class DatabaseContentProvider extends ContentProvider
+public class DatabaseContentProvider extends ContentProvider implements ICacheWordSubscriber
 {
-	  // Database
-	  private DatabaseHelper database;
+	private static DatabaseHelper sDatabaseHelper;
+	private static Context sContext;
+	private static CacheWordHandler sCacheWordHandler;
+	private static SQLiteDatabase sDatabase;
+	
+    /** The key for a boolean variable that records whether or not a user-defined database encryption passphrase has been saved */
+    private static final String KEY_DATABASE_PASSPHRASE_SAVED = "databasePassphraseSaved";
+    
+    /** The default passphrase for the database. This is NOT intended to have any security value, but rather to make the
+     * code simpler by always having the database encrypted and therefore not forcing us to switch between encrypted and unencrypted
+     * databases. */
+    public static final String DEFAULT_DATABASE_PASSPHRASE = "myDefaultDatabasePassphrase";
+    
+	// Used by the URI Matcher
+	private static final int ADDRESSES = 10;
+	private static final int ADDRESS_ID = 20;
+	private static final int ADDRESS_BOOK_RECORDS = 30;
+	private static final int ADDRESS_BOOK_RECORD_ID = 40;
+	private static final int MESSAGES = 50;
+	private static final int MESSAGE_ID = 60;
+	private static final int QUEUE_RECORDS = 70;
+	private static final int QUEUE_RECORD_ID = 80;
+    private static final int PAYLOADS = 90;
+    private static final int PAYLOAD_ID = 100; 
+    private static final int PUBKEYS = 110;
+    private static final int PUBKEY_ID = 120;
+    private static final int SERVER_RECORDS = 130;
+    private static final int SERVER_RECORD_ID = 140;
 	  
-	  // Used by the URI Matcher
-	  private static final int ADDRESSES = 10;
-	  private static final int ADDRESS_ID = 20;
-	  private static final int ADDRESS_BOOK_RECORDS = 30;
-	  private static final int ADDRESS_BOOK_RECORD_ID = 40;
-	  private static final int MESSAGES = 50;
-	  private static final int MESSAGE_ID = 60;
-	  private static final int QUEUE_RECORDS = 70;
-	  private static final int QUEUE_RECORD_ID = 80;
-	  private static final int PAYLOADS = 90;
-	  private static final int PAYLOAD_ID = 100; 
-	  private static final int PUBKEYS = 110;
-	  private static final int PUBKEY_ID = 120;
-	  private static final int SERVER_RECORDS = 130;
-	  private static final int SERVER_RECORD_ID = 140;
+    private static final String AUTHORITY = "org.bitseal.database";
 	  
-	  private static final String AUTHORITY = "org.bitseal.database";
+    // The path strings for each table in the database
+    private static final String PATH_ADDRESSES = "addresses";
+    private static final String PATH_ADDRESS_BOOK_RECORDS = "address_book_records";
+    private static final String PATH_MESSAGES = "messages";
+    private static final String PATH_QUEUE_RECORDS = "queue_records";
+    private static final String PATH_PAYLOADS = "payloads";
+    private static final String PATH_PUBKEYS = "pubkeys";
+    private static final String PATH_SERVER_RECORDS = "server_records";
 	  
-	  // The path strings for each table in the database
-	  private static final String PATH_ADDRESSES = "addresses";
-	  private static final String PATH_ADDRESS_BOOK_RECORDS = "address_book_records";
-	  private static final String PATH_MESSAGES = "messages";
-	  private static final String PATH_QUEUE_RECORDS = "queue_records";
-	  private static final String PATH_PAYLOADS = "payloads";
-	  private static final String PATH_PUBKEYS = "pubkeys";
-	  private static final String PATH_SERVER_RECORDS = "server_records";
+    // The URIs for each table in the database
+    public static final Uri CONTENT_URI_ADDRESSES = Uri.parse("content://" + AUTHORITY + "/" + PATH_ADDRESSES);
+    public static final Uri CONTENT_URI_ADDRESS_BOOK_RECORDS = Uri.parse("content://" + AUTHORITY + "/" + PATH_ADDRESS_BOOK_RECORDS);
+    public static final Uri CONTENT_URI_MESSAGES = Uri.parse("content://" + AUTHORITY + "/" + PATH_MESSAGES);
+    public static final Uri CONTENT_URI_QUEUE_RECORDS = Uri.parse("content://" + AUTHORITY + "/" + PATH_QUEUE_RECORDS);
+    public static final Uri CONTENT_URI_PAYLOADS = Uri.parse("content://" + AUTHORITY + "/" + PATH_PAYLOADS);
+    public static final Uri CONTENT_URI_PUBKEYS = Uri.parse("content://" + AUTHORITY + "/" + PATH_PUBKEYS);
+    public static final Uri CONTENT_URI_SERVER_RECORDS = Uri.parse("content://" + AUTHORITY + "/" + PATH_SERVER_RECORDS);
 	  
-	  // The URIs for each table in the database
-	  public static final Uri CONTENT_URI_ADDRESSES = Uri.parse("content://" + AUTHORITY + "/" + PATH_ADDRESSES);
-	  public static final Uri CONTENT_URI_ADDRESS_BOOK_RECORDS = Uri.parse("content://" + AUTHORITY + "/" + PATH_ADDRESS_BOOK_RECORDS);
-	  public static final Uri CONTENT_URI_MESSAGES = Uri.parse("content://" + AUTHORITY + "/" + PATH_MESSAGES);
-	  public static final Uri CONTENT_URI_QUEUE_RECORDS = Uri.parse("content://" + AUTHORITY + "/" + PATH_QUEUE_RECORDS);
-	  public static final Uri CONTENT_URI_PAYLOADS = Uri.parse("content://" + AUTHORITY + "/" + PATH_PAYLOADS);
-	  public static final Uri CONTENT_URI_PUBKEYS = Uri.parse("content://" + AUTHORITY + "/" + PATH_PUBKEYS);
-	  public static final Uri CONTENT_URI_SERVER_RECORDS = Uri.parse("content://" + AUTHORITY + "/" + PATH_SERVER_RECORDS);
-	  
-	  private static final UriMatcher sURIMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-	  
-	  static 
-	  {
-	    sURIMatcher.addURI(AUTHORITY, PATH_ADDRESSES, ADDRESSES);
-	    sURIMatcher.addURI(AUTHORITY, PATH_ADDRESSES + "/#", ADDRESS_ID);
-	    
-	    sURIMatcher.addURI(AUTHORITY, PATH_ADDRESS_BOOK_RECORDS, ADDRESS_BOOK_RECORDS);
-	    sURIMatcher.addURI(AUTHORITY, PATH_ADDRESS_BOOK_RECORDS + "/#", ADDRESS_BOOK_RECORD_ID);
-	    
-	    sURIMatcher.addURI(AUTHORITY, PATH_MESSAGES, MESSAGES);
-	    sURIMatcher.addURI(AUTHORITY, PATH_MESSAGES + "/#", MESSAGE_ID);
-	    
-	    sURIMatcher.addURI(AUTHORITY, PATH_QUEUE_RECORDS, QUEUE_RECORDS);
-	    sURIMatcher.addURI(AUTHORITY, PATH_QUEUE_RECORDS + "/#", QUEUE_RECORD_ID);
-	    
-	    sURIMatcher.addURI(AUTHORITY, PATH_PAYLOADS, PAYLOADS);
-	    sURIMatcher.addURI(AUTHORITY, PATH_PAYLOADS + "/#", PAYLOAD_ID);
-	    
-	    sURIMatcher.addURI(AUTHORITY, PATH_PUBKEYS, PUBKEYS);
-	    sURIMatcher.addURI(AUTHORITY, PATH_PUBKEYS + "/#", PUBKEY_ID);
-	    
-	    sURIMatcher.addURI(AUTHORITY, PATH_SERVER_RECORDS, SERVER_RECORDS);
-	    sURIMatcher.addURI(AUTHORITY, PATH_SERVER_RECORDS + "/#", SERVER_RECORD_ID);
-	  }
+    private static final UriMatcher sURIMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+    
+    private static final String TAG = "DATABASE_CONTENT_PROVIDER";
+            	  
+    static 
+    {
+    	sURIMatcher.addURI(AUTHORITY, PATH_ADDRESSES, ADDRESSES);
+    	sURIMatcher.addURI(AUTHORITY, PATH_ADDRESSES + "/#", ADDRESS_ID);
+    	
+    	sURIMatcher.addURI(AUTHORITY, PATH_ADDRESS_BOOK_RECORDS, ADDRESS_BOOK_RECORDS);
+    	sURIMatcher.addURI(AUTHORITY, PATH_ADDRESS_BOOK_RECORDS + "/#", ADDRESS_BOOK_RECORD_ID);
+    	
+    	sURIMatcher.addURI(AUTHORITY, PATH_MESSAGES, MESSAGES);
+    	sURIMatcher.addURI(AUTHORITY, PATH_MESSAGES + "/#", MESSAGE_ID);
+    	
+    	sURIMatcher.addURI(AUTHORITY, PATH_QUEUE_RECORDS, QUEUE_RECORDS);
+    	sURIMatcher.addURI(AUTHORITY, PATH_QUEUE_RECORDS + "/#", QUEUE_RECORD_ID);
+    	
+    	sURIMatcher.addURI(AUTHORITY, PATH_PAYLOADS, PAYLOADS);
+    	sURIMatcher.addURI(AUTHORITY, PATH_PAYLOADS + "/#", PAYLOAD_ID);
+    	
+    	sURIMatcher.addURI(AUTHORITY, PATH_PUBKEYS, PUBKEYS);
+    	sURIMatcher.addURI(AUTHORITY, PATH_PUBKEYS + "/#", PUBKEY_ID);
+    	
+    	sURIMatcher.addURI(AUTHORITY, PATH_SERVER_RECORDS, SERVER_RECORDS);
+    	sURIMatcher.addURI(AUTHORITY, PATH_SERVER_RECORDS + "/#", SERVER_RECORD_ID);
+    }
 
-	  @Override
-	  public boolean onCreate() 
-	  {
-	    database = new DatabaseHelper(getContext());
-	    return false;
-	  }
-	  
-	  @Override
-	  public String getType(Uri uri) 
-	  {
-	    return null; // This method will not be called unless the application changes to specifically invoke it. Thus it can be safely left to return null.
-	  }
-	  
-	  @Override
-	  public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) 
-	  {
-	    // Using SQLiteQueryBuilder instead of query() method
+    @SuppressLint("InlinedApi")
+	@Override
+    public boolean onCreate() 
+    {    	
+    	Log.i(TAG, "Database content provider onCreate() called");
+    	
+    	sContext = getContext();
+    	
+    	sCacheWordHandler = new CacheWordHandler(sContext, this);
+    	sCacheWordHandler.connectToService();
+    	
+    	sDatabaseHelper = new DatabaseHelper(sContext, sCacheWordHandler);
+		
+		return false;
+    }
+    
+    /**
+     * Gets a writable SQLiteDatabase object
+     * 
+     * @return The SQLiteDatabase object
+     */
+    public static SQLiteDatabase openDatabase()
+    {
+    	Log.i(TAG, "DatabaseContentProvider.openDatabase() called");
+    	
+    	try
+    	{
+    		SQLiteDatabase.loadLibs(sContext);
+    		sDatabase = sDatabaseHelper.getWritableDatabase();
+    	}
+    	catch (Exception e)
+    	{
+    		Log.e(TAG, "Exception occurred while running DatabaseContentProvider.openDatabase(). The exception message was:\n" 
+    				+ e.getMessage());
+    	}
+    	
+		return sDatabase;
+    }
+    
+    /**
+     * Changes the database passphrase
+     * 
+     * @param newPassphrase - The new passphrase
+     * 
+     * @return A boolean indicating whether or not the database passphrase was
+     * changed successfully
+     */
+    public static boolean changeDatabasePassphrase(String newPassphrase)
+    {
+    	Log.i(TAG, "DatabaseContentProvider.changeDatabasePassphrase() called");
+    	
+    	try
+    	{
+	    	// Get the old encryption key
+    		String oldEncryptionKey = DatabaseHelper.encodeRawKeyToStr(sCacheWordHandler.getEncryptionKey());
+    		
+    		// Set CacheWord to use the new passphrase
+			sCacheWordHandler.changePassphrase((PassphraseSecrets) sCacheWordHandler.getCachedSecrets(), newPassphrase.toCharArray());
+			
+			// Get the new encryption key
+			String newEncryptionKey = DatabaseHelper.encodeRawKeyToStr(sCacheWordHandler.getEncryptionKey());
+	    	
+	    	sDatabase.execSQL("PRAGMA key = \"" + oldEncryptionKey + "\";");
+	    	sDatabase.execSQL("PRAGMA rekey = \"" + newEncryptionKey + "\";");
+	    	
+	    	openDatabase();
+	    	return true;
+    	}
+    	catch (Exception e)
+    	{
+    		Log.e(TAG, "Exception occurred while running DatabaseContentProvider.changeDatabasePassphrase(). The exception message was:\n" + 
+    				e.getMessage());
+    		return false;
+    	}
+    }
+    
+	/**
+	 * Closes the SQLiteDatabase object that we use to interact with the
+	 * app's database. This method is intended to be used when the user locks
+	 * the app. 
+	 */
+	public static void closeDatabase()
+	{
+		Log.i(TAG, "DatabaseContentProvider.closeDatabase() called.");
+		if (sDatabase != null)
+		{
+			Log.d(TAG, "About to close database");
+			sDatabase.close();
+			sDatabase = null;
+			System.gc();
+		}
+	}
+    
+    @Override
+    public String getType(Uri uri) 
+    {
+    	return null; // This method will not be called unless the application changes to specifically invoke it. Thus it can be safely left to return null.
+    }
+    
+    @Override
+    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) 
+    {
+    	// Using SQLiteQueryBuilder instead of query() method
 	    SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
 	    
 	    int uriType = sURIMatcher.match(uri);
@@ -157,57 +265,54 @@ public class DatabaseContentProvider extends ContentProvider
 		    default:
 		    	throw new IllegalArgumentException("Unknown URI: " + uri + " Exception occurred in DatabaseContentProvider.query()");
 	    }
-
-	    SQLiteDatabase db = database.getWritableDatabase();
-	    Cursor cursor = queryBuilder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
+	    
+	    Cursor cursor = queryBuilder.query(sDatabase, projection, selection, selectionArgs, null, null, sortOrder);
 	    // make sure that potential listeners are getting notified
-	    cursor.setNotificationUri(getContext().getContentResolver(), uri);
-
+	    cursor.setNotificationUri(sContext.getContentResolver(), uri);
 	    return cursor;
 	  }
 
 	  @Override
 	  public Uri insert(Uri uri, ContentValues values)
 	  {
-	    int uriType = sURIMatcher.match(uri);
-	    SQLiteDatabase sqlDB = database.getWritableDatabase();
+		int uriType = sURIMatcher.match(uri);
 	    long id = 0;
 	    String path;
 	    
 	    switch (uriType) 
 	    {
 		    case ADDRESSES:
-			      id = sqlDB.insert(AddressesTable.TABLE_ADDRESSES, null, values);
+			      id = sDatabase.insert(AddressesTable.TABLE_ADDRESSES, null, values);
 			      path = PATH_ADDRESSES;
 			      break;
 		      
 		    case ADDRESS_BOOK_RECORDS:
-			      id = sqlDB.insert(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, null, values);
+			      id = sDatabase.insert(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, null, values);
 			      path = PATH_ADDRESS_BOOK_RECORDS;
 			      break;
 			      
 		    case MESSAGES:
-			      id = sqlDB.insert(MessagesTable.TABLE_MESSAGES, null, values);
+			      id = sDatabase.insert(MessagesTable.TABLE_MESSAGES, null, values);
 			      path = PATH_MESSAGES;
 			      break;
 			      
 		    case QUEUE_RECORDS:
-			      id = sqlDB.insert(QueueRecordsTable.TABLE_QUEUE_RECORDS, null, values);
+			      id = sDatabase.insert(QueueRecordsTable.TABLE_QUEUE_RECORDS, null, values);
 			      path = PATH_QUEUE_RECORDS;
 			      break;
 			      
 		    case PAYLOADS:
-			      id = sqlDB.insert(PayloadsTable.TABLE_PAYLOADS, null, values);
+			      id = sDatabase.insert(PayloadsTable.TABLE_PAYLOADS, null, values);
 			      path = PATH_PAYLOADS;
 			      break;
 			      
 		    case PUBKEYS:
-			      id = sqlDB.insert(PubkeysTable.TABLE_PUBKEYS, null, values);
+			      id = sDatabase.insert(PubkeysTable.TABLE_PUBKEYS, null, values);
 			      path = PATH_PUBKEYS;
 			      break;
 			      
 		    case SERVER_RECORDS:
-			      id = sqlDB.insert(ServerRecordsTable.TABLE_SERVER_RECORDS, null, values);
+			      id = sDatabase.insert(ServerRecordsTable.TABLE_SERVER_RECORDS, null, values);
 			      path = PATH_SERVER_RECORDS;
 			      break;
 		      
@@ -215,250 +320,249 @@ public class DatabaseContentProvider extends ContentProvider
 		    	  throw new IllegalArgumentException("Unknown URI: " + uri + " Exception occurred in DatabaseContentProvider.insert()");
 	    }
 	    
-	    getContext().getContentResolver().notifyChange(uri, null);
+	    sContext.getContentResolver().notifyChange(uri, null);
 	    return Uri.parse(path + "/" + id);
 	  }
 
 	  @Override
 	  public int delete(Uri uri, String selection, String[] selectionArgs) 
 	  {
-	    int uriType = sURIMatcher.match(uri);
-	    SQLiteDatabase sqlDB = database.getWritableDatabase();
+		int uriType = sURIMatcher.match(uri);
 	    int rowsDeleted = 0;
 	    String id;
+	    
 	    switch (uriType)
 	    {
 		    case ADDRESSES:
-			      rowsDeleted = sqlDB.delete(AddressesTable.TABLE_ADDRESSES, selection, selectionArgs);
+			      rowsDeleted = sDatabase.delete(AddressesTable.TABLE_ADDRESSES, selection, selectionArgs);
 			      break;      
 		    case ADDRESS_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsDeleted = sqlDB.delete(AddressesTable.TABLE_ADDRESSES, AddressesTable.COLUMN_ID + "=" + id, null);
+			    	  rowsDeleted = sDatabase.delete(AddressesTable.TABLE_ADDRESSES, AddressesTable.COLUMN_ID + "=" + id, null);
 			      }
 			      else 
 			      {
-			    	  rowsDeleted = sqlDB.delete(AddressesTable.TABLE_ADDRESSES, AddressesTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
+			    	  rowsDeleted = sDatabase.delete(AddressesTable.TABLE_ADDRESSES, AddressesTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case ADDRESS_BOOK_RECORDS:
-			      rowsDeleted = sqlDB.delete(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, selection, selectionArgs);
+			      rowsDeleted = sDatabase.delete(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, selection, selectionArgs);
 			      break;      
 		    case ADDRESS_BOOK_RECORD_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsDeleted = sqlDB.delete(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, AddressBookRecordsTable.COLUMN_ID + "=" + id, null);
+			    	  rowsDeleted = sDatabase.delete(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, AddressBookRecordsTable.COLUMN_ID + "=" + id, null);
 			      }
 			      else 
 			      {
-			    	  rowsDeleted = sqlDB.delete(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, AddressBookRecordsTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
+			    	  rowsDeleted = sDatabase.delete(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, AddressBookRecordsTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case MESSAGES:
-			      rowsDeleted = sqlDB.delete(MessagesTable.TABLE_MESSAGES, selection, selectionArgs);
+			      rowsDeleted = sDatabase.delete(MessagesTable.TABLE_MESSAGES, selection, selectionArgs);
 			      break;      
 		    case MESSAGE_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsDeleted = sqlDB.delete(MessagesTable.TABLE_MESSAGES, MessagesTable.COLUMN_ID + "=" + id, null);
+			    	  rowsDeleted = sDatabase.delete(MessagesTable.TABLE_MESSAGES, MessagesTable.COLUMN_ID + "=" + id, null);
 			      }
 			      else 
 			      {
-			    	  rowsDeleted = sqlDB.delete(MessagesTable.TABLE_MESSAGES, MessagesTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
+			    	  rowsDeleted = sDatabase.delete(MessagesTable.TABLE_MESSAGES, MessagesTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case QUEUE_RECORDS:
-			      rowsDeleted = sqlDB.delete(QueueRecordsTable.TABLE_QUEUE_RECORDS, selection, selectionArgs);
+			      rowsDeleted = sDatabase.delete(QueueRecordsTable.TABLE_QUEUE_RECORDS, selection, selectionArgs);
 			      break;      
 		    case QUEUE_RECORD_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsDeleted = sqlDB.delete(QueueRecordsTable.TABLE_QUEUE_RECORDS, QueueRecordsTable.COLUMN_ID + "=" + id, null);
+			    	  rowsDeleted = sDatabase.delete(QueueRecordsTable.TABLE_QUEUE_RECORDS, QueueRecordsTable.COLUMN_ID + "=" + id, null);
 			      }
 			      else 
 			      {
-			    	  rowsDeleted = sqlDB.delete(QueueRecordsTable.TABLE_QUEUE_RECORDS, QueueRecordsTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
+			    	  rowsDeleted = sDatabase.delete(QueueRecordsTable.TABLE_QUEUE_RECORDS, QueueRecordsTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case PAYLOADS:
-			      rowsDeleted = sqlDB.delete(PayloadsTable.TABLE_PAYLOADS, selection, selectionArgs);
+			      rowsDeleted = sDatabase.delete(PayloadsTable.TABLE_PAYLOADS, selection, selectionArgs);
 			      break;      
 		    case PAYLOAD_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsDeleted = sqlDB.delete(PayloadsTable.TABLE_PAYLOADS, PayloadsTable.COLUMN_ID + "=" + id, null);
+			    	  rowsDeleted = sDatabase.delete(PayloadsTable.TABLE_PAYLOADS, PayloadsTable.COLUMN_ID + "=" + id, null);
 			      }
 			      else 
 			      {
-			    	  rowsDeleted = sqlDB.delete(PayloadsTable.TABLE_PAYLOADS, PayloadsTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
+			    	  rowsDeleted = sDatabase.delete(PayloadsTable.TABLE_PAYLOADS, PayloadsTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case PUBKEYS:
-			      rowsDeleted = sqlDB.delete(PubkeysTable.TABLE_PUBKEYS, selection, selectionArgs);
+			      rowsDeleted = sDatabase.delete(PubkeysTable.TABLE_PUBKEYS, selection, selectionArgs);
 			      break;      
 		    case PUBKEY_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsDeleted = sqlDB.delete(PubkeysTable.TABLE_PUBKEYS, PubkeysTable.COLUMN_ID + "=" + id, null);
+			    	  rowsDeleted = sDatabase.delete(PubkeysTable.TABLE_PUBKEYS, PubkeysTable.COLUMN_ID + "=" + id, null);
 			      }
 			      else 
 			      {
-			    	  rowsDeleted = sqlDB.delete(PubkeysTable.TABLE_PUBKEYS, PubkeysTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
+			    	  rowsDeleted = sDatabase.delete(PubkeysTable.TABLE_PUBKEYS, PubkeysTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case SERVER_RECORDS:
-			      rowsDeleted = sqlDB.delete(ServerRecordsTable.TABLE_SERVER_RECORDS, selection, selectionArgs);
+			      rowsDeleted = sDatabase.delete(ServerRecordsTable.TABLE_SERVER_RECORDS, selection, selectionArgs);
 			      break;      
 		    case SERVER_RECORD_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsDeleted = sqlDB.delete(ServerRecordsTable.TABLE_SERVER_RECORDS, ServerRecordsTable.COLUMN_ID + "=" + id, null);
+			    	  rowsDeleted = sDatabase.delete(ServerRecordsTable.TABLE_SERVER_RECORDS, ServerRecordsTable.COLUMN_ID + "=" + id, null);
 			      }
 			      else 
 			      {
-			    	  rowsDeleted = sqlDB.delete(ServerRecordsTable.TABLE_SERVER_RECORDS, ServerRecordsTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
+			    	  rowsDeleted = sDatabase.delete(ServerRecordsTable.TABLE_SERVER_RECORDS, ServerRecordsTable.COLUMN_ID + "=" + id + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    default:
 		    	  throw new IllegalArgumentException("Unknown URI: " + uri + " Exception occurred in DatabaseContentProvider.delete()");
 	    }
-	    getContext().getContentResolver().notifyChange(uri, null);
+	    sContext.getContentResolver().notifyChange(uri, null);
 	    return rowsDeleted;
 	  }
 
 	  @Override
 	  public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) 
 	  {
-	    int uriType = sURIMatcher.match(uri);
-	    SQLiteDatabase sqlDB = database.getWritableDatabase();
+		int uriType = sURIMatcher.match(uri);
 	    int rowsUpdated = 0;
 	    String id;
 	    
 	    switch (uriType)
 	    {
 		    case ADDRESSES:
-			      rowsUpdated = sqlDB.update(AddressesTable.TABLE_ADDRESSES, values, selection, selectionArgs);
+			      rowsUpdated = sDatabase.update(AddressesTable.TABLE_ADDRESSES, values, selection, selectionArgs);
 			      break;
 		    case ADDRESS_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsUpdated = sqlDB.update(AddressesTable.TABLE_ADDRESSES, values, AddressesTable.COLUMN_ID + "=" + id, null);
+			    	  rowsUpdated = sDatabase.update(AddressesTable.TABLE_ADDRESSES, values, AddressesTable.COLUMN_ID + "=" + id, null);
 			      } 
 			      else 
 			      {
-			    	  rowsUpdated = sqlDB.update(AddressesTable.TABLE_ADDRESSES, values, AddressesTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
+			    	  rowsUpdated = sDatabase.update(AddressesTable.TABLE_ADDRESSES, values, AddressesTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case ADDRESS_BOOK_RECORDS:
-			      rowsUpdated = sqlDB.update(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, values, selection, selectionArgs);
+			      rowsUpdated = sDatabase.update(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, values, selection, selectionArgs);
 			      break;
 		    case ADDRESS_BOOK_RECORD_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsUpdated = sqlDB.update(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, values, AddressBookRecordsTable.COLUMN_ID + "=" + id, null);
+			    	  rowsUpdated = sDatabase.update(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, values, AddressBookRecordsTable.COLUMN_ID + "=" + id, null);
 			      } 
 			      else 
 			      {
-			    	  rowsUpdated = sqlDB.update(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, values, AddressBookRecordsTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
+			    	  rowsUpdated = sDatabase.update(AddressBookRecordsTable.TABLE_ADDRESS_BOOK_RECORDS, values, AddressBookRecordsTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case MESSAGES:
-			      rowsUpdated = sqlDB.update(MessagesTable.TABLE_MESSAGES, values, selection, selectionArgs);
+			      rowsUpdated = sDatabase.update(MessagesTable.TABLE_MESSAGES, values, selection, selectionArgs);
 			      break;
 		    case MESSAGE_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsUpdated = sqlDB.update(MessagesTable.TABLE_MESSAGES, values, MessagesTable.COLUMN_ID + "=" + id, null);
+			    	  rowsUpdated = sDatabase.update(MessagesTable.TABLE_MESSAGES, values, MessagesTable.COLUMN_ID + "=" + id, null);
 			      } 
 			      else 
 			      {
-			    	  rowsUpdated = sqlDB.update(MessagesTable.TABLE_MESSAGES, values, MessagesTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
+			    	  rowsUpdated = sDatabase.update(MessagesTable.TABLE_MESSAGES, values, MessagesTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
 			      }
 			      break;
 
 		    case QUEUE_RECORDS:
-			      rowsUpdated = sqlDB.update(QueueRecordsTable.TABLE_QUEUE_RECORDS, values, selection, selectionArgs);
+			      rowsUpdated = sDatabase.update(QueueRecordsTable.TABLE_QUEUE_RECORDS, values, selection, selectionArgs);
 			      break;
 		    case QUEUE_RECORD_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsUpdated = sqlDB.update(QueueRecordsTable.TABLE_QUEUE_RECORDS, values, QueueRecordsTable.COLUMN_ID + "=" + id, null);
+			    	  rowsUpdated = sDatabase.update(QueueRecordsTable.TABLE_QUEUE_RECORDS, values, QueueRecordsTable.COLUMN_ID + "=" + id, null);
 			      } 
 			      else 
 			      {
-			    	  rowsUpdated = sqlDB.update(QueueRecordsTable.TABLE_QUEUE_RECORDS, values, QueueRecordsTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
+			    	  rowsUpdated = sDatabase.update(QueueRecordsTable.TABLE_QUEUE_RECORDS, values, QueueRecordsTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case PAYLOADS:
-			      rowsUpdated = sqlDB.update(PayloadsTable.TABLE_PAYLOADS, values, selection, selectionArgs);
+			      rowsUpdated = sDatabase.update(PayloadsTable.TABLE_PAYLOADS, values, selection, selectionArgs);
 			      break;
 		    case PAYLOAD_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsUpdated = sqlDB.update(PayloadsTable.TABLE_PAYLOADS, values, PayloadsTable.COLUMN_ID + "=" + id, null);
+			    	  rowsUpdated = sDatabase.update(PayloadsTable.TABLE_PAYLOADS, values, PayloadsTable.COLUMN_ID + "=" + id, null);
 			      }
 			      else 
 			      {
-			    	  rowsUpdated = sqlDB.update(PayloadsTable.TABLE_PAYLOADS, values, PayloadsTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
+			    	  rowsUpdated = sDatabase.update(PayloadsTable.TABLE_PAYLOADS, values, PayloadsTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case PUBKEYS:
-			      rowsUpdated = sqlDB.update(PubkeysTable.TABLE_PUBKEYS, values, selection, selectionArgs);
+			      rowsUpdated = sDatabase.update(PubkeysTable.TABLE_PUBKEYS, values, selection, selectionArgs);
 			      break;
 		    case PUBKEY_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsUpdated = sqlDB.update(PubkeysTable.TABLE_PUBKEYS, values, PubkeysTable.COLUMN_ID + "=" + id, null);
+			    	  rowsUpdated = sDatabase.update(PubkeysTable.TABLE_PUBKEYS, values, PubkeysTable.COLUMN_ID + "=" + id, null);
 			      } 
 			      else 
 			      {
-			    	  rowsUpdated = sqlDB.update(PubkeysTable.TABLE_PUBKEYS, values, PubkeysTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
+			    	  rowsUpdated = sDatabase.update(PubkeysTable.TABLE_PUBKEYS, values, PubkeysTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
 			      }
 			      break;
 			      
 		    case SERVER_RECORDS:
-			      rowsUpdated = sqlDB.update(ServerRecordsTable.TABLE_SERVER_RECORDS, values, selection, selectionArgs);
+			      rowsUpdated = sDatabase.update(ServerRecordsTable.TABLE_SERVER_RECORDS, values, selection, selectionArgs);
 			      break;
 		    case SERVER_RECORD_ID:
 			      id = uri.getLastPathSegment();
 			      if (TextUtils.isEmpty(selection)) 
 			      {
-			    	  rowsUpdated = sqlDB.update(ServerRecordsTable.TABLE_SERVER_RECORDS, values, ServerRecordsTable.COLUMN_ID + "=" + id, null);
+			    	  rowsUpdated = sDatabase.update(ServerRecordsTable.TABLE_SERVER_RECORDS, values, ServerRecordsTable.COLUMN_ID + "=" + id, null);
 			      } 
 			      else 
 			      {
-			    	  rowsUpdated = sqlDB.update(ServerRecordsTable.TABLE_SERVER_RECORDS, values, ServerRecordsTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
+			    	  rowsUpdated = sDatabase.update(ServerRecordsTable.TABLE_SERVER_RECORDS, values, ServerRecordsTable.COLUMN_ID + "=" + id  + " and " + selection, selectionArgs);
 			      }
 			      break;
 		      
 		    default:
 		    	  throw new IllegalArgumentException("Unknown URI: " + uri + " Exception occurred in DatabaseContentProvider.update()");
 	    }
-	    getContext().getContentResolver().notifyChange(uri, null);
+	    sContext.getContentResolver().notifyChange(uri, null);
 	    return rowsUpdated;
 	  }
 	  
@@ -540,4 +644,51 @@ public class DatabaseContentProvider extends ContentProvider
 		    	 throw new IllegalArgumentException("Unknown URI Type: " + uriType + " Exception occurred in DatabaseContentProvider.getAvailable()");
 		    }
 	  }
+	
+	/**
+	 * If the database encryption passphrase is currently set to its default value, 
+	 * this method retrieves the corresponding encryption key and stores it using
+	 * CacheWord. 
+	 */
+	public static void attemptGetDefaultEncryptionKey()
+	{
+      	// Check whether the user has set a database encryption passphrase
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(sContext);
+		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false) == false)
+		{
+			try
+			{
+				sCacheWordHandler.setPassphrase(DEFAULT_DATABASE_PASSPHRASE.toCharArray());
+			}
+			catch (GeneralSecurityException e)
+			{
+				Log.e(TAG, "GeneralSecurityException occurred in DatabaseContentProvider.onCreate(). The exception message was:\n" 
+					+ e.getMessage());
+			}
+		}
+	}
+	
+	@SuppressLint("InlinedApi")
+	@Override
+	public void onCacheWordLocked()
+	{
+		Log.d(TAG, "DatabaseContenProvider.onCacheWordLocked() called.");
+		
+		attemptGetDefaultEncryptionKey();
+	}
+
+	@Override
+	public void onCacheWordOpened()
+	{
+		Log.d(TAG, "DatabaseContenProvider.onCacheWordOpened() called.");
+		
+		openDatabase();
+	}
+
+	@Override
+	public void onCacheWordUninitialized()
+	{
+		Log.d(TAG, "DatabaseContenProvider.onCacheWordUninitialized() called.");
+	   // Nothing to do here
+	}
 }
