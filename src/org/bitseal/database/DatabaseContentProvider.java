@@ -187,7 +187,7 @@ public class DatabaseContentProvider extends ContentProvider implements ICacheWo
 		Log.i(TAG, "DatabaseContentProvider.closeDatabase() called.");
 		if (sDatabase != null)
 		{
-			Log.i(TAG, "About to close database");
+			Log.d(TAG, "About to close database");
 			sDatabase.close();
 			sDatabase = null;
 			System.gc();
