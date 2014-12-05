@@ -54,4 +54,4 @@ Support the project!
 The development of Bitseal has been a large project, taking many months of work. I'm doing it on a purely non-profit basis. 
 
 Bitcoin donations are very gratefully received: 
-[**1L7amdWrPv4R4f1vLdanr2xU71TPs3wUEC**](https://www.blocktrail.com/address/1L7amdWrPv4R4f1vLdanr2xU71TPs3wUEC)
+[**1ALTrxJ3Yn3Rc85Uf467u3ZcpHCzx4jDAT**](https://www.blocktrail.com/address/1ALTrxJ3Yn3Rc85Uf467u3ZcpHCzx4jDAT)
