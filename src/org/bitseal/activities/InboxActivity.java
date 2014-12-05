@@ -45,6 +45,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * The Activity class for the app's inbox. 
@@ -110,6 +111,8 @@ public class InboxActivity extends ListActivity implements ICacheWordSubscriber
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false))
 		{
+			Log.i(TAG, "We detected that the user has a database encryption passphrase set");
+			
 			// If Bitseal is being launched (rather than re-opened)
 			if (getIntent().hasCategory(Intent.CATEGORY_LAUNCHER))
 			{
@@ -130,26 +133,51 @@ public class InboxActivity extends ListActivity implements ICacheWordSubscriber
 				this.startService(firstStartIntent);
 			}
 		}
+		else
+		{
+			Log.i(TAG, "We detected that the user does NOT have a database encryption passphrase set");
+		}
 		
         // Check whether this is the first time the inbox activity has been opened - if so then run the 'first launch' routine
 		if (prefs.getBoolean(INBOX_FIRST_RUN, true))
 		{
 			runFirstLaunchRoutine();
 		}
-		
-		MessageProvider msgProv = MessageProvider.get(this);
-		mMessages =msgProv.searchMessages(MessagesTable.COLUMN_BELONGS_TO_ME, String.valueOf(0)); // 0 stands for "false" in the database
-		
-        // Sort the messages so that the most recent are displayed first
-        Collections.sort(mMessages);
         
         mInboxListView = new ListView(this);
         mInboxListView = (ListView)findViewById(android.R.id.list);
         
         setTitle(getResources().getString(R.string.inbox_activity_title));
         
-        MessageAdapter adapter = new MessageAdapter(mMessages);  
-        setListAdapter(adapter);
+        // Sometimes the CacheWordService will take too long to initialize, and as a result we will fail to detect 
+        // that the app is locked. Therefore if our attempt to access the database fails and the user has a database
+        // passphrase set, we will redirect to the lock screen.
+        try
+        {
+    		MessageProvider msgProv = MessageProvider.get(this);
+    		mMessages =msgProv.searchMessages(MessagesTable.COLUMN_BELONGS_TO_ME, String.valueOf(0)); // 0 stands for "false" in the database
+    		
+            // Sort the messages so that the most recent are displayed first
+            Collections.sort(mMessages);
+            
+            MessageAdapter adapter = new MessageAdapter(mMessages);  
+            setListAdapter(adapter);
+        }
+        catch (Exception e)
+        {
+        	Log.e(TAG, "While running InboxActivity.onCreate, our attempt to access the database failed.");
+        	
+        	if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false))
+        	{
+        		Log.e(TAG, "The user has a database passphrase set. Calling onCacheWordLocked().");
+        		onCacheWordLocked();
+        	}
+        	else
+        	{
+        		Toast.makeText(getBaseContext(), "An unknown error occurred while trying to access the database", Toast.LENGTH_LONG).show();
+        		Log.e(TAG, "Unknown exception occurred in InboxActivity.onCreate");
+        	}
+        }
 	}
 	
 	@Override
@@ -585,6 +613,8 @@ public class InboxActivity extends ListActivity implements ICacheWordSubscriber
 	@Override
 	public void onCacheWordLocked()
 	{
+		Log.i(TAG, "InboxActivity.onCacheWordLocked() called");
+		
 		// Redirect to the lock screen activity
         Intent intent = new Intent(getBaseContext(), LockScreenActivity.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
