@@ -87,16 +87,16 @@ public class IncomingMessageProcessor
 			return null;
 		}
 		
-		// Check whether this msg is an acknowledgment
+		// Check whether this msg is an acknowledgement
 		if (msgObject.getPayload().length == ACK_DATA_LENGTH)
 		{
-			// If this msg is an acknowledgment, process it (checking whether it is one that I am awaiting)
+			// If this msg is an acknowledgement, process it (checking whether it is one that I am awaiting)
 			processAck(msgObject);
 			return null;
 		}
 		else
 		{
-			// This msg is not an acknowledgment. Attempt to decrypt it using each of our addresses
+			// This msg is not an acknowledgement. Attempt to decrypt it using each of our addresses
 			ArrayList<Address> myAddresses = AddressProvider.get(App.getContext()).getAllAddresses();
 			UnencryptedMsg unencMsg = null;
 			for (Address a : myAddresses)
@@ -203,31 +203,31 @@ public class IncomingMessageProcessor
 	}
 	
 	/**
-	 * Takes a msg that we have determined to be an acknowledgment and
+	 * Takes a msg that we have determined to be an acknowledgement and
 	 * checks whether it is one which we are awaiting. If so, the status
 	 * of the corresponding Message is updated. 
 	 * 
-	 * @param msg - A msg object containing the acknowledgment to be processed
+	 * @param msg - A msg object containing the acknowledgement to be processed
 	 */
 	private void processAck(BMObject msg)
 	{
 		// Get the ack data from the msg
 		byte[] ackData = msg.getPayload();
 		
-		// Get all acknowledgments that I am awaiting
+		// Get all acknowledgements that I am awaiting
 		PayloadProvider payProv = PayloadProvider.get(App.getContext());
 		
 		String[] columnNames = new String[]{PayloadsTable.COLUMN_ACK, PayloadsTable.COLUMN_BELONGS_TO_ME};
 		String[] searchTerms = new String[]{"1", "1"}; // 1 stands for true in the database
 		ArrayList<Payload> expectedAckPayloads = payProv.searchPayloads(columnNames, searchTerms);
 		
-		// Check if this is an acknowledgment bound for me
+		// Check if this is an acknowledgement bound for me
 		for (Payload p : expectedAckPayloads)
 		{
 			if (Arrays.equals(p.getPayload(), ackData))
 			{
-				// This is an acknowledgment that I am expecting!
-				// Update the status of the Message that this acknowledgment is for
+				// This is an acknowledgement that I am expecting!
+				// Update the status of the Message that this acknowledgement is for
 				MessageProvider msgProv = MessageProvider.get(App.getContext());
 				ArrayList<Message> retrievedMessages = msgProv.searchMessages(MessagesTable.COLUMN_ACK_PAYLOAD_ID, String.valueOf(p.getId()));
 				if (retrievedMessages.size() == 1)
@@ -235,7 +235,7 @@ public class IncomingMessageProcessor
 					Message originalMessage = retrievedMessages.get(0);
 					originalMessage.setStatus(Message.STATUS_ACK_RECEIVED);
 					msgProv.updateMessage(originalMessage);
-					Log.d(TAG, "Acknowledgment received!\n" +
+					Log.d(TAG, "acknowledgement received!\n" +
 							"Message subject:    " + originalMessage.getSubject() + "\n" +
 							"Message to address: " +  originalMessage.getToAddress());
 					
@@ -248,7 +248,8 @@ public class IncomingMessageProcessor
 					ArrayList<QueueRecord> retrievedRecords = queueProv.searchQueueRecords(QueueRecordsTable.COLUMN_OBJECT_0_ID, String.valueOf(originalMessage.getId()));
 					for (QueueRecord q : retrievedRecords)
 					{
-						if (q.getTask().equals(QueueRecordProcessor.TASK_SEND_MESSAGE))
+						// If this is a QueueRecord for one of the three 'send message' tasks
+						if (q.getTask().equals(QueueRecordProcessor.TASK_SEND_MESSAGE) || q.getTask().equals(QueueRecordProcessor.TASK_PROCESS_OUTGOING_MESSAGE) || q.getTask().equals(QueueRecordProcessor.TASK_DISSEMINATE_MESSAGE))
 						{
 							queueProv.deleteQueueRecord(q);
 						}
@@ -256,16 +257,16 @@ public class IncomingMessageProcessor
 				}
 				else
 				{
-					Log.d(TAG, "We received an acknowledgment that we were awaiting, but the original message could not be found in the database.");
+					Log.d(TAG, "We received an acknowledgement that we were awaiting, but the original message could not be found in the database.");
 				}
 				
-				// We have now received this acknowledgment, so delete the 'awaiting' ack payload from the database
+				// We have now received this acknowledgement, so delete the 'awaiting' ack payload from the database
 				payProv.deletePayload(p);
 				return;
 			}
 		}
-		// If the acknowledgment was not one that we are awaiting
-		Log.i(TAG, "Processed a msg that was found to be an acknowledgment bound for someone else");
+		// If the acknowledgement was not one that we are awaiting
+		Log.i(TAG, "Processed a msg that was found to be an acknowledgement bound for someone else");
 	}
 
 	/**
@@ -453,13 +454,13 @@ public class IncomingMessageProcessor
 		// In some rare instances, such as PyBitmessage sending a message to one of its own addresses, no ack data will be included
 		if (ackData.length != 0)
 		{
-			// Save the acknowledgment data of this msg as a Payload object and save it to 
+			// Save the acknowledgement data of this msg as a Payload object and save it to 
 			// the database so that we can send it later
 			Payload ackPayload = new Payload();
-			ackPayload.setBelongsToMe(false); // i.e This is the acknowledgment of a msg created by someone else
+			ackPayload.setBelongsToMe(false); // i.e This is the acknowledgement of a msg created by someone else
 			ackPayload.setProcessingComplete(true); // Set 'processing complete' to true so that we won't attempt to process this as a new incoming msg
 			ackPayload.setPOWDone(true);
-			ackPayload.setAck(true); // This payload is an acknowledgment
+			ackPayload.setAck(true); // This payload is an acknowledgement
 			ackPayload.setType(Payload.OBJECT_TYPE_MSG); // Currently we treat all acks from other people as msgs. Strictly though they can be objects of any type, so this may change
 			ackPayload.setPayload(ackData);
 			
