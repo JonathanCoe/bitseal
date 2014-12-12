@@ -29,8 +29,8 @@
 		    android:layout_marginTop="2dp"
 		    android:layout_marginStart="20dp"
 		    android:layout_marginLeft="20dp"
-		    android:layout_marginRight="10dp"
-		    android:layout_marginEnd="10dp"
+		    android:layout_marginRight="5dp"
+		    android:layout_marginEnd="5dp"
 		    android:layout_weight="7"
 		    android:imeOptions="actionNext"
 		    android:singleLine="true"
@@ -43,10 +43,10 @@
 		 <ImageView 
 		   android:id="@+id/lock_screen_unlock_icon_imageview"
 		   android:src="@drawable/ic_action_forward"
-		   android:layout_width="35dp"
-		   android:layout_height="35dp"
-		   android:layout_marginRight="20dp"
-		   android:layout_marginEnd="20dp"
+		   android:layout_width="50dp"
+		   android:layout_height="50dp"
+		   android:layout_marginRight="10dp"
+		   android:layout_marginEnd="10dp"
 		   android:layout_gravity="center"
 		   />
 	  
