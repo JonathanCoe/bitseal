@@ -135,13 +135,34 @@ public class OutgoingMessageProcessor
 		PubkeyProvider pubProv = PubkeyProvider.get(App.getContext());
 		ArrayList<Pubkey> retrievedPubkeys = pubProv.searchPubkeys(PubkeysTable.COLUMN_CORRESPONDING_ADDRESS_ID, String.valueOf(fromAddress.getId()));
 		Pubkey fromPubkey = null;
-		if (retrievedPubkeys.size() != 1)
-		{
-			Log.e(TAG, "There should be exactly 1 record found in this search. Instead " + retrievedPubkeys.size() + " records were found");
-		}
-		else
+		if (retrievedPubkeys.size() == 1)
 		{
 			fromPubkey = retrievedPubkeys.get(0);
+		}
+		else if (retrievedPubkeys.size() > 1) // If there are duplicate pubkeys for this address
+		{
+			Log.e(TAG, "There should be exactly 1 record found in this search. Instead " + retrievedPubkeys.size() + " records were found");
+			
+			// Delete all but the most recent of the duplicate pubkeys
+			long firstPubkeyTime = retrievedPubkeys.get(0).getExpirationTime();
+			Pubkey pubkeyToKeep = retrievedPubkeys.get(0);
+			for (Pubkey p : retrievedPubkeys)
+			{
+				if (p.getExpirationTime() > firstPubkeyTime)
+				{
+					pubkeyToKeep = p;
+				}
+			}
+			for (Pubkey p : retrievedPubkeys)
+			{
+				if (p.equals(pubkeyToKeep) == false)
+				{
+					pubProv.deletePubkey(p);
+				}
+			}
+			
+			// Use the most recent of the duplicate pubkeys
+			fromPubkey = pubkeyToKeep;
 		}
 		
 		if (fromPubkey == null)
