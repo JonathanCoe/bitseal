@@ -214,7 +214,9 @@ public class ApiCaller
      */
     private boolean doConnectionTest() 
     {   	
-		try 
+    	Object rawResult = null;
+    	
+    	try 
 		{
 			Log.i(TAG, "Running doConnectionTest() with server at " + url.toString());
 			
@@ -225,7 +227,8 @@ public class ApiCaller
 			int testInt2 = rand.nextInt(5000);
 			int sumOfTestInts = testInt1 + testInt2;
 			
-			result = (Integer) client.call(API_METHOD_ADD, testInt1, testInt2); // Test the connection with some random values that are unlikely to come up by chance
+			rawResult = client.call(API_METHOD_ADD, testInt1, testInt2); // Test the connection with some random values that are unlikely to come up by chance
+			result = (Integer) rawResult;
 			
 			if (result == sumOfTestInts)
 			{
@@ -256,6 +259,7 @@ public class ApiCaller
 		{
 			Log.e(TAG, "An Exception occurred in ApiCaller.doConnectionTest() \n" + 
 					"Execption message was: " + e.getMessage());
+			Log.e(TAG, "The raw result of the connection test was: " + rawResult.toString());
 			return false;
 		}
     }
