@@ -235,7 +235,7 @@ public class IncomingMessageProcessor
 					Message originalMessage = retrievedMessages.get(0);
 					originalMessage.setStatus(Message.STATUS_ACK_RECEIVED);
 					msgProv.updateMessage(originalMessage);
-					Log.d(TAG, "acknowledgement received!\n" +
+					Log.d(TAG, "Acknowledgement received!\n" +
 							"Message subject:    " + originalMessage.getSubject() + "\n" +
 							"Message to address: " +  originalMessage.getToAddress());
 					
