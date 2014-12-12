@@ -41,14 +41,11 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
     
     private TimerTask mUnlockAttemptTimerTask;
     
-    /** This variable is used as a flag to record whether the user has entered a passphrase yet. This prevents
-     * the app from being unlocked erroneously, as sometimes onCacheWordOpened() can be called before the 
-     * CacheWord service has been properly locked, resulting in the app being opened without a valid passphrase
-     * being entered. */
-    private boolean mPassphraseEnteredByUser;
+    /** Records whether onCacheWordOpened() has been called during the lifetime of this activity */
+    private boolean mOnCacheWordOpenedCalled;
     
     /** This variable is used as a flag to detect times when attempts to unlock the database hang without giving any result */
-    private boolean mLastUnlockAttemptSuccessful;
+    private boolean mLastUnlockAttemptCompleted;
     
     /** The minimum length we will allow for a database encryption passphrase */
     private static final int MINIMUM_PASSPHRASE_LENGTH = 8;
@@ -64,8 +61,6 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_lock_screen);
-		
-		mPassphraseEnteredByUser = false;
 		
 		mActivityContext = this;
 		
@@ -95,8 +90,6 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 						// almost instantly, so showing this message is only useful on older, slower devices. 
 						Toast.makeText(getBaseContext(), "Checking passphrase...", Toast.LENGTH_SHORT).show();
 					}
-					
-					mPassphraseEnteredByUser = true; // Set this flag to true, allowing us to open the app if the passphrase is correct
 					
 					new AttemptUnlockTask().execute(new String[]{enteredPassphrase}); // Attempt to unlock the app using the passphrase entered by the user
 				}
@@ -138,19 +131,21 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
         {
         	Log.i(TAG, "LockScreenActivity.AttemptUnlockTask.execute() called");
         	
-        	// Sometimes the call to mCacheWordHandler.setPassphrase() can result in the code hanging indefinitely, with no result or exception.
+        	// Sometimes the call to mCacheWordHandler.setPassphrase() can hang indefinitely, with no result or exception.
         	// Therefore we will set a timer task to detect when this happens and handle it.
-        	mLastUnlockAttemptSuccessful = false;
+        	mLastUnlockAttemptCompleted = false;
         	mUnlockAttemptTimerTask = new TimerTask() 
         	{          
         	    @Override
         	    public void run()
         	    {
-        	    	if (mLastUnlockAttemptSuccessful == false)
-        	    	Log.e(TAG, "We detected that the last unlock attempt hung, without giving any result. We will now attempt to handle this error.");
-        	    	unlockIcon.setClickable(true);
-        			mCacheWordHandler = new CacheWordHandler(mActivityContext);
-        			mCacheWordHandler.connectToService();
+        	    	if (mLastUnlockAttemptCompleted == false)
+        	    	{
+            	    	Log.e(TAG, "We detected that the last unlock attempt hung, without giving any result. We will now attempt to handle this error.");
+            	    	unlockIcon.setClickable(true);
+            			mCacheWordHandler = new CacheWordHandler(mActivityContext);
+            			mCacheWordHandler.connectToService();
+        	    	}
         	    }
         	};
         	new Timer().schedule(mUnlockAttemptTimerTask, 4000); // Run after 4 seconds
@@ -162,29 +157,77 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
             catch (GeneralSecurityException e) // If the passphrase is invalid, a GeneralSecurityException will be thrown
             {
                 Log.i(TAG, "The passphrase entered by the user was invalid, resulting in a GeneralSecurityException");
-                mLastUnlockAttemptSuccessful = true;
+                mLastUnlockAttemptCompleted = true;
                 return false;
             }
             catch (Exception e)
             {
                 Log.e(TAG, "Cacheword passphrase verification failed, throwing an unknown exception. The exception message was:\n"
                 		+ e.getMessage());
-                mLastUnlockAttemptSuccessful = true;
+                mLastUnlockAttemptCompleted = true;
                 return false;
             }
-    		mLastUnlockAttemptSuccessful = true;
+    		mLastUnlockAttemptCompleted = true;
             return true;
         }
         
         @Override
-        protected void onPostExecute(Boolean result) 
+        protected void onPostExecute(Boolean passphraseCorrect) 
         {
-        	if (result == false)
+        	unlockIcon.setClickable(true);
+        	
+        	if (passphraseCorrect)
+        	{
+        		openBitseal();
+        	}
+        	else
         	{
         		Toast.makeText(getBaseContext(), "Invalid passphrase", Toast.LENGTH_SHORT).show();
-        		unlockIcon.setClickable(true);
         	}
         }
+    }
+    
+    /**
+     * Checks whether the correct conditions to open the app have been met and, if so, 
+     * opens the app. 
+     */
+    @SuppressLint("InlinedApi")
+	private void openBitseal()
+    {
+		// Check whether onCacheWordOpened() has been called
+    	if (mOnCacheWordOpenedCalled)
+		{
+			// Reset this flag
+			mOnCacheWordOpenedCalled = false;
+			
+			// Cancel the 'handle hung unlock attempts' timer task
+			mUnlockAttemptTimerTask.cancel();
+			
+			// Clear any 'unlock' notifications
+			NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+			notificationManager.cancel(NotificationsService.getUnlockNotificationId());
+			
+			// Open the Inbox Activity
+			Intent intent = new Intent(getBaseContext(), InboxActivity.class);
+			intent.putExtra(EXTRA_DATABASE_UNLOCKED, true);
+	        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
+	        {
+	        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
+	        }
+	        else
+	        {
+	        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+	        }
+	        startActivity(intent);
+		}
+		else
+		{
+			Log.e(TAG, "LockScreenActivity.openBitseal() was called, but onCacheWordOpened() has not yet been called!");
+			// Attempt to handle this failure
+			mCacheWordHandler = new CacheWordHandler(mActivityContext);
+			mCacheWordHandler.connectToService();
+			new AttemptUnlockTask().execute(new String[]{enterPassphraseEditText.getText().toString()});
+		}
     }
     
     @Override
@@ -197,7 +240,6 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
     	}
      }
 	
-	@SuppressLint("InlinedApi")
 	@Override
 	public void onCacheWordLocked()
 	{
@@ -205,31 +247,12 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 		// We are already at the lock screen activity, so there's nothing to do here
 	}
 
+	@SuppressLint("InlinedApi")
 	@Override
 	public void onCacheWordOpened()
 	{
 		Log.i(TAG, "LockScreenActivity.onCacheWordOpened() called.");
-		
-		if (mPassphraseEnteredByUser)
-		{
-			mPassphraseEnteredByUser = false; // Reset this flag
-			
-			// Cancel the 'handle hung unlock attempts' timer task
-			mUnlockAttemptTimerTask.cancel();
-			
-			// Clear any 'unlock' notifications
-			NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-			notificationManager.cancel(NotificationsService.getUnlockNotificationId());
-			
-			// Open the Inbox Activity
-			Intent intent = new Intent(getBaseContext(), InboxActivity.class);
-			intent.putExtra(EXTRA_DATABASE_UNLOCKED, true);
-	        startActivityForResult(intent, 0);
-		}
-		else
-		{
-			Log.e(TAG, "LockScreenActivity.onCacheWordOpened() was called, but the user has not entered a passphrase yet!");
-		}
+		mOnCacheWordOpenedCalled = true;
 	}
 	
 	@Override
