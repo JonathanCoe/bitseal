@@ -172,7 +172,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 					boolean databasePassphraseSaved= prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
 					if (databasePassphraseSaved)
 					{
-						Toast.makeText(getBaseContext(), "Changing the database passphrase...", Toast.LENGTH_LONG).show();
+						Toast.makeText(getBaseContext(), R.string.security_toast_changing_passphrase, Toast.LENGTH_LONG).show();
 						
 						savePassphraseButton = (Button) v;
 						savePassphraseButton.setEnabled(false);
@@ -184,7 +184,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 					}
 					else
 					{
-						Toast.makeText(getBaseContext(), "Encrypting the database...", Toast.LENGTH_LONG).show();
+						Toast.makeText(getBaseContext(), R.string.security_toast_encrypting_database, Toast.LENGTH_LONG).show();
 						
 						// Set the database passphrase for the first time
 						new SetPassphraseTask().execute(enteredPassphrase);
@@ -305,7 +305,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 			{
 				Log.i(TAG, "Security settings screen enable database encryption confirm button pressed");
 				
-				Toast.makeText(getBaseContext(), "Disabling database encryption...", Toast.LENGTH_LONG).show();
+				Toast.makeText(getBaseContext(), R.string.security_toast_disabling_encryption, Toast.LENGTH_LONG).show();
 				
 				new RestoreDefaultPassphraseTask().execute();
 				
@@ -361,7 +361,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 		// Check whether the passphrases matched
 		if (enteredPassphrase.equals(confirmedPassphrase) == false)
 		{
-			Toast.makeText(this, "The passphrases do not match", Toast.LENGTH_LONG).show();
+			Toast.makeText(this, R.string.security_toast_passphrases_not_match, Toast.LENGTH_LONG).show();
 			Log.e(TAG, "The passphrases do not match");
 			return false;
 		}
@@ -369,7 +369,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 		// Check the length of the passphrase
 		if (enteredPassphrase.length() < MINIMUM_PASSPHRASE_LENGTH)
 		{
-			Toast.makeText(this, "The passphrase must be at least " + MINIMUM_PASSPHRASE_LENGTH + " characters long", Toast.LENGTH_LONG).show();
+			Toast.makeText(this, R.string.security_toast_passphrase_at_least + MINIMUM_PASSPHRASE_LENGTH + R.string.security_toast_characters_long, Toast.LENGTH_LONG).show();
 			Log.e(TAG, "The passphrase entered is too short - only " + enteredPassphrase.length() + " characters in length.\n" +
 					"The passphrase must be at least " + MINIMUM_PASSPHRASE_LENGTH + " characters in length");
 			return false;
@@ -377,7 +377,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 		
 		if (enteredPassphrase.equals(PLACEHOLDER_PASSPHRASE))
 		{
-			Toast.makeText(this, "You have not changed the passphrase", Toast.LENGTH_LONG).show();
+			Toast.makeText(this, R.string.security_toast_passphrase_not_changed, Toast.LENGTH_LONG).show();
 			Log.e(TAG, "Prevented the user from saving the placeholder string as the database passphrase");
 			return false;
 		}
@@ -412,7 +412,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
     			
     			mMenu.add(Menu.NONE, R.id.menu_item_lock, 7, R.string.menu_item_label_lock);
         	    
-        		Toast.makeText(getBaseContext(), "Database encryption passphrase set successfully", Toast.LENGTH_LONG).show();
+        		Toast.makeText(getBaseContext(), R.string.security_toast_database_passphrase_set, Toast.LENGTH_LONG).show();
         	}
         	
         	onPassphraseModificationResult(success);
@@ -443,7 +443,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
         		databaseEncryptionCheckbox.setChecked(true);
     			databaseEncryptionCheckbox.setText("Database encryption enabled");
         	    
-        	    Toast.makeText(getBaseContext(), "Database encryption passphrase changed", Toast.LENGTH_LONG).show();
+        	    Toast.makeText(getBaseContext(), R.string.security_toast_database_passphrase_changed, Toast.LENGTH_LONG).show();
         	}
         	
         	onPassphraseModificationResult(success);
@@ -483,7 +483,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
         	    databaseEncryptionCheckbox.setText("Enable database encryption");	    
         	    databaseEncryptionCheckbox.setChecked(false);
         	    
-        	    Toast.makeText(getBaseContext(), "Database encryption disabled", Toast.LENGTH_LONG).show();
+        	    Toast.makeText(getBaseContext(), R.string.security_toast_database_encryption_disabled, Toast.LENGTH_LONG).show();
         	}
         	
         	onPassphraseModificationResult(success);
@@ -510,7 +510,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 		}
 		else
 		{
-			Toast.makeText(getBaseContext(), "An error occurred while attempting to set the database passphrase", Toast.LENGTH_LONG).show();
+			Toast.makeText(getBaseContext(), R.string.security_toast_error_occurred, Toast.LENGTH_LONG).show();
 		}
     }
 	

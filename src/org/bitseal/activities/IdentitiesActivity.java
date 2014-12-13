@@ -65,8 +65,6 @@ public class IdentitiesActivity extends ListActivity implements ICacheWordSubscr
 	
 	private static final String IDENTITIES_FIRST_OPEN = "identities_first_open";
 	
-    private static final String IDENTITIES_WELCOME_MESSAGE_TOAST = "Here is your new Bitmessage address!\n\nGive it to your friends so they can send you a message.";
-	
 	// Used when receiving Intents to the UI so that it can refresh the data it is displaying
 	public static final String UI_NOTIFICATION = "uiNotification";
 	public static final String EXTRA_UPDATE_MY_ADDRESSES_LIST = "updateMyAddressesList";
@@ -120,7 +118,7 @@ public class IdentitiesActivity extends ListActivity implements ICacheWordSubscr
 	private void createNewAddress()
 	{
 		Log.i(TAG, "Generate New Address Button pressed");
-		Toast.makeText(getApplicationContext(), "Generating a new Bitmessage address...", Toast.LENGTH_LONG).show();
+		Toast.makeText(getApplicationContext(), R.string.identities_toast_generating_address, Toast.LENGTH_LONG).show();
 		
 		// ---------------------------------- Create a new identity! ----------------------------
 	    try
@@ -160,7 +158,7 @@ public class IdentitiesActivity extends ListActivity implements ICacheWordSubscr
 		
 	    for (int i = 0; i < 2; i++) // Yes, it's a hack. Come at me bro. 
 	    {
-	    	Toast.makeText(getApplicationContext(), IDENTITIES_WELCOME_MESSAGE_TOAST, Toast.LENGTH_LONG).show();
+	    	Toast.makeText(getApplicationContext(), R.string.identities_toast_welcome_message, Toast.LENGTH_LONG).show();
 	    }
 	}
 	
@@ -462,7 +460,7 @@ public class IdentitiesActivity extends ListActivity implements ICacheWordSubscr
             				String label = listItemDialogLabelEditText.getText().toString();
             				if (label.equals(""))
             				{
-            					Toast.makeText(getApplicationContext(), "The label must not be blank", Toast.LENGTH_LONG).show();
+            					Toast.makeText(getApplicationContext(), R.string.identities_toast_blank_label, Toast.LENGTH_LONG).show();
             					return;
             				}
             				else
@@ -510,7 +508,7 @@ public class IdentitiesActivity extends ListActivity implements ICacheWordSubscr
             				
             				listItemDialog.dismiss();
             				
-            				Toast.makeText(getApplicationContext(), "Address copied to the clipboard", Toast.LENGTH_LONG).show();
+            				Toast.makeText(getApplicationContext(), R.string.identities_toast_address_copied, Toast.LENGTH_LONG).show();
             			}
             		});
             	    
@@ -591,7 +589,7 @@ public class IdentitiesActivity extends ListActivity implements ICacheWordSubscr
             						        secondDeleteDialog.dismiss();
             								listItemDialog.dismiss();
             								
-            								Toast.makeText(getApplicationContext(), "Address deleted", Toast.LENGTH_SHORT).show();
+            								Toast.makeText(getApplicationContext(), R.string.identities_toast_address_deleted, Toast.LENGTH_SHORT).show();
             								
             								updateListView();
             							}

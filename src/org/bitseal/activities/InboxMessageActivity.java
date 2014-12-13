@@ -211,7 +211,7 @@ public class InboxMessageActivity extends Activity implements ICacheWordSubscrib
 				    clipboard.setPrimaryClip(clip);
 				}
 							
-				Toast.makeText(getApplicationContext(), "Message text copied to the clipboard", Toast.LENGTH_LONG).show();
+				Toast.makeText(getApplicationContext(), R.string.inbox_message_message_copied, Toast.LENGTH_LONG).show();
 			}
 		});	
 		
@@ -257,7 +257,7 @@ public class InboxMessageActivity extends Activity implements ICacheWordSubscrib
 				        
 				        deleteDialog.dismiss();
 				        
-				        Toast.makeText(getApplicationContext(), "Message deleted", Toast.LENGTH_SHORT).show();
+				        Toast.makeText(getApplicationContext(), R.string.inbox_message_message_deleted, Toast.LENGTH_SHORT).show();
 				        					
 						Intent i = new Intent(getBaseContext(), InboxActivity.class);
 				        startActivityForResult(i, 0);

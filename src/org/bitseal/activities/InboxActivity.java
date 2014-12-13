@@ -174,7 +174,7 @@ public class InboxActivity extends ListActivity implements ICacheWordSubscriber
         	}
         	else
         	{
-        		Toast.makeText(getBaseContext(), "An unknown error occurred while trying to access the database", Toast.LENGTH_LONG).show();
+        		Toast.makeText(getBaseContext(), R.string.inbox_toast_unknown_database_error, Toast.LENGTH_LONG).show();
         		Log.e(TAG, "Unknown exception occurred in InboxActivity.onCreate");
         	}
         }

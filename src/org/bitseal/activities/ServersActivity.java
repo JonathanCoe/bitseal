@@ -181,21 +181,21 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 						String url = listItemDialogUrlEditText.getText().toString();
 						if (url.equals(""))
 						{
-							Toast.makeText(getApplicationContext(), "The URL must not be blank", Toast.LENGTH_LONG).show();
+							Toast.makeText(getApplicationContext(), R.string.servers_toast_url_blank, Toast.LENGTH_LONG).show();
 							return;
 						}
 						
 						String username = listItemDialogUsernameEditText.getText().toString();
 						if (username.equals(""))
 						{
-							Toast.makeText(getApplicationContext(), "The Username must not be blank", Toast.LENGTH_LONG).show();
+							Toast.makeText(getApplicationContext(), R.string.servers_toast_username_blank, Toast.LENGTH_LONG).show();
 							return;
 						}
 						
 						String password = listItemDialogPasswordEditText.getText().toString();
 						if (password.equals(""))
 						{
-							Toast.makeText(getApplicationContext(), "The Password must not be blank", Toast.LENGTH_LONG).show();
+							Toast.makeText(getApplicationContext(), R.string.servers_toast_password_blank, Toast.LENGTH_LONG).show();
 							return;
 						}
 						
@@ -434,21 +434,21 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 				String url = listItemDialogUrlEditText.getText().toString();
 				if (url.equals(""))
 				{
-					Toast.makeText(getApplicationContext(), "The URL must not be blank", Toast.LENGTH_LONG).show();
+					Toast.makeText(getApplicationContext(), R.string.servers_toast_url_blank, Toast.LENGTH_LONG).show();
 					return;
 				}
 				
 				String username = listItemDialogUsernameEditText.getText().toString();
 				if (username.equals(""))
 				{
-					Toast.makeText(getApplicationContext(), "The Username must not be blank", Toast.LENGTH_LONG).show();
+					Toast.makeText(getApplicationContext(), R.string.servers_toast_username_blank, Toast.LENGTH_LONG).show();
 					return;
 				}
 				
 				String password = listItemDialogPasswordEditText.getText().toString();
 				if (password.equals(""))
 				{
-					Toast.makeText(getApplicationContext(), "The Password must not be blank", Toast.LENGTH_LONG).show();
+					Toast.makeText(getApplicationContext(), R.string.servers_toast_password_blank, Toast.LENGTH_LONG).show();
 					return;
 				}
 				
@@ -496,7 +496,7 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 				
 				listItemDialog.dismiss();
 				
-				Toast.makeText(getApplicationContext(), "Server URL copied to the clipboard", Toast.LENGTH_LONG).show();
+				Toast.makeText(getApplicationContext(), R.string.servers_toast_url_copied, Toast.LENGTH_LONG).show();
 			}
 		});
 	    

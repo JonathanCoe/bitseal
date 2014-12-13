@@ -88,14 +88,14 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
 					{
 						// Post Jelly Bean devices should generally be fast enough that the app will either unlock or show an 'invalid' message
 						// almost instantly, so showing this message is only useful on older, slower devices. 
-						Toast.makeText(getBaseContext(), "Checking passphrase...", Toast.LENGTH_SHORT).show();
+						Toast.makeText(getBaseContext(), R.string.lock_screen_toast_checking_passphrase, Toast.LENGTH_SHORT).show();
 					}
 					
 					new AttemptUnlockTask().execute(new String[]{enteredPassphrase}); // Attempt to unlock the app using the passphrase entered by the user
 				}
 				else
 				{
-					Toast.makeText(getBaseContext(), "Invalid passphrase", Toast.LENGTH_SHORT).show();
+					Toast.makeText(getBaseContext(), R.string.lock_screen_toast_invalid_passphrase, Toast.LENGTH_SHORT).show();
 					unlockIcon.setClickable(true);
 				}
 			}
@@ -182,7 +182,7 @@ public class LockScreenActivity extends Activity implements ICacheWordSubscriber
         	}
         	else
         	{
-        		Toast.makeText(getBaseContext(), "Invalid passphrase", Toast.LENGTH_SHORT).show();
+        		Toast.makeText(getBaseContext(), R.string.lock_screen_toast_invalid_passphrase, Toast.LENGTH_SHORT).show();
         	}
         }
     }

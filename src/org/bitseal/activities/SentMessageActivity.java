@@ -191,7 +191,7 @@ public class SentMessageActivity extends Activity implements ICacheWordSubscribe
 				    clipboard.setPrimaryClip(clip);
 				}
 							
-				Toast.makeText(getApplicationContext(), "Message text copied to the clipboard", Toast.LENGTH_LONG).show();
+				Toast.makeText(getApplicationContext(), R.string.sent_message_toast_message_copied, Toast.LENGTH_LONG).show();
 			}
 		});	
 		
@@ -267,7 +267,7 @@ public class SentMessageActivity extends Activity implements ICacheWordSubscribe
 				        
 				        deleteDialog.dismiss();
 				        
-				        Toast.makeText(getApplicationContext(), "Message deleted", Toast.LENGTH_SHORT).show();
+				        Toast.makeText(getApplicationContext(), R.string.sent_message_toast_message_deleted, Toast.LENGTH_SHORT).show();
 				        
 				        // Return to the 'Sent' Activity
 						Intent i = new Intent(getBaseContext(), SentActivity.class);

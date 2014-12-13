@@ -228,7 +228,7 @@ public class ComposeActivity extends Activity implements ICacheWordSubscriber
 	       		}
 	       		else
 	       		{
-	       			Toast.makeText(getApplicationContext(), "The scanned QR code does not contain a valid Bitmessage address", Toast.LENGTH_LONG).show();
+	       			Toast.makeText(getApplicationContext(), R.string.compose_toast_qr_address_invalid, Toast.LENGTH_LONG).show();
 	       		}
 	       	}
 	       else
@@ -266,7 +266,7 @@ public class ComposeActivity extends Activity implements ICacheWordSubscriber
 		{
 			if (toAddress.equals(""))
 			{
-				Toast.makeText(getApplicationContext(), "You must enter a 'To' address", Toast.LENGTH_LONG).show();
+				Toast.makeText(getApplicationContext(), R.string.compose_toast_enter_to_address, Toast.LENGTH_LONG).show();
 				return;
 			}
 			AddressProcessor addProc = new AddressProcessor();
@@ -281,7 +281,7 @@ public class ComposeActivity extends Activity implements ICacheWordSubscriber
 				}
 				else
 				{
-					Toast.makeText(getApplicationContext(), "The 'To' address must be a valid Bitmessage address or a label from your address book", Toast.LENGTH_LONG).show();
+					Toast.makeText(getApplicationContext(), R.string.compose_toast_to_address_invalid, Toast.LENGTH_LONG).show();
 					return;
 				}
 			}
@@ -290,7 +290,7 @@ public class ComposeActivity extends Activity implements ICacheWordSubscriber
 		{
 			Log.e(TAG, "Exception occurred in ComposeActivity.sendMessage(). \n" +
 					"The exception messsage was: " + e.getMessage());
-			Toast.makeText(getApplicationContext(), "An error occurred while validating the 'To address'", Toast.LENGTH_LONG).show();
+			Toast.makeText(getApplicationContext(), R.string.compose_toast_to_address_error, Toast.LENGTH_LONG).show();
 			return;
 		}	
 		
@@ -300,7 +300,7 @@ public class ComposeActivity extends Activity implements ICacheWordSubscriber
 		{
 			if (fromAddress.equals(""))
 			{
-				Toast.makeText(getApplicationContext(), "You must enter a 'From' address", Toast.LENGTH_LONG).show();
+				Toast.makeText(getApplicationContext(), R.string.compose_toast_enter_from_address, Toast.LENGTH_LONG).show();
 				return;
 			}
 	
@@ -315,7 +315,7 @@ public class ComposeActivity extends Activity implements ICacheWordSubscriber
 				}
 				else
 				{
-					Toast.makeText(getApplicationContext(), "The 'From' address must be one of your addresses or the label of one of them", Toast.LENGTH_LONG).show();
+					Toast.makeText(getApplicationContext(), R.string.compose_toast_from_address_invalid, Toast.LENGTH_LONG).show();
 					return;
 				}
 			}
@@ -324,7 +324,7 @@ public class ComposeActivity extends Activity implements ICacheWordSubscriber
 		{
 			Log.e(TAG, "Exception occurred in ComposeActivity.sendMessage(). \n" +
 					"The exception messsage was: " + e.getMessage());
-			Toast.makeText(getApplicationContext(), "An error occurred while validating the 'From address'", Toast.LENGTH_LONG).show();
+			Toast.makeText(getApplicationContext(), R.string.compose_toast_from_address_error, Toast.LENGTH_LONG).show();
 			return;
 		}
 		
@@ -337,7 +337,7 @@ public class ComposeActivity extends Activity implements ICacheWordSubscriber
 		{
 			Log.e(TAG, "The user attempted to send a message with a combined text (subject + body) size greater than the maximum value allowed. \n" +
 					"The size of the combined message text was " + messageTextSize + " bytes.");
-			Toast.makeText(getApplicationContext(), "The message is too long. Bitmessage does not allow messages greater than 256kB in size.", Toast.LENGTH_LONG).show();
+			Toast.makeText(getApplicationContext(), R.string.compose_toast_message_too_long, Toast.LENGTH_LONG).show();
 			return;
 		}
 		
@@ -365,7 +365,7 @@ public class ComposeActivity extends Activity implements ICacheWordSubscriber
 		    intent.putExtra(BackgroundService.MESSAGE_ID, messageId);	    
 		    startService(intent);
 			
-			Toast.makeText(getApplicationContext(), "Sending the message", Toast.LENGTH_LONG).show();
+			Toast.makeText(getApplicationContext(), R.string.compose_toast_sending_message, Toast.LENGTH_LONG).show();
 			
 			mToAddressEditText.setText("");
 			mFromAddressEditText.setText("");
@@ -380,7 +380,7 @@ public class ComposeActivity extends Activity implements ICacheWordSubscriber
 	    {
 	    	Log.e(TAG, "Exception occured in ComposeActivity while running mSendButton.onClick()");
 	    	e.printStackTrace();
-			Toast.makeText(getApplicationContext(), "An error occurred.", Toast.LENGTH_LONG).show();
+			Toast.makeText(getApplicationContext(), R.string.compose_toast_error, Toast.LENGTH_LONG).show();
 			return;
 	    }
 	    // ----------------------------------------------------------------------------------------------

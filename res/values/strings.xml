@@ -25,6 +25,7 @@
     <!-- Inbox Activity: -->
     <string name="inbox_activity_title">Inbox</string>
     <string name="inbox_unread_tag">New</string>
+    <string name="inbox_toast_unknown_database_error">An unknown error occurred while trying to access the database</string>
         
     <!-- Inbox Message Activity: -->
     <string name="inbox_message_activity_title">Message</string>
@@ -38,6 +39,8 @@
     <string name="inbox_message_delete_dialog_textView_text">Delete this message?</string>
     <string name="inbox_message_delete_dialog_confirm_button_label">Delete</string>
     <string name="inbox_message_delete_dialog_cancel_button_label">Cancel</string>
+    <string name="inbox_message_message_copied">Message text copied to the clipboard</string>
+    <string name="inbox_message_message_deleted">Message deleted</string>
     
     <!-- Sent Activity: -->
     <string name="sent_activity_title">Sent</string>
@@ -54,6 +57,8 @@
     <string name="sent_message_delete_dialog_textView_text">Delete this message?</string>
     <string name="sent_message_delete_dialog_confirm_button_label">Delete</string>
     <string name="sent_message_delete_dialog_cancel_button_label">Cancel</string>
+    <string name="sent_message_toast_message_copied">Message text copied to the clipboard</string>
+    <string name="sent_message_toast_message_deleted">Message deleted</string>
 
     <!-- Compose Activity: -->
     <string name="compose_activity_title">Compose</string>
@@ -70,6 +75,17 @@
     <string name="compose_dialog_to_address_selection_cancel_button_label">Cancel</string>
     <string name="compose_dialog_from_address_selection_title">Select from address</string>
     <string name="compose_dialog_from_address_selection_cancel_button_label">Cancel</string>
+    <string name="compose_toast_qr_address_invalid">The scanned QR code does not contain a valid Bitmessage address</string>
+    <string name="compose_toast_enter_to_address">You must enter a \'To\' address</string>
+    <string name="compose_toast_enter_from_address">You must enter a \'From\' address</string>
+    <string name="compose_toast_to_address_invalid">The \'To\' address must be a valid Bitmessage address or a label from your address book</string>
+    <string name="compose_toast_from_address_invalid">The \'From\' address must be one of your addresses or the label of one of them</string>
+    <string name="compose_toast_to_address_error">An error occurred while validating the \'To address\'</string>
+    <string name="compose_toast_from_address_error">An error occurred while validating the \'From address\'</string>
+    <string name="compose_toast_message_too_long">The message is too long. Bitmessage does not allow messages greater than 256kB in size.</string>
+    <string name="compose_toast_sending_message">Sending the message</string>
+    <string name="compose_toast_error">An error occurred</string>
+    
 
     <!-- Identities Activity: -->
     <string name="identities_activity_title">My Addresses</string>
@@ -92,6 +108,11 @@
         you are certain that you never want to use this address again.</string>
     <string name="identities_second_delete_dialog_confirm_button_label">Yes, delete this address</string>
     <string name="identities_second_delete_dialog_cancel_button_label">No, do not delete this address</string>
+    <string name="identities_toast_welcome_message">Here is your new Bitmessage address!\n\nGive it to your friends so they can send you a message.</string>
+    <string name="identities_toast_generating_address">Generating a new Bitmessage address...</string>
+    <string name="identities_toast_blank_label">The label must not be blank</string>
+    <string name="identities_toast_address_copied">Address copied to the clipboard</string>
+    <string name="identities_toast_address_deleted">Address deleted</string>
     
     <!-- Address Book Activity: -->
     <string name="addressBook_add_new_entry_section_label">Add</string>
@@ -113,6 +134,17 @@
     <string name="addressBook_delete_dialog_textView_text">Delete this entry?</string>
     <string name="addressBook_delete_dialog_confirm_button_label">Delete</string>
     <string name="addressBook_delete_dialog_cancel_button_label">Cancel</string>
+    <string name="addressBook_toast_welcome_message">This is your address book. We\'ve added some default entries to it.\n\nTry sending a message to one of them!</string>
+    <string name="addressBook_toast_must_enter_label">You must enter a label</string>
+    <string name="addressBook_toast_must_enter_address">You must enter an address</string>
+    <string name="addressBook_toast_not_valid_address">The address entered is not a valid Bitmessage address</string>
+    <string name="addressBook_toast_entry_already_exists">There is already an entry in the Address Book for this address</string>
+    <string name="addressBook_toast_qr_address_invalid">The scanned QR code does not contain a valid Bitmessage address</string>
+    <string name="addressBook_toast_blank_label">The label must not be blank</string>
+    <string name="addressBook_toast_blank_address">The address must not be blank</string>
+    <string name="addressBook_toast_address_copied">Address copied to the clipboard</string>
+    <string name="addressBook_toast_entry_deleted">Address book entry deleted</string>
+    
     
     <!-- Settings Activity: -->
     <string name="activity_settings_title">Settings</string>
@@ -121,6 +153,7 @@
     <string name="settings_import_or_export_button_label">Import or export data</string>
     <string name="settings_restart_background_service_button_label">Restart background service</string>
     <string name="settings_show_settings_textbox_label">Show settings (for advanced users only)</string>
+    <string name="settings_toast_background_service_restart">Background Service queued for restart</string>
     
     <!-- Servers Activity: -->
     <string name="activity_servers_title">Servers</string>
@@ -145,12 +178,19 @@
     <string name="servers_dialog_add_new_save_button_label">Save</string>
     <string name="servers_dialog_add_new_cancel_button_label">Cancel</string>
     <string name="servers_note">Note: Bitseal will use all the servers listed</string>
+    <string name="servers_toast_url_blank">The URL must not be blank</string>
+    <string name="servers_toast_username_blank">The Username must not be blank</string>
+    <string name="servers_toast_password_blank">The Password must not be blank</string>
+    <string name="servers_toast_url_copied">Server URL copied to the clipboard</string>
     
     <!-- Import or Export Activity: -->
     <string name="activity_import_or_export_title">Import or Export Data</string>
     <string name="import_or_export_addresses_section_label">Addresses</string>
     <string name="import_or_export_import_address_button_label">Import address</string>
     <string name="import_or_export_export_address_button_label">Export address</string>
+    <string name="import_or_export_toast_imported_successfully">Address imported successfully</string>
+    <string name="import_or_export_toast_import_failed">The provided keys could not be imported</string>
+    <string name="import_or_export_toast_scanned_code_invalid">The scanned QR code does not contain a valid Bitmessage private key</string>
     
     <!-- Export Addresses Activity: --> 
     <string name="activity_export_addresses_title">Export Addresses</string>
@@ -174,6 +214,9 @@
     <string name="import_address_dialog_private_encryption_key_label_title">Private Encryption Key</string>
     <string name="import_address_dialog_private_encryption_key_scan_qr_code_button_label">Scan QR Code</string>
     <string name="import_address_dialog_import_button_label">Import</string>
+    <string name="export_addresses_toast_address_copied">Address copied to the clipboard</string>
+    <string name="export_addresses_toast_private_signing_key_copied">Private Signing Key copied to the clipboard</string>
+    <string name="export_addresses_toast_private_encryption_key_copied">Private Encryption Key copied to the clipboard</string>
     
     <!-- Security Settings Activity: -->
     <string name="activity_security_title">Security Settings</string>
@@ -187,8 +230,21 @@
     <string name="security_disable_database_encryption_confirm_textView_text">Are you sure you want to disable database encryption?</string>
     <string name="security_disable_database_encryption_confirm_confirm_button_label">Confirm</string>
     <string name="security_disable_database_encryption_confirm_cancel_button_label">Cancel</string>
+    <string name="security_toast_changing_passphrase">Changing the database passphrase...</string>
+    <string name="security_toast_encrypting_database">Encrypting the database...</string>
+    <string name="security_toast_disabling_encryption">Disabling database encryption...</string>
+    <string name="security_toast_passphrases_not_match">The passphrases do not match</string>
+    <string name="security_toast_passphrase_at_least">The passphrase must be at least </string>
+    <string name="security_toast_characters_long"> characters long</string>
+    <string name="security_toast_passphrase_not_changed">You have not changed the passphrase</string>
+    <string name="security_toast_database_passphrase_set">Database encryption passphrase set successfully</string>
+    <string name="security_toast_database_passphrase_changed">Database passphrase changed</string>
+    <string name="security_toast_database_encryption_disabled">Database encryption disabled</string>
+    <string name="security_toast_error_occurred">An error occurred while attempting to set the database passphrase</string>
     
     <!-- Lock Screen Activity: -->
     <string name="lock_screen_enter_passphrase_edittext_hint">Enter passphrase</string>
+    <string name="lock_screen_toast_checking_passphrase">Checking passphrase...</string>
+    <string name="lock_screen_toast_invalid_passphrase">Invalid passphrase</string>
     
 </resources>

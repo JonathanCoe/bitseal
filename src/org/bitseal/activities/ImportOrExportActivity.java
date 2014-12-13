@@ -204,12 +204,12 @@ public class ImportOrExportActivity extends Activity implements ICacheWordSubscr
 				
 				if (importSuccessful)
 				{
-					Toast.makeText(getApplicationContext(), "Address successfully imported", Toast.LENGTH_LONG).show();
+					Toast.makeText(getApplicationContext(), R.string.import_or_export_toast_imported_successfully, Toast.LENGTH_LONG).show();
 					importAddressDialog.cancel();
 				}
 				else
 				{
-					Toast.makeText(getApplicationContext(), "The provided keys could not be imported", Toast.LENGTH_LONG).show();
+					Toast.makeText(getApplicationContext(), R.string.import_or_export_toast_import_failed, Toast.LENGTH_LONG).show();
 				}
 			}
 		});
@@ -242,7 +242,7 @@ public class ImportOrExportActivity extends Activity implements ICacheWordSubscr
 	    	   }
 	    	   else
 	    	   {
-	    		   Toast.makeText(getApplicationContext(), "The scanned QR code does not contain a valid Bitmessage private key", Toast.LENGTH_LONG).show();
+	    		   Toast.makeText(getApplicationContext(), R.string.import_or_export_toast_scanned_code_invalid, Toast.LENGTH_LONG).show();
 	    		   openImportDialog();
 	    	   }
 	       }

@@ -160,7 +160,7 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 			@Override
 			public void onClick(View v)
 			{
-				Toast.makeText(getApplicationContext(), "Background Service queued for restart", Toast.LENGTH_LONG).show();
+				Toast.makeText(getApplicationContext(), R.string.settings_toast_background_service_restart, Toast.LENGTH_LONG).show();
 				
 				// Start the BackgroundService for the first time
 				Context context = getApplicationContext();

@@ -65,7 +65,6 @@ public class AddressBookActivity extends ListActivity implements ICacheWordSubsc
     private static final String BITMESSAGE_ADDRESS_PREFIX = "BM-";
     
     private static final String ADDRESS_BOOK_FIRST_OPEN = "address_book_first_open";
-    private static final String ADDRESS_BOOK_WELCOME_MESSAGE_TOAST = "This is your address book. We've added some default entries to it.\n\nTry sending a message to one of them!";
     
     private static final int ADDRESS_BOOK_COLOURS_ALPHA_VALUE = 70;
     
@@ -143,7 +142,7 @@ public class AddressBookActivity extends ListActivity implements ICacheWordSubsc
 		
 	    for (int i = 0; i < 2; i++) // Yes, it's a hack. Come at me bro. 
 	    {
-	    	Toast.makeText(getApplicationContext(), ADDRESS_BOOK_WELCOME_MESSAGE_TOAST, Toast.LENGTH_LONG).show();
+	    	Toast.makeText(getApplicationContext(), R.string.addressBook_toast_welcome_message, Toast.LENGTH_LONG).show();
 	    }
 	}
 	
@@ -243,7 +242,7 @@ public class AddressBookActivity extends ListActivity implements ICacheWordSubsc
 				String label = newEntryDialogLabelEditText.getText().toString();
 				if (label.equals(""))
 				{
-					Toast.makeText(getApplicationContext(), "You must enter a label", Toast.LENGTH_LONG).show();
+					Toast.makeText(getApplicationContext(), R.string.addressBook_toast_must_enter_label, Toast.LENGTH_LONG).show();
 					return;
 				}
 				else
@@ -254,7 +253,7 @@ public class AddressBookActivity extends ListActivity implements ICacheWordSubsc
 				String address = newEntryDialogAddressEditText.getText().toString();
 				if (address.equals(""))
 				{
-					Toast.makeText(getApplicationContext(), "You must enter an address", Toast.LENGTH_LONG).show();
+					Toast.makeText(getApplicationContext(), R.string.addressBook_toast_must_enter_address, Toast.LENGTH_LONG).show();
 					return;
 				}
 				else
@@ -264,7 +263,7 @@ public class AddressBookActivity extends ListActivity implements ICacheWordSubsc
 					boolean addressValid = addProc.validateAddress(address);
 					if (addressValid == false)
 					{
-						Toast.makeText(getApplicationContext(), "The address entered is not a valid Bitmessage address", Toast.LENGTH_LONG).show();
+						Toast.makeText(getApplicationContext(), R.string.addressBook_toast_not_valid_address, Toast.LENGTH_LONG).show();
 						return;
 					}
 					
@@ -272,7 +271,7 @@ public class AddressBookActivity extends ListActivity implements ICacheWordSubsc
 					ArrayList<AddressBookRecord> retrievedRecords = addBookProv.searchAddressBookRecords(AddressBookRecordsTable.COLUMN_ADDRESS, address);
 					if (retrievedRecords.size() > 0)
 					{
-						Toast.makeText(getApplicationContext(), "There is already an entry in the Address Book for this address", Toast.LENGTH_LONG).show();
+						Toast.makeText(getApplicationContext(), R.string.addressBook_toast_entry_already_exists, Toast.LENGTH_LONG).show();
 						return;
 					}
 					else
@@ -373,7 +372,7 @@ public class AddressBookActivity extends ListActivity implements ICacheWordSubsc
         		}
         		else
         		{
-        			Toast.makeText(getApplicationContext(), "The scanned QR code does not contain a valid Bitmessage address", Toast.LENGTH_LONG).show();
+        			Toast.makeText(getApplicationContext(), R.string.addressBook_toast_qr_address_invalid, Toast.LENGTH_LONG).show();
         			openNewEntryDialog("");
         		}
         	} 
@@ -558,14 +557,14 @@ public class AddressBookActivity extends ListActivity implements ICacheWordSubsc
             				String label = listItemDialogLabelEditText.getText().toString();
             				if (label.equals(""))
             				{
-            					Toast.makeText(getApplicationContext(), "The label must not be blank", Toast.LENGTH_LONG).show();
+            					Toast.makeText(getApplicationContext(), R.string.addressBook_toast_blank_label, Toast.LENGTH_LONG).show();
             					return;
             				}
             				
             				String address = listItemDialogAddressEditText.getText().toString();
             				if (address.equals(""))
             				{
-            					Toast.makeText(getApplicationContext(), "The address must not be blank", Toast.LENGTH_LONG).show();
+            					Toast.makeText(getApplicationContext(), R.string.addressBook_toast_blank_address, Toast.LENGTH_LONG).show();
             					return;
             				}
             				
@@ -573,7 +572,7 @@ public class AddressBookActivity extends ListActivity implements ICacheWordSubsc
             				boolean addressValid = addProc.validateAddress(address);
             				if (addressValid == false)
             				{
-            					Toast.makeText(getApplicationContext(), "The address entered is not a valid Bitmessage address", Toast.LENGTH_LONG).show();
+            					Toast.makeText(getApplicationContext(), R.string.addressBook_toast_not_valid_address, Toast.LENGTH_LONG).show();
             					return;
             				}
             				
@@ -621,7 +620,7 @@ public class AddressBookActivity extends ListActivity implements ICacheWordSubsc
             				
             				listItemDialog.dismiss();
             				
-            				Toast.makeText(getApplicationContext(), "Address copied to the clipboard", Toast.LENGTH_LONG).show();
+            				Toast.makeText(getApplicationContext(), R.string.addressBook_toast_address_copied, Toast.LENGTH_LONG).show();
             			}
             		});
             	    
@@ -666,7 +665,7 @@ public class AddressBookActivity extends ListActivity implements ICacheWordSubsc
             				        deleteDialog.dismiss();
             						listItemDialog.dismiss();
             						
-            						Toast.makeText(getApplicationContext(), "Address book entry deleted", Toast.LENGTH_SHORT).show();
+            						Toast.makeText(getApplicationContext(), R.string.addressBook_toast_entry_deleted, Toast.LENGTH_SHORT).show();
             					}
             				});
             			    

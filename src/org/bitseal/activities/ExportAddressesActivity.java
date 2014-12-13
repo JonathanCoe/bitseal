@@ -270,7 +270,7 @@ public class ExportAddressesActivity extends ListActivity implements ICacheWordS
 						    clipboard.setPrimaryClip(clip);
 						}
 						
-						Toast.makeText(getApplicationContext(), "Address copied to the clipboard", Toast.LENGTH_LONG).show();
+						Toast.makeText(getApplicationContext(), R.string.export_addresses_toast_address_copied, Toast.LENGTH_LONG).show();
 					}
 				});
 			    
@@ -314,7 +314,7 @@ public class ExportAddressesActivity extends ListActivity implements ICacheWordS
 						    clipboard.setPrimaryClip(clip);
 						}
 						
-						Toast.makeText(getApplicationContext(), "Private Signing Key copied to the clipboard", Toast.LENGTH_LONG).show();
+						Toast.makeText(getApplicationContext(), R.string.export_addresses_toast_private_signing_key_copied, Toast.LENGTH_LONG).show();
 					}
 				});
 			    
@@ -358,7 +358,7 @@ public class ExportAddressesActivity extends ListActivity implements ICacheWordS
 						    clipboard.setPrimaryClip(clip);
 						}
 						
-						Toast.makeText(getApplicationContext(), "Private Encryption Key copied to the clipboard", Toast.LENGTH_LONG).show();
+						Toast.makeText(getApplicationContext(), R.string.export_addresses_toast_private_encryption_key_copied, Toast.LENGTH_LONG).show();
 					}
 				});
 			}
