@@ -109,7 +109,7 @@
     <string name="identities_second_delete_dialog_confirm_button_label">Yes, delete this address</string>
     <string name="identities_second_delete_dialog_cancel_button_label">No, do not delete this address</string>
     <string name="identities_toast_welcome_message">Here is your new Bitmessage address!\n\nGive it to your friends so they can send you a message.</string>
-    <string name="identities_toast_generating_address">Generating a new Bitmessage address...</string>
+    <string name="identities_toast_generating_address">Generating a new Bitmessage address&#8230;</string>
     <string name="identities_toast_blank_label">The label must not be blank</string>
     <string name="identities_toast_address_copied">Address copied to the clipboard</string>
     <string name="identities_toast_address_deleted">Address deleted</string>
@@ -230,9 +230,9 @@
     <string name="security_disable_database_encryption_confirm_textView_text">Are you sure you want to disable database encryption?</string>
     <string name="security_disable_database_encryption_confirm_confirm_button_label">Confirm</string>
     <string name="security_disable_database_encryption_confirm_cancel_button_label">Cancel</string>
-    <string name="security_toast_changing_passphrase">Changing the database passphrase...</string>
-    <string name="security_toast_encrypting_database">Encrypting the database...</string>
-    <string name="security_toast_disabling_encryption">Disabling database encryption...</string>
+    <string name="security_toast_changing_passphrase">Changing the database passphrase&#8230;</string>
+    <string name="security_toast_encrypting_database">Encrypting the database&#8230;</string>
+    <string name="security_toast_disabling_encryption">Disabling database encryption&#8230;</string>
     <string name="security_toast_passphrases_not_match">The passphrases do not match</string>
     <string name="security_toast_passphrase_at_least">The passphrase must be at least </string>
     <string name="security_toast_characters_long"> characters long</string>
