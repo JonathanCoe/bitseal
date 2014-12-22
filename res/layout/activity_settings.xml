@@ -1,79 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout 
+<ScrollView 
   xmlns:android="http://schemas.android.com/apk/res/android"
-  android:layout_width="match_parent"
+  android:id="@+id/settings_scrollView"
+  android:layout_width="fill_parent"
   android:layout_height="wrap_content"
-  android:orientation="vertical"
   >
-    
-	  <Button 
-	    android:id="@+id/settings_security_settings_button"
-	    android:textSize="20sp"
-	    android:layout_width="match_parent"
-	    android:layout_height="50dp"
-	    android:layout_marginTop="20dp"
-	    android:layout_marginBottom="20dp"
-	    android:layout_marginLeft="16dp"
-	    android:layout_marginRight="16dp"
-	    android:hint="@string/settings_security_settings_button_label"
-	    />
-      
-	  <Button 
-	    android:id="@+id/settings_server_settings_button"
-	    android:textSize="20sp"
-	    android:layout_width="match_parent"
-	    android:layout_height="50dp"
-	    android:layout_marginTop="20dp"
-	    android:layout_marginBottom="20dp"
-	    android:layout_marginLeft="16dp"
-	    android:layout_marginRight="16dp"
-	    android:hint="@string/settings_server_settings_button_label"
-	    />
-	  
-	  <Button 
-	    android:id="@+id/settings_import_or_export_button"
-	    android:textSize="20sp"
-	    android:layout_width="match_parent"
-	    android:layout_height="50dp"
-	    android:layout_marginTop="20dp"
-	    android:layout_marginBottom="20dp"
-	    android:layout_marginLeft="16dp"
-	    android:layout_marginRight="16dp"
-	    android:hint="@string/settings_import_or_export_button_label"
-	    />
-	  
-	  <Button 
-	    android:id="@+id/settings_restart_background_service_button"
-	    android:textSize="20sp"
-	    android:layout_width="match_parent"
-	    android:layout_height="50dp"
-	    android:layout_marginTop="20dp"
-	    android:layout_marginBottom="20dp"
-	    android:layout_marginLeft="16dp"
-	    android:layout_marginRight="16dp"
-	    android:hint="@string/settings_restart_background_service_button_label"
-	    />
-	  
-	  <TextView
-	    android:id="@+id/settings_time_behind_network_textview"
-	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:layout_marginTop="25dp"
-	    android:layout_marginBottom="10dp"
-	    android:layout_marginLeft="16dp"
-	    android:layout_marginRight="16dp"
-	    android:gravity="center_horizontal"
-	    android:textStyle="bold"
-	    />
 
-	  <CheckBox
-	    android:id="@+id/settings_show_settings_checkbox"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:layout_marginTop="10dp"
-	    android:layout_marginLeft="6dp"
-	    android:text="@string/settings_show_settings_textbox_label" 
-	    />
-	  
-</LinearLayout>
+	<LinearLayout
+	  android:layout_width="fill_parent"
+	  android:layout_height="wrap_content"
+	  android:orientation="vertical"
+	  >
+	    
+		  <Button 
+		    android:id="@+id/settings_security_settings_button"
+		    android:textSize="20sp"
+		    android:layout_width="match_parent"
+		    android:layout_height="50dp"
+		    android:layout_marginTop="20dp"
+		    android:layout_marginBottom="20dp"
+		    android:layout_marginLeft="16dp"
+		    android:layout_marginRight="16dp"
+		    android:hint="@string/settings_security_settings_button_label"
+		    />
+	      
+		  <Button 
+		    android:id="@+id/settings_server_settings_button"
+		    android:textSize="20sp"
+		    android:layout_width="match_parent"
+		    android:layout_height="50dp"
+		    android:layout_marginTop="20dp"
+		    android:layout_marginBottom="20dp"
+		    android:layout_marginLeft="16dp"
+		    android:layout_marginRight="16dp"
+		    android:hint="@string/settings_server_settings_button_label"
+		    />
+		  
+		  <Button 
+		    android:id="@+id/settings_import_or_export_button"
+		    android:textSize="20sp"
+		    android:layout_width="match_parent"
+		    android:layout_height="50dp"
+		    android:layout_marginTop="20dp"
+		    android:layout_marginBottom="20dp"
+		    android:layout_marginLeft="16dp"
+		    android:layout_marginRight="16dp"
+		    android:hint="@string/settings_import_or_export_button_label"
+		    />
+		  
+		  <Button 
+		    android:id="@+id/settings_restart_background_service_button"
+		    android:textSize="20sp"
+		    android:layout_width="match_parent"
+		    android:layout_height="50dp"
+		    android:layout_marginTop="20dp"
+		    android:layout_marginBottom="20dp"
+		    android:layout_marginLeft="16dp"
+		    android:layout_marginRight="16dp"
+		    android:hint="@string/settings_restart_background_service_button_label"
+		    />
+		  
+		  <TextView
+		    android:id="@+id/settings_time_behind_network_textview"
+		    android:layout_width="match_parent"
+		    android:layout_height="wrap_content"
+		    android:layout_marginTop="25dp"
+		    android:layout_marginBottom="10dp"
+		    android:layout_marginLeft="16dp"
+		    android:layout_marginRight="16dp"
+		    android:gravity="center_horizontal"
+		    android:textStyle="bold"
+		    />
+	
+		  <CheckBox
+		    android:id="@+id/settings_show_settings_checkbox"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:layout_marginTop="10dp"
+		    android:layout_marginLeft="6dp"
+		    android:text="@string/settings_show_settings_textbox_label" 
+		    />
+		  
+	</LinearLayout>
+
+</ScrollView>

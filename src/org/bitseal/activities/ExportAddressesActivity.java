@@ -35,6 +35,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -134,13 +135,14 @@ public class ExportAddressesActivity extends ListActivity implements ICacheWordS
 				
 		        // Open a dialog to enter the data for the selected address
 				final Dialog listItemDialog = new Dialog(ExportAddressesActivity.this);
-				LinearLayout dialogLayout = (LinearLayout) View.inflate(ExportAddressesActivity.this, R.layout.dialog_export_addresses_list_item_options, null);
+				ScrollView dialogLayout = (ScrollView) View.inflate(ExportAddressesActivity.this, R.layout.dialog_export_addresses_list_item_options, null);
 				listItemDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 				listItemDialog.setContentView(dialogLayout);
 				
 				WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
 			    lp.copyFrom(listItemDialog.getWindow().getAttributes());
 			    lp.width = WindowManager.LayoutParams.MATCH_PARENT;
+			    lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
 				
 			    listItemDialog.show();
 			    listItemDialog.getWindow().setAttributes(lp);

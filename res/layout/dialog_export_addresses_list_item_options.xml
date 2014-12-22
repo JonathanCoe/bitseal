@@ -1,221 +1,231 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout 
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  android:layout_width="150dp"
-  android:layout_height="match_parent"
-  android:orientation="vertical"
-  android:background="@android:color/white" >
-    
-  <TextView
-    android:id="@+id/export_addresses_dialog_label_textview"
-    android:layout_width="fill_parent"
-    android:layout_height="20dp"
-    android:layout_marginTop="2dp"
-    android:layout_marginBottom="0dp"
-    android:layout_marginLeft="5dp"
-    android:layout_marginRight="5dp"
-    android:textIsSelectable="true"
-    android:textSize="16sp"
-    android:textStyle="bold"
-    android:text="@string/export_addresses_dialog_label_title"
-    />
-    
-  <EditText
-    android:id="@+id/export_addresses_dialog_label_edittext"
-    android:layout_width="fill_parent"
-    android:layout_height="30dp"
-    android:layout_marginTop="2dp"
-    android:layout_marginBottom="15dp"
-    android:layout_marginLeft="0dp"
-    android:layout_marginRight="0dp"
-    android:textIsSelectable="true"
-    android:textSize="14sp"
-    android:inputType="text"
-    />
-  
-  <TextView
-    android:id="@+id/export_addresses_dialog_address_textview"
-    android:layout_width="fill_parent"
-    android:layout_height="20dp"
-    android:layout_marginTop="2dp"
-    android:layout_marginBottom="0dp"
-    android:layout_marginLeft="5dp"
-    android:layout_marginRight="5dp"
-    android:textIsSelectable="true"
-    android:textSize="16sp"
-    android:textStyle="bold"
-    android:text="@string/export_addresses_dialog_address_title" 
-    />
-  
-  <EditText
-    android:id="@+id/export_addresses_dialog_address_edittext"
-    android:layout_width="fill_parent"
-    android:layout_height="30dp"
-    android:layout_marginTop="0dp"
-    android:layout_marginBottom="0dp"
-    android:layout_marginLeft="0dp"
-    android:layout_marginRight="0dp"
-    android:textIsSelectable="true"
-    android:textSize="12sp"
-    android:inputType="text"
-    />
-  
-    <LinearLayout 
- 	  android:layout_width="match_parent"
- 	  android:layout_height="wrap_content"
-	  android:orientation="horizontal"
- 	  >
-  	  
-  	  <Button 
-	    android:id="@+id/export_addresses_dialog_address_show_qr_code_button"
-	    android:layout_width="wrap_content"
-	    android:layout_height="40dp"
-	    android:layout_weight="1"
-	    android:layout_marginTop="0dp"
-	    android:layout_marginBottom="8dp"
-	    android:layout_marginLeft="2dp"
-	    android:layout_marginRight="2dp"
-	    android:textSize="14sp"
-	    android:hint="@string/export_addresses_dialog_address_show_qr_code_button_label"
-	    />
-  
-	  <Button 
-	    android:id="@+id/export_addresses_address_copy_button"
-	    android:layout_width="wrap_content"
-	    android:layout_height="40dp"
-	    android:layout_weight="1"
-	    android:layout_marginTop="0dp"
-	    android:layout_marginBottom="8dp"
-	    android:layout_marginLeft="2dp"
-	    android:layout_marginRight="2dp"
-	    android:textSize="14sp"
-	    android:hint="@string/export_addresses_dialog_address_copy_button_label"
-	    />
-	    
-	</LinearLayout>
-  
-  <TextView
-    android:id="@+id/export_addresses_dialog_private_signing_key_textview"
-    android:layout_width="fill_parent"
-    android:layout_height="20dp"
-    android:layout_marginTop="15dp"
-    android:layout_marginBottom="0dp"
-    android:layout_marginLeft="5dp"
-    android:layout_marginRight="5dp"
-    android:textIsSelectable="true"
-    android:textSize="16sp"
-    android:textStyle="bold"
-    android:text="@string/export_addresses_dialog_private_signing_key_label"
-    />
-    
-  <EditText
-    android:id="@+id/export_addresses_dialog_private_signing_key_edittext"
-    android:layout_width="fill_parent"
-    android:layout_height="43dp"
-    android:layout_marginTop="2dp"
-    android:layout_marginBottom="0dp"
-    android:layout_marginLeft="0dp"
-    android:layout_marginRight="0dp"
-    android:textIsSelectable="true"
-    android:textSize="10.5sp"
-    android:minLines="2"
-    android:inputType="textMultiLine"
-    />
-  
-    <LinearLayout 
- 	  android:layout_width="match_parent"
- 	  android:layout_height="wrap_content"
-	  android:orientation="horizontal"
- 	  >
-  	  
-  	  <Button 
-	    android:id="@+id/export_addresses_dialog_private_signing_key_show_qr_code_button"
-	    android:layout_width="wrap_content"
-	    android:layout_height="40dp"
-	    android:layout_weight="1"
-	    android:layout_marginTop="0dp"
-	    android:layout_marginBottom="8dp"
-	    android:layout_marginLeft="2dp"
-	    android:layout_marginRight="2dp"
-	    android:textSize="14sp"
-	    android:hint="@string/export_addresses_dialog_private_signing_key_show_qr_code_button_label"
-	    />
-  
-	  <Button 
-	    android:id="@+id/export_addresses_private_signing_key_copy_button"
-	    android:layout_width="wrap_content"
-	    android:layout_height="40dp"
-	    android:layout_weight="1"
-	    android:layout_marginTop="0dp"
-	    android:layout_marginBottom="8dp"
-	    android:layout_marginLeft="2dp"
-	    android:layout_marginRight="2dp"
-	    android:textSize="14sp"
-	    android:hint="@string/export_addresses_dialog_private_signing_key_copy_button_label"
-	    />
-	    
-	</LinearLayout>
-  
-  <TextView
-    android:id="@+id/export_addresses_dialog_private_encryption_key_textview"
-    android:layout_width="fill_parent"
-    android:layout_height="20dp"
-    android:layout_marginTop="15dp"
-    android:layout_marginBottom="0dp"
-    android:layout_marginLeft="5dp"
-    android:layout_marginRight="5dp"
-    android:textIsSelectable="true"
-    android:textSize="16sp"
-    android:textStyle="bold"
-    android:text="@string/export_addresses_dialog_private_encryption_key_label_title"
-    />
-    
-  <EditText
-    android:id="@+id/export_addresses_dialog_private_encryption_key_edittext"
-    android:layout_width="fill_parent"
-    android:layout_height="43dp"
-    android:layout_marginTop="2dp"
-    android:layout_marginBottom="0dp"
-    android:layout_marginLeft="0dp"
-    android:layout_marginRight="0dp"
-    android:textIsSelectable="true"
-    android:textSize="10.5sp"
-    android:minLines="2"
-    android:inputType="textMultiLine"
-    />
-  
-  	<LinearLayout 
- 	  android:layout_width="match_parent"
- 	  android:layout_height="wrap_content"
-	  android:orientation="horizontal"
- 	  >
-  	  
-  	  <Button 
-	    android:id="@+id/export_addresses_dialog_private_encryption_key_show_qr_code_button"
-	    android:layout_width="wrap_content"
-	    android:layout_height="40dp"
-	    android:layout_weight="1"
-	    android:layout_marginTop="0dp"
-	    android:layout_marginBottom="8dp"
-	    android:layout_marginLeft="2dp"
-	    android:layout_marginRight="2dp"
-	    android:textSize="14sp"
-	    android:hint="@string/export_addresses_dialog_private_encryption_key_show_qr_code_button_label"
-	    />
-  
-	  <Button 
-	    android:id="@+id/export_addresses_dialog_private_encryption_key_copy_button"
-	    android:layout_width="wrap_content"
-	    android:layout_height="40dp"
-	    android:layout_weight="1"
-	    android:layout_marginTop="0dp"
-	    android:layout_marginBottom="8dp"
-	    android:layout_marginLeft="2dp"
-	    android:layout_marginRight="2dp"
-	    android:textSize="14sp"
-	    android:hint="@string/export_addresses_dialog_private_encryption_key_copy_button_label"
-	    />
-	    
-	</LinearLayout>
 
-</LinearLayout>
+<ScrollView 
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/export_addresses_dialog_scrollView"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent"
+  >
+ 
+	<LinearLayout 
+	  android:layout_width="fill_parent"
+	  android:layout_height="wrap_content"
+	  android:orientation="vertical"
+	  android:background="@android:color/white"
+	  >
+	    
+	  <TextView
+	    android:id="@+id/export_addresses_dialog_label_textview"
+	    android:layout_width="fill_parent"
+	    android:layout_height="20dp"
+	    android:layout_marginTop="2dp"
+	    android:layout_marginBottom="0dp"
+	    android:layout_marginLeft="5dp"
+	    android:layout_marginRight="5dp"
+	    android:textIsSelectable="true"
+	    android:textSize="16sp"
+	    android:textStyle="bold"
+	    android:text="@string/export_addresses_dialog_label_title"
+	    />
+	    
+	  <EditText
+	    android:id="@+id/export_addresses_dialog_label_edittext"
+	    android:layout_width="fill_parent"
+	    android:layout_height="30dp"
+	    android:layout_marginTop="2dp"
+	    android:layout_marginBottom="15dp"
+	    android:layout_marginLeft="0dp"
+	    android:layout_marginRight="0dp"
+	    android:textIsSelectable="true"
+	    android:textSize="14sp"
+	    android:inputType="text"
+	    />
+	  
+	  <TextView
+	    android:id="@+id/export_addresses_dialog_address_textview"
+	    android:layout_width="fill_parent"
+	    android:layout_height="20dp"
+	    android:layout_marginTop="2dp"
+	    android:layout_marginBottom="0dp"
+	    android:layout_marginLeft="5dp"
+	    android:layout_marginRight="5dp"
+	    android:textIsSelectable="true"
+	    android:textSize="16sp"
+	    android:textStyle="bold"
+	    android:text="@string/export_addresses_dialog_address_title" 
+	    />
+	  
+	  <EditText
+	    android:id="@+id/export_addresses_dialog_address_edittext"
+	    android:layout_width="fill_parent"
+	    android:layout_height="30dp"
+	    android:layout_marginTop="0dp"
+	    android:layout_marginBottom="0dp"
+	    android:layout_marginLeft="0dp"
+	    android:layout_marginRight="0dp"
+	    android:textIsSelectable="true"
+	    android:textSize="12sp"
+	    android:inputType="text"
+	    />
+	  
+	    <LinearLayout 
+	 	  android:layout_width="match_parent"
+	 	  android:layout_height="wrap_content"
+		  android:orientation="horizontal"
+	 	  >
+	  	  
+	  	  <Button 
+		    android:id="@+id/export_addresses_dialog_address_show_qr_code_button"
+		    android:layout_width="wrap_content"
+		    android:layout_height="40dp"
+		    android:layout_weight="1"
+		    android:layout_marginTop="0dp"
+		    android:layout_marginBottom="8dp"
+		    android:layout_marginLeft="2dp"
+		    android:layout_marginRight="2dp"
+		    android:textSize="14sp"
+		    android:hint="@string/export_addresses_dialog_address_show_qr_code_button_label"
+		    />
+	  
+		  <Button 
+		    android:id="@+id/export_addresses_address_copy_button"
+		    android:layout_width="wrap_content"
+		    android:layout_height="40dp"
+		    android:layout_weight="1"
+		    android:layout_marginTop="0dp"
+		    android:layout_marginBottom="8dp"
+		    android:layout_marginLeft="2dp"
+		    android:layout_marginRight="2dp"
+		    android:textSize="14sp"
+		    android:hint="@string/export_addresses_dialog_address_copy_button_label"
+		    />
+		    
+		</LinearLayout>
+	  
+	  <TextView
+	    android:id="@+id/export_addresses_dialog_private_signing_key_textview"
+	    android:layout_width="fill_parent"
+	    android:layout_height="20dp"
+	    android:layout_marginTop="15dp"
+	    android:layout_marginBottom="0dp"
+	    android:layout_marginLeft="5dp"
+	    android:layout_marginRight="5dp"
+	    android:textIsSelectable="true"
+	    android:textSize="16sp"
+	    android:textStyle="bold"
+	    android:text="@string/export_addresses_dialog_private_signing_key_label"
+	    />
+	    
+	  <EditText
+	    android:id="@+id/export_addresses_dialog_private_signing_key_edittext"
+	    android:layout_width="fill_parent"
+	    android:layout_height="43dp"
+	    android:layout_marginTop="2dp"
+	    android:layout_marginBottom="0dp"
+	    android:layout_marginLeft="0dp"
+	    android:layout_marginRight="0dp"
+	    android:textIsSelectable="true"
+	    android:textSize="10.5sp"
+	    android:minLines="2"
+	    android:inputType="textMultiLine"
+	    />
+	  
+	    <LinearLayout 
+	 	  android:layout_width="match_parent"
+	 	  android:layout_height="wrap_content"
+		  android:orientation="horizontal"
+	 	  >
+	  	  
+	  	  <Button 
+		    android:id="@+id/export_addresses_dialog_private_signing_key_show_qr_code_button"
+		    android:layout_width="wrap_content"
+		    android:layout_height="40dp"
+		    android:layout_weight="1"
+		    android:layout_marginTop="0dp"
+		    android:layout_marginBottom="8dp"
+		    android:layout_marginLeft="2dp"
+		    android:layout_marginRight="2dp"
+		    android:textSize="14sp"
+		    android:hint="@string/export_addresses_dialog_private_signing_key_show_qr_code_button_label"
+		    />
+	  
+		  <Button 
+		    android:id="@+id/export_addresses_private_signing_key_copy_button"
+		    android:layout_width="wrap_content"
+		    android:layout_height="40dp"
+		    android:layout_weight="1"
+		    android:layout_marginTop="0dp"
+		    android:layout_marginBottom="8dp"
+		    android:layout_marginLeft="2dp"
+		    android:layout_marginRight="2dp"
+		    android:textSize="14sp"
+		    android:hint="@string/export_addresses_dialog_private_signing_key_copy_button_label"
+		    />
+		    
+		</LinearLayout>
+	  
+	  <TextView
+	    android:id="@+id/export_addresses_dialog_private_encryption_key_textview"
+	    android:layout_width="fill_parent"
+	    android:layout_height="20dp"
+	    android:layout_marginTop="15dp"
+	    android:layout_marginBottom="0dp"
+	    android:layout_marginLeft="5dp"
+	    android:layout_marginRight="5dp"
+	    android:textIsSelectable="true"
+	    android:textSize="16sp"
+	    android:textStyle="bold"
+	    android:text="@string/export_addresses_dialog_private_encryption_key_label_title"
+	    />
+	    
+	  <EditText
+	    android:id="@+id/export_addresses_dialog_private_encryption_key_edittext"
+	    android:layout_width="fill_parent"
+	    android:layout_height="43dp"
+	    android:layout_marginTop="2dp"
+	    android:layout_marginBottom="0dp"
+	    android:layout_marginLeft="0dp"
+	    android:layout_marginRight="0dp"
+	    android:textIsSelectable="true"
+	    android:textSize="10.5sp"
+	    android:minLines="2"
+	    android:inputType="textMultiLine"
+	    />
+	  
+	  	<LinearLayout 
+	 	  android:layout_width="match_parent"
+	 	  android:layout_height="wrap_content"
+		  android:orientation="horizontal"
+	 	  >
+	  	  
+	  	  <Button 
+		    android:id="@+id/export_addresses_dialog_private_encryption_key_show_qr_code_button"
+		    android:layout_width="wrap_content"
+		    android:layout_height="40dp"
+		    android:layout_weight="1"
+		    android:layout_marginTop="0dp"
+		    android:layout_marginBottom="8dp"
+		    android:layout_marginLeft="2dp"
+		    android:layout_marginRight="2dp"
+		    android:textSize="14sp"
+		    android:hint="@string/export_addresses_dialog_private_encryption_key_show_qr_code_button_label"
+		    />
+	  
+		  <Button 
+		    android:id="@+id/export_addresses_dialog_private_encryption_key_copy_button"
+		    android:layout_width="wrap_content"
+		    android:layout_height="40dp"
+		    android:layout_weight="1"
+		    android:layout_marginTop="0dp"
+		    android:layout_marginBottom="8dp"
+		    android:layout_marginLeft="2dp"
+		    android:layout_marginRight="2dp"
+		    android:textSize="14sp"
+		    android:hint="@string/export_addresses_dialog_private_encryption_key_copy_button_label"
+		    />
+		    
+		</LinearLayout>
+	
+	</LinearLayout>
+	
+</ScrollView>

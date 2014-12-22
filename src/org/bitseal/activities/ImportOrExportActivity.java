@@ -25,7 +25,7 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.Toast;
 
 import com.google.zxing.integration.android.IntentIntegrator;
@@ -98,13 +98,14 @@ public class ImportOrExportActivity extends Activity implements ICacheWordSubscr
 	{
 		// Open the import dialog
 		final Dialog importAddressDialog = new Dialog(ImportOrExportActivity.this);
-		LinearLayout dialogLayout = (LinearLayout) View.inflate(ImportOrExportActivity.this, R.layout.dialog_import_address, null);
+		ScrollView dialogLayout = (ScrollView) View.inflate(ImportOrExportActivity.this, R.layout.dialog_import_address, null);
 		importAddressDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		importAddressDialog.setContentView(dialogLayout);
 		
 		WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
 	    lp.copyFrom(importAddressDialog.getWindow().getAttributes());
 	    lp.width = WindowManager.LayoutParams.MATCH_PARENT;
+	    lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
 		
 	    importAddressDialog.show();
 	    importAddressDialog.getWindow().setAttributes(lp);
