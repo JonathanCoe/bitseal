@@ -71,7 +71,7 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 	 * by us). <br><br>
 	 * 
 	 * If we create and send out an object using a low time to live and the first attempt is 
-	 * not successful (e.g. we do not receive an acknowledgment for a sent msg) then we can 
+	 * not successful (e.g. we do not receive an acknowledgement for a sent msg) then we can 
 	 * re-create and re-send the object with a longer time to live. That time to live is 
 	 * determined by this constant.  
 	 */
@@ -367,8 +367,8 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 						}
 						else
 						{
-							// Create a new QueueRecord for re-sending this msg in the event that we do not receive an acknowledgment for it
-							// before its time to live expires. If we do receive the acknowledgment before then, this QueueRecord will be deleted
+							// Create a new QueueRecord for re-sending this msg in the event that we do not receive an acknowledgement for it
+							// before its time to live expires. If we do receive the acknowledgement before then, this QueueRecord will be deleted
 							currentTime = System.currentTimeMillis() / 1000;
 							queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, currentTime + SUBSEQUENT_ATTEMPTS_TTL, q.getRecordCount() + 1, messageToSend, null, null);
 							
