@@ -201,8 +201,8 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 				QueueRecordProcessor queueProc = new QueueRecordProcessor();
 				QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, 0, 0, messageToSend, null, null);
 				
-				// Also create a new QueueRecord for re-sending this msg in the event that we do not receive an acknowledgment for it
-				// before its time to live expires. If we do receive the acknowledgment before then, this QueueRecord will be deleted
+				// Also create a new QueueRecord for re-sending this msg in the event that we do not receive an acknowledgement for it
+				// before its time to live expires. If we do receive the acknowledgement before then, this QueueRecord will be deleted
 				long currentTime = System.currentTimeMillis() / 1000;
 				queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, currentTime + FIRST_ATTEMPT_TTL, 1, messageToSend, null, null);
 				
