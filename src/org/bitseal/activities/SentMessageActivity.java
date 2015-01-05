@@ -21,6 +21,7 @@ import org.bitseal.database.MessagesTable;
 import org.bitseal.database.PayloadProvider;
 import org.bitseal.database.QueueRecordProvider;
 import org.bitseal.database.QueueRecordsTable;
+import org.bitseal.services.DatabaseLockHandler;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -377,21 +378,8 @@ public class SentMessageActivity extends Activity implements ICacheWordSubscribe
  		        break;
  		        
  		    case R.id.menu_item_lock:
- 		    	// Lock the database
- 		    	mCacheWordHandler.lock();
- 		    	
- 		    	// Open the lock screen activity
- 		        Intent intent = new Intent(getBaseContext(), LockScreenActivity.class);
- 		        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
- 		        {
- 		        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
- 		        }
- 		        else
- 		        {
- 		        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
- 		        }
- 		        startActivity(intent);
- 		        break;
+		    	DatabaseLockHandler.runLockRoutine(mCacheWordHandler);
+		        break;
  		        
  		    default:
  		        return super.onOptionsItemSelected(item);

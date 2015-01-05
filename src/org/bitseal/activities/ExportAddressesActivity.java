@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import org.bitseal.R;
 import org.bitseal.data.Address;
 import org.bitseal.database.AddressProvider;
+import org.bitseal.services.DatabaseLockHandler;
 import org.bitseal.util.ColourCalculator;
 
 import android.annotation.SuppressLint;
@@ -488,21 +489,8 @@ public class ExportAddressesActivity extends ListActivity implements ICacheWordS
   		        break;
   		        
   		    case R.id.menu_item_lock:
-  		    	// Lock the database
-  		    	mCacheWordHandler.lock();
-  		    	
-  		    	// Open the lock screen activity
-  		        Intent intent = new Intent(getBaseContext(), LockScreenActivity.class);
-  		        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) // FLAG_ACTIVITY_CLEAR_TASK only exists in API 11 and later 
-  		        {
-  		        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);// Clear the stack of activities
-  		        }
-  		        else
-  		        {
-  		        	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-  		        }
-  		        startActivity(intent);
-  		        break;
+		    	DatabaseLockHandler.runLockRoutine(mCacheWordHandler);
+		        break;
   		        
   		    default:
   		        return super.onOptionsItemSelected(item);
