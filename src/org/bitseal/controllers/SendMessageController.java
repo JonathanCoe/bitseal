@@ -1,5 +1,6 @@
 package org.bitseal.controllers;
 
+import org.bitseal.R;
 import org.bitseal.core.App;
 import org.bitseal.core.OutgoingGetpubkeyProcessor;
 import org.bitseal.core.OutgoingMessageProcessor;
@@ -39,7 +40,7 @@ public class SendMessageController
 	 */
 	public Object retrievePubkey(Message message, Payload getpubkeyPayload, long timeToLive)
 	{
-		MessageStatusHandler.updateMessageStatus(message, Message.STATUS_REQUESTING_PUBKEY);
+		MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_requesting_pubkey));
 		
 		try
 		{
@@ -72,12 +73,12 @@ public class SendMessageController
 				if (NetworkHelper.checkInternetAvailability() == true)
 				{
 					// Disseminate the getpubkey Payload that we created earlier
-					MessageStatusHandler.updateMessageStatus(message, Message.STATUS_REQUESTING_PUBKEY);
+					MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_requesting_pubkey));
 					new OutgoingGetpubkeyProcessor().disseminateGetpubkeyRequest(getpubkeyPayload);
 				}
 				else
 				{
-					MessageStatusHandler.updateMessageStatus(message, Message.STATUS_WAITING_FOR_CONNECTION);
+					MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_waiting_for_connection));
 				}
 				return getpubkeyPayload;
 			}

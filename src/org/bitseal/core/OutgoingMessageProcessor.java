@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 
+import org.bitseal.R;
 import org.bitseal.crypt.CryptProcessor;
 import org.bitseal.crypt.KeyConverter;
 import org.bitseal.crypt.PubkeyGenerator;
@@ -273,7 +274,7 @@ public class OutgoingMessageProcessor
 		// Construct the payload to be encrypted
 		byte[] msgDataForEncryption = constructMsgPayloadForEncryption(unencMsg);
 		
-		MessageStatusHandler.updateMessageStatus(message, Message.STATUS_ENCRYPTING_MESSAGE);
+		MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_encrypting_message));
 		
 		// Encrypt the payload
 		CryptProcessor cryptProc = new CryptProcessor();
@@ -290,7 +291,7 @@ public class OutgoingMessageProcessor
 		
 		if (doPOW == true)
 		{
-			MessageStatusHandler.updateMessageStatus(message, Message.STATUS_DOING_POW);
+			MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_doing_pow));
 			
 			// Do proof of work for the Msg object
 			Log.i(TAG, "About to do POW calculations for a msg that we are sending");
@@ -427,7 +428,7 @@ public class OutgoingMessageProcessor
 		byte[] payload = new byte[0];
 		if (doPOW == true)
 		{
-			MessageStatusHandler.updateMessageStatus(message, Message.STATUS_DOING_ACK_POW);
+			MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_doing_ack_pow));
 			
 			// Do proof of work for the acknowledgement payload
 			Log.i(TAG, "About to do POW calculations for the acknowledgment payload of a msg that we are sending");

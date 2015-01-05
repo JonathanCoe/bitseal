@@ -352,7 +352,7 @@ public class ComposeActivity extends Activity implements ICacheWordSubscriber
 			messageToSend.setFromAddress(fromAddress);
 			messageToSend.setSubject(subject);
 			messageToSend.setBody(body);
-			messageToSend.setStatus(Message.STATUS_REQUESTING_PUBKEY);
+			messageToSend.setStatus(getBaseContext().getString(R.string.message_status_preparing_to_send));
 			
 			// Save the Message to the database
 			MessageProvider msgProv = MessageProvider.get(getApplicationContext());

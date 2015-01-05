@@ -21,6 +21,20 @@
     <string name="menu_item_label_addressBook">Address Book</string>
     <string name="menu_item_label_settings">Settings</string>
     <string name="menu_item_label_lock">Lock</string>
+    
+    <!-- Message Status Strings: -->
+    <string name="message_status_preparing_to_send">Preparing to send message</string>
+    <string name="message_status_requesting_pubkey">Retrieving encryption keys</string>
+    <string name="message_status_constructing_payload">Constructing message payload</string>
+    <string name="message_status_doing_ack_pow">Doing proof of work for the acknowledgement</string>
+    <string name="message_status_encrypting_message">Encrypting the message</string>
+    <string name="message_status_doing_pow">Doing proof of work for the message</string>
+    <string name="message_status_sending_message">Sending message</string>
+    <string name="message_status_waiting_for_connection">Waiting for internet connection</string>
+    <string name="message_status_message_sent">Message sent, waiting for acknowledgment</string>
+    <string name="message_status_message_sent_no_ack_expected">Message sent, no acknowledgment expected</string>
+    <string name="message_status_ack_received">Acknowledgment received</string>
+    <string name="message_status_sending_failed">Failed to send the message</string>
 
     <!-- Inbox Activity: -->
     <string name="inbox_activity_title">Inbox</string>
@@ -246,5 +260,5 @@
     <string name="lock_screen_enter_passphrase_edittext_hint">Enter passphrase</string>
     <string name="lock_screen_toast_checking_passphrase">Checking passphrase...</string>
     <string name="lock_screen_toast_invalid_passphrase">Invalid passphrase</string>
-    
+        
 </resources>

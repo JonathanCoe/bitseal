@@ -23,19 +23,6 @@ public class Message implements Comparable<Message>
 	private String subject;
 	private String body;
 	
-	// Status messages
-	public static final String STATUS_REQUESTING_PUBKEY = "Retrieving encryption keys";
-	public static final String STATUS_CONSTRUCTING_PAYLOAD = "Constructing message payload";
-	public static final String STATUS_DOING_ACK_POW = "Doing proof of work for the acknowledgement";
-	public static final String STATUS_ENCRYPTING_MESSAGE = "Encrypting the message";
-	public static final String STATUS_DOING_POW = "Doing proof of work for the message";
-	public static final String STATUS_SENDING_MESSAGE = "Sending message";
-	public static final String STATUS_WAITING_FOR_CONNECTION = "Waiting for internet connection";
-	public static final String STATUS_MSG_SENT = "Message sent, waiting for acknowledgment";
-	public static final String STATUS_MSG_SENT_NO_ACK_EXPECTED = "Message sent, no acknowledgment expected";
-	public static final String STATUS_ACK_RECEIVED = "Acknowledgment received";
-	public static final String STATUS_SENDING_FAILED = "Failed to send the message";
-	
 	public Message()
 	{
 		read = false; // The default value for the "read" field should be false

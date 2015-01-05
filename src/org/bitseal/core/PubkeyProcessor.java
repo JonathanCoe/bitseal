@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import org.bitseal.R;
 import org.bitseal.crypt.AddressGenerator;
 import org.bitseal.crypt.CryptProcessor;
 import org.bitseal.crypt.KeyConverter;
@@ -146,7 +147,7 @@ public class PubkeyProcessor
 			}
 			else
 			{
-				MessageStatusHandler.updateMessageStatus(message, Message.STATUS_WAITING_FOR_CONNECTION);
+				MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_waiting_for_connection));
 				throw new RuntimeException("Unable to retrieve the pubkey because no internet connection is available");
 			}
 		}

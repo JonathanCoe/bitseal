@@ -3,6 +3,7 @@ package org.bitseal.core;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.bitseal.R;
 import org.bitseal.crypt.AddressGenerator;
 import org.bitseal.crypt.CryptProcessor;
 import org.bitseal.crypt.KeyConverter;
@@ -24,6 +25,7 @@ import org.bitseal.database.PubkeyProvider;
 import org.bitseal.database.PubkeysTable;
 import org.bitseal.database.QueueRecordProvider;
 import org.bitseal.database.QueueRecordsTable;
+import org.bitseal.services.MessageStatusHandler;
 import org.bitseal.util.ArrayCopier;
 import org.bitseal.util.ByteFormatter;
 import org.bitseal.util.ByteUtils;
@@ -233,8 +235,7 @@ public class IncomingMessageProcessor
 				if (retrievedMessages.size() == 1)
 				{
 					Message originalMessage = retrievedMessages.get(0);
-					originalMessage.setStatus(Message.STATUS_ACK_RECEIVED);
-					msgProv.updateMessage(originalMessage);
+					MessageStatusHandler.updateMessageStatus(originalMessage, App.getContext().getString(R.string.message_status_ack_received));
 					Log.d(TAG, "Acknowledgement received!\n" +
 							"Message subject:    " + originalMessage.getSubject() + "\n" +
 							"Message to address: " +  originalMessage.getToAddress());

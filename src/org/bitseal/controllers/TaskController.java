@@ -2,6 +2,7 @@ package org.bitseal.controllers;
 
 import java.util.ArrayList;
 
+import org.bitseal.R;
 import org.bitseal.core.App;
 import org.bitseal.core.BehaviourBitfieldProcessor;
 import org.bitseal.core.ObjectProcessor;
@@ -252,7 +253,7 @@ public class TaskController
 		
 		QueueRecordProcessor queueProc = new QueueRecordProcessor();
 		
-		MessageStatusHandler.updateMessageStatus(message, Message.STATUS_CONSTRUCTING_PAYLOAD);
+		MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_constructing_payload));
 		
 		// Attempt to construct the message payload
 		Payload msgPayload = null;
@@ -274,7 +275,7 @@ public class TaskController
 		queueProc.deleteQueueRecord(inputQueueRecord);
 		QueueRecord newQueueRecord = queueProc.createAndSaveQueueRecord(BackgroundService.TASK_DISSEMINATE_MESSAGE, 0, 0, message, msgPayload, toPubkey);
 		
-		MessageStatusHandler.updateMessageStatus(message, Message.STATUS_SENDING_MESSAGE);
+		MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_sending_message));
 		
 		// Update the "correspondingPayloadId" field of the Message
 		message.setMsgPayloadId(msgPayload.getId());
@@ -288,7 +289,7 @@ public class TaskController
 		}
 		else
 		{
-			MessageStatusHandler.updateMessageStatus(message, Message.STATUS_WAITING_FOR_CONNECTION);
+			MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_waiting_for_connection));
 			return false;
 		}
 	}
@@ -337,14 +338,14 @@ public class TaskController
 			{
 				Message originalMessage = retrievedMessages.get(0);
 				
-				// Check whether we should expect an acknowledgment and update the original Message's status accordingly
+				// Check whether we should expect an acknowledgement and update the original Message's status accordingly
 				if (BehaviourBitfieldProcessor.checkSendsAcks(toPubkey.getBehaviourBitfield()))
 				{
-					MessageStatusHandler.updateMessageStatus(originalMessage, Message.STATUS_MSG_SENT);
+					MessageStatusHandler.updateMessageStatus(originalMessage, App.getContext().getString(R.string.message_status_message_sent));
 				}
 				else
 				{
-					MessageStatusHandler.updateMessageStatus(originalMessage, Message.STATUS_MSG_SENT_NO_ACK_EXPECTED);
+					MessageStatusHandler.updateMessageStatus(originalMessage, App.getContext().getString(R.string.message_status_message_sent_no_ack_expected));
 				}
 			}
 			else

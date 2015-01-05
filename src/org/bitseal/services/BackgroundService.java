@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 
+import org.bitseal.R;
 import org.bitseal.controllers.TaskController;
 import org.bitseal.core.App;
 import org.bitseal.core.ObjectProcessor;
@@ -328,8 +329,7 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 					{
 						MessageProvider msgProv = MessageProvider.get(getApplicationContext());
 						Message messageToSend = msgProv.searchForSingleRecord(q.getObject0Id());
-						messageToSend.setStatus(Message.STATUS_SENDING_FAILED);
-						msgProv.updateMessage(messageToSend);
+						MessageStatusHandler.updateMessageStatus(messageToSend, getApplicationContext().getString(R.string.message_status_sending_failed));
 					}
 					queueProc.deleteQueueRecord(q);
 					continue;
@@ -467,7 +467,7 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 					{
 						MessageProvider messageProv = MessageProvider.get(getApplicationContext());
 						Message messageToSend = messageProv.searchForSingleRecord(q.getObject0Id());
-						MessageStatusHandler.updateMessageStatus(messageToSend, Message.STATUS_WAITING_FOR_CONNECTION);
+						MessageStatusHandler.updateMessageStatus(messageToSend, getApplicationContext().getString(R.string.message_status_waiting_for_connection));
 					}
 				}
 				

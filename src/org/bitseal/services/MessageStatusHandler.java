@@ -24,7 +24,7 @@ public class MessageStatusHandler
 	 * @param status - The status String to use
 	 */
 	public static void updateMessageStatus(Message message, String status)
-	{
+	{		
 		// Update the status of the Message and then prompt the UI to update the list of sent messages it is displaying
 		message.setStatus(status);
 		MessageProvider msgProv = MessageProvider.get(App.getContext());

@@ -3,6 +3,7 @@ package org.bitseal.core;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import org.bitseal.R;
 import org.bitseal.data.Message;
 import org.bitseal.data.Payload;
 import org.bitseal.database.PayloadProvider;
@@ -76,7 +77,7 @@ public class OutgoingGetpubkeyProcessor
 		// Check whether an Internet connection is available. 
 		if (NetworkHelper.checkInternetAvailability() == true)
 		{
-			MessageStatusHandler.updateMessageStatus(message, Message.STATUS_REQUESTING_PUBKEY);
+			MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_requesting_pubkey));
 			
 			// Disseminate the getpubkey payload
 			try
@@ -99,7 +100,7 @@ public class OutgoingGetpubkeyProcessor
 		}
 		else
 		{
-			MessageStatusHandler.updateMessageStatus(message, Message.STATUS_WAITING_FOR_CONNECTION);
+			MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_waiting_for_connection));
 			return getpubkeyPayload;
 		}	
 	}
