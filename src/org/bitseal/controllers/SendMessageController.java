@@ -39,14 +39,12 @@ public class SendMessageController
 	 * and had to send a getpubkey request). 
 	 */
 	public Object retrievePubkey(Message message, Payload getpubkeyPayload, long timeToLive)
-	{
-		MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_requesting_pubkey));
-		
+	{	
 		try
 		{
 			Pubkey toPubkey = new PubkeyProcessor().retrievePubkeyForMessage(message);
 			
-			// If we successfully retrieve the pubkey, delete any getpubkey we may have created
+			// If we successfully retrieved the pubkey, delete any getpubkey we may have created
 			if (getpubkeyPayload != null)
 			{
 				PayloadProvider payProv = PayloadProvider.get(App.getContext());

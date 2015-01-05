@@ -140,6 +140,8 @@ public class PubkeyProcessor
 		{
 			Log.i(TAG, "Unable to find the requested pubkey in the application database. The pubkey will now be requested from a server.");
 			
+			MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_requesting_pubkey));
+			
 			// Check whether an Internet connection is available.
 			if (NetworkHelper.checkInternetAvailability() == true)
 			{
