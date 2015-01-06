@@ -112,10 +112,10 @@ public class CheckForMessagesController
 	}
 	
 	/**
-	 * Attempts to send any acknowledgments that are scheduled to be
+	 * Attempts to send any acknowledgements that are scheduled to be
 	 * sent by me for messages that I have received
 	 * 
-	 * @return - A boolean indicating whether or not all outstanding acknowledgments
+	 * @return - A boolean indicating whether or not all outstanding acknowledgements
 	 * were successfully processed 
 	 */
 	public boolean sendAcknowledgments()
