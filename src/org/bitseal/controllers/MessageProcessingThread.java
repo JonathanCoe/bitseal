@@ -1,5 +1,9 @@
 package org.bitseal.controllers;
 
+import org.bitseal.core.App;
+
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 /**
@@ -11,6 +15,12 @@ import android.util.Log;
 public class MessageProcessingThread 
 {
 	private Thread processingThread;
+	
+	/** A key used to store the time of the last successful 'check for new msgs' server request */
+	private static final String LAST_MSG_CHECK_TIME = "lastMsgCheckTime";
+	
+	/** Stores the Unix timestamp of the last msg payload we processed. This can be used to tell us how far behind the network we are. */
+	private static final String LAST_PROCESSED_MSG_TIME = "lastProcessedMsgTime";
 	
 	private static final String TAG = "MessageProcessingThread";
 	
@@ -76,6 +86,15 @@ public class MessageProcessingThread
     	            {
     	            	newMessagesProcessed = controller.processIncomingMessages();
     	            }
+    	            
+    	            // Once we have processed the last available new msg, update the 'last processed msg' time to equal the
+    	            // 'last msg check' time
+    	            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(App.getContext());
+    	            SharedPreferences.Editor editor = prefs.edit();
+    	            long lastMsgCheckTime = prefs.getLong(LAST_MSG_CHECK_TIME, 0);	
+    			    editor.putLong(LAST_PROCESSED_MSG_TIME, lastMsgCheckTime);
+    			    editor.commit();
+    				Log.i(TAG, "Updated the 'last processed msg time' value stored in SharedPreferences to " + lastMsgCheckTime);
     	            
 					// Attempt to send any pending acknowledgements
 					controller.sendAcknowledgments();
