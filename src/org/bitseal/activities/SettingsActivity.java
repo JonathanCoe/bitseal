@@ -167,7 +167,7 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 				Context context = getApplicationContext();
 				Intent firstStartIntent = new Intent(context, BackgroundService.class);
 				firstStartIntent.putExtra(BackgroundService.PERIODIC_BACKGROUND_PROCESSING_REQUEST, BackgroundService.BACKGROUND_PROCESSING_REQUEST);
-				context.startService(firstStartIntent);
+				BackgroundService.sendWakefulWork(context, firstStartIntent);
 			}
 		});
 		

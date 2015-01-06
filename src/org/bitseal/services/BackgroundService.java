@@ -28,7 +28,6 @@ import org.bitseal.util.TimeUtils;
 
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
-import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -38,13 +37,15 @@ import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.commonsware.cwac.wakeful.WakefulIntentService;
+
 /**
  * This class handles all the long-running processing required
  * by the application. 
  * 
  * @author Jonathan Coe
  */
-public class BackgroundService extends IntentService  implements ICacheWordSubscriber
+public class BackgroundService extends WakefulIntentService  implements ICacheWordSubscriber
 {
 	/**
 	 * This constant determines whether or not the app will do
@@ -146,7 +147,7 @@ public class BackgroundService extends IntentService  implements ICacheWordSubsc
 	 */
 	@SuppressLint("InlinedApi")
 	@Override
-	protected void onHandleIntent(Intent i)
+	protected void doWakefulWork(Intent i)
 	{
 		Log.i(TAG, "BackgroundService.onHandleIntent() called");
 		

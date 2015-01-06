@@ -364,7 +364,7 @@ public class ComposeActivity extends Activity implements ICacheWordSubscriber
     		Intent intent = new Intent(getBaseContext(), BackgroundService.class);		    
 		    intent.putExtra(BackgroundService.UI_REQUEST, BackgroundService.UI_REQUEST_SEND_MESSAGE);	    
 		    intent.putExtra(BackgroundService.MESSAGE_ID, messageId);	    
-		    startService(intent);
+		    BackgroundService.sendWakefulWork(getBaseContext(), intent);
 			
 			Toast.makeText(getApplicationContext(), R.string.compose_toast_sending_message, Toast.LENGTH_LONG).show();
 			

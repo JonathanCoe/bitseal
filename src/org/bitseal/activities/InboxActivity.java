@@ -131,7 +131,7 @@ public class InboxActivity extends ListActivity implements ICacheWordSubscriber
 				// Start the BackgroundService
 				Intent firstStartIntent = new Intent(this, BackgroundService.class);
 				firstStartIntent.putExtra(BackgroundService.PERIODIC_BACKGROUND_PROCESSING_REQUEST, BackgroundService.BACKGROUND_PROCESSING_REQUEST);
-				this.startService(firstStartIntent);
+				BackgroundService.sendWakefulWork(this, firstStartIntent);
 			}
 		}
 		else
@@ -316,7 +316,7 @@ public class InboxActivity extends ListActivity implements ICacheWordSubscriber
 		    Intent intent = new Intent(getBaseContext(), BackgroundService.class);
 		    intent.putExtra(BackgroundService.UI_REQUEST, BackgroundService.UI_REQUEST_CREATE_IDENTITY);
 		    intent.putExtra(BackgroundService.ADDRESS_ID, firstAddress.getId());
-	    	startService(intent);
+		    BackgroundService.sendWakefulWork(this, intent);
 	    	
 	    	Log.i(TAG, "Starting BackgroundService for the first time");
 	    }

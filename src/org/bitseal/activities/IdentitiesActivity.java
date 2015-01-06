@@ -135,7 +135,7 @@ public class IdentitiesActivity extends ListActivity implements ICacheWordSubscr
 		    Intent intent = new Intent(getBaseContext(), BackgroundService.class);
 		    intent.putExtra(BackgroundService.UI_REQUEST, BackgroundService.UI_REQUEST_CREATE_IDENTITY);
 		    intent.putExtra(BackgroundService.ADDRESS_ID, address.getId());
-	    	startService(intent);
+		    BackgroundService.sendWakefulWork(this, intent);
 	    }
 	    catch (Exception e)
 	    {

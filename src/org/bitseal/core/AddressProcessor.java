@@ -395,7 +395,7 @@ public final class AddressProcessor
 		    Intent intent = new Intent(appContext, BackgroundService.class);
 		    intent.putExtra(BackgroundService.UI_REQUEST, BackgroundService.UI_REQUEST_CREATE_IDENTITY);
 		    intent.putExtra(BackgroundService.ADDRESS_ID, recreatedAddress.getId());
-		    appContext.startService(intent);
+		    BackgroundService.sendWakefulWork(appContext, intent);
 		}
 		catch (Exception e)
 		{
