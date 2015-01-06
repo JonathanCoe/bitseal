@@ -77,7 +77,7 @@ public class MessageProcessingThread
     	            	newMessagesProcessed = controller.processIncomingMessages();
     	            }
     	            
-					// Attempt to send any pending acknowledgments
+					// Attempt to send any pending acknowledgements
 					controller.sendAcknowledgments();
     	            
     	            Log.i(TAG, "Finishing message processing thread.");
