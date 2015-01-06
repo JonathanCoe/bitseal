@@ -15,7 +15,7 @@ import org.bitseal.database.AddressProvider;
 import org.bitseal.database.AddressesTable;
 import org.bitseal.database.MessageProvider;
 import org.bitseal.database.MessagesTable;
-import org.bitseal.services.DatabaseLockHandler;
+import org.bitseal.services.AppLockHandler;
 import org.bitseal.services.NotificationsService;
 
 import android.annotation.SuppressLint;
@@ -382,7 +382,7 @@ public class InboxMessageActivity extends Activity implements ICacheWordSubscrib
   		        break;
   		        
   		    case R.id.menu_item_lock:
-		    	DatabaseLockHandler.runLockRoutine(mCacheWordHandler);
+		    	AppLockHandler.runLockRoutine(mCacheWordHandler);
 		        break;
   		        
   		    default:

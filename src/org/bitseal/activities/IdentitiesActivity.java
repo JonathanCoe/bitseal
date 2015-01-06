@@ -13,7 +13,7 @@ import org.bitseal.data.Pubkey;
 import org.bitseal.database.AddressProvider;
 import org.bitseal.database.PubkeyProvider;
 import org.bitseal.services.BackgroundService;
-import org.bitseal.services.DatabaseLockHandler;
+import org.bitseal.services.AppLockHandler;
 import org.bitseal.util.ColourCalculator;
 
 import android.annotation.SuppressLint;
@@ -702,7 +702,7 @@ public class IdentitiesActivity extends ListActivity implements ICacheWordSubscr
   		        break;
   		        
   		    case R.id.menu_item_lock:
-		    	DatabaseLockHandler.runLockRoutine(mCacheWordHandler);
+		    	AppLockHandler.runLockRoutine(mCacheWordHandler);
 		        break;
   		        
   		    default:

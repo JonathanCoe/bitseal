@@ -11,7 +11,7 @@ import org.bitseal.core.AddressProcessor;
 import org.bitseal.data.AddressBookRecord;
 import org.bitseal.database.AddressBookRecordProvider;
 import org.bitseal.database.AddressBookRecordsTable;
-import org.bitseal.services.DatabaseLockHandler;
+import org.bitseal.services.AppLockHandler;
 import org.bitseal.util.ColourCalculator;
 
 import android.annotation.SuppressLint;
@@ -749,7 +749,7 @@ public class AddressBookActivity extends ListActivity implements ICacheWordSubsc
  		        break;
  		        
  		    case R.id.menu_item_lock:
-		    	DatabaseLockHandler.runLockRoutine(mCacheWordHandler);
+		    	AppLockHandler.runLockRoutine(mCacheWordHandler);
 		        break;
  		        
  		    default:

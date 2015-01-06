@@ -17,7 +17,7 @@ import org.bitseal.database.AddressProvider;
 import org.bitseal.database.AddressesTable;
 import org.bitseal.database.MessageProvider;
 import org.bitseal.services.BackgroundService;
-import org.bitseal.services.DatabaseLockHandler;
+import org.bitseal.services.AppLockHandler;
 import org.bitseal.util.ColourCalculator;
 
 import android.annotation.SuppressLint;
@@ -952,7 +952,7 @@ public class ComposeActivity extends Activity implements ICacheWordSubscriber
  		        break;
  		        
  		    case R.id.menu_item_lock:
-		    	DatabaseLockHandler.runLockRoutine(mCacheWordHandler);
+		    	AppLockHandler.runLockRoutine(mCacheWordHandler);
 		        break;
  		        
  		    default:

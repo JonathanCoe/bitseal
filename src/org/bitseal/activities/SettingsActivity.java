@@ -8,7 +8,7 @@ import java.util.TimerTask;
 
 import org.bitseal.R;
 import org.bitseal.services.BackgroundService;
-import org.bitseal.services.DatabaseLockHandler;
+import org.bitseal.services.AppLockHandler;
 import org.bitseal.util.TimeUtils;
 
 import android.annotation.SuppressLint;
@@ -262,7 +262,7 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
  		        break;
  		        
  		    case R.id.menu_item_lock:
-		    	DatabaseLockHandler.runLockRoutine(mCacheWordHandler);
+		    	AppLockHandler.runLockRoutine(mCacheWordHandler);
 		        break;
  		        
  		    default:

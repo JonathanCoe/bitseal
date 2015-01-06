@@ -21,7 +21,7 @@ import org.bitseal.database.MessagesTable;
 import org.bitseal.database.PayloadProvider;
 import org.bitseal.database.QueueRecordProvider;
 import org.bitseal.database.QueueRecordsTable;
-import org.bitseal.services.DatabaseLockHandler;
+import org.bitseal.services.AppLockHandler;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -378,7 +378,7 @@ public class SentMessageActivity extends Activity implements ICacheWordSubscribe
  		        break;
  		        
  		    case R.id.menu_item_lock:
-		    	DatabaseLockHandler.runLockRoutine(mCacheWordHandler);
+		    	AppLockHandler.runLockRoutine(mCacheWordHandler);
 		        break;
  		        
  		    default:

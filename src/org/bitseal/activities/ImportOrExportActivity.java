@@ -5,7 +5,7 @@ import info.guardianproject.cacheword.ICacheWordSubscriber;
 
 import org.bitseal.R;
 import org.bitseal.core.AddressProcessor;
-import org.bitseal.services.DatabaseLockHandler;
+import org.bitseal.services.AppLockHandler;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -316,7 +316,7 @@ public class ImportOrExportActivity extends Activity implements ICacheWordSubscr
  		        break;
  		        
  		    case R.id.menu_item_lock:
-		    	DatabaseLockHandler.runLockRoutine(mCacheWordHandler);
+		    	AppLockHandler.runLockRoutine(mCacheWordHandler);
 		        break;
  		        
  		    default:

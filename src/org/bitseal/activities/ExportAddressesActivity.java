@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import org.bitseal.R;
 import org.bitseal.data.Address;
 import org.bitseal.database.AddressProvider;
-import org.bitseal.services.DatabaseLockHandler;
+import org.bitseal.services.AppLockHandler;
 import org.bitseal.util.ColourCalculator;
 
 import android.annotation.SuppressLint;
@@ -489,7 +489,7 @@ public class ExportAddressesActivity extends ListActivity implements ICacheWordS
   		        break;
   		        
   		    case R.id.menu_item_lock:
-		    	DatabaseLockHandler.runLockRoutine(mCacheWordHandler);
+		    	AppLockHandler.runLockRoutine(mCacheWordHandler);
 		        break;
   		        
   		    default:

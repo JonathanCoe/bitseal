@@ -9,7 +9,7 @@ import org.bitseal.R;
 import org.bitseal.data.ServerRecord;
 import org.bitseal.database.ServerRecordProvider;
 import org.bitseal.network.ServerHelper;
-import org.bitseal.services.DatabaseLockHandler;
+import org.bitseal.services.AppLockHandler;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -640,7 +640,7 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
   		        break;
   		        
   		    case R.id.menu_item_lock:
-		    	DatabaseLockHandler.runLockRoutine(mCacheWordHandler);
+		    	AppLockHandler.runLockRoutine(mCacheWordHandler);
 		        break;
   		        
   		    default:

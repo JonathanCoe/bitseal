@@ -18,7 +18,7 @@ import org.bitseal.database.AddressBookRecordProvider;
 import org.bitseal.database.AddressBookRecordsTable;
 import org.bitseal.database.MessageProvider;
 import org.bitseal.database.MessagesTable;
-import org.bitseal.services.DatabaseLockHandler;
+import org.bitseal.services.AppLockHandler;
 import org.bitseal.util.ColourCalculator;
 
 import android.annotation.SuppressLint;
@@ -404,7 +404,7 @@ public class SentActivity extends ListActivity implements ICacheWordSubscriber
  		        break;
  		        
  		    case R.id.menu_item_lock:
-		    	DatabaseLockHandler.runLockRoutine(mCacheWordHandler);
+		    	AppLockHandler.runLockRoutine(mCacheWordHandler);
 		        break;
  		        
  		    default:
