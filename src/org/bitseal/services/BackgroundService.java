@@ -3,7 +3,6 @@ import info.guardianproject.cacheword.CacheWordHandler;
 import info.guardianproject.cacheword.ICacheWordSubscriber;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 
 import org.bitseal.R;
@@ -27,9 +26,6 @@ import org.bitseal.network.NetworkHelper;
 import org.bitseal.util.TimeUtils;
 
 import android.annotation.SuppressLint;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -93,14 +89,6 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 	 * from the queue.
 	 */
 	public static final int MAXIMUM_ATTEMPTS = 500;
-	
-    /**
-     * The normal amount of time in seconds between each attempt to start the
-     * BackgroundService, in seconds. e.g. If this value is set to 60, then
-     * a PendingIntent will be registered with the AlarmManager to start the
-     * background service every minute. 
-     */
-	public static final int BACKGROUND_SERVICE_NORMAL_START_INTERVAL = 60;
 		
 	/** Determines how often the database cleaning routine should be run, in seconds. */
 	private static final long TIME_BETWEEN_DATABASE_CLEANING = 3600;
@@ -258,19 +246,7 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 	 */
 	private void scheduleRestart()
 	{
-		// Create a new intent that will be used to run processTasks() again after a period of time
-		Intent intent = new Intent(getApplicationContext(), BackgroundService.class);
-		intent.putExtra(BackgroundService.PERIODIC_BACKGROUND_PROCESSING_REQUEST, BackgroundService.BACKGROUND_PROCESSING_REQUEST);
-		PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-		
-	    // Get the current time and add the number of seconds specified by BACKGROUND_SERVICE_START_INTERVAL_SECONDS to it
-	    Calendar cal = Calendar.getInstance();
-    	cal.add(Calendar.SECOND, BACKGROUND_SERVICE_NORMAL_START_INTERVAL);
-    	Log.i(TAG, "The BackgroundService will be restarted in " + TimeUtils.getTimeMessage(BACKGROUND_SERVICE_NORMAL_START_INTERVAL));
-	    
-	    // Register the pending intent with AlarmManager
-	    AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-	    am.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), pendingIntent);
+		WakefulIntentService.scheduleAlarms(new AlarmScheduler(), getApplicationContext(), true);
 	}
 	
 	/**
