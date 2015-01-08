@@ -291,210 +291,217 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 			// Process each queued task in turn, removing them from the database if completed successfully
 			for (QueueRecord q : queueRecords)
 			{
-				Log.i(TAG, "Found a QueueRecord with the task " + q.getTask() + " and number of attempts " + q.getAttempts());
-				
-				// First check how many times the task recorded by this QueueRecord has been attempted.
-				// If it has been attempted a very high number of times (all without success) then we
-				// will delete it.
-				int attempts = q.getAttempts();
-				String task = q.getTask();
-				if (attempts > MAXIMUM_ATTEMPTS)
+				try
 				{
-					Log.d(TAG, "Deleting a QueueRecord for a task of type " + task + " because it has been attempted " + attempts + " times without success.");
+				
+					Log.i(TAG, "Found a QueueRecord with the task " + q.getTask() + " and number of attempts " + q.getAttempts());
+					
+					// First check how many times the task recorded by this QueueRecord has been attempted.
+					// If it has been attempted a very high number of times (all without success) then we
+					// will delete it.
+					int attempts = q.getAttempts();
+					String task = q.getTask();
+					if (attempts > MAXIMUM_ATTEMPTS)
+					{
+						Log.d(TAG, "Deleting a QueueRecord for a task of type " + task + " because it has been attempted " + attempts + " times without success.");
+						
+						if (task.equals(TASK_SEND_MESSAGE))
+						{
+							MessageProvider msgProv = MessageProvider.get(getApplicationContext());
+							Message messageToSend = msgProv.searchForSingleRecord(q.getObject0Id());
+							MessageStatusHandler.updateMessageStatus(messageToSend, getApplicationContext().getString(R.string.message_status_sending_failed));
+						}
+						queueProc.deleteQueueRecord(q);
+						continue;
+					}
 					
 					if (task.equals(TASK_SEND_MESSAGE))
 					{
-						MessageProvider msgProv = MessageProvider.get(getApplicationContext());
-						Message messageToSend = msgProv.searchForSingleRecord(q.getObject0Id());
-						MessageStatusHandler.updateMessageStatus(messageToSend, getApplicationContext().getString(R.string.message_status_sending_failed));
+						// Attempt to retrieve the Message from the database. If it has been deleted by the user
+						// then we should abort the sending process. 
+						try
+						{
+							MessageProvider msgProv = MessageProvider.get(getApplicationContext());
+							Message messageToSend = msgProv.searchForSingleRecord(q.getObject0Id());
+							
+							// Check whether there are any existing QueueRecords which should be processed before this one
+							if (checkForEarlierSendMsgQueueRecords(q))
+							{
+								continue;
+							}
+							
+							// Ignore any QueueRecords that have a 'trigger time' in the future
+							long currentTime = System.currentTimeMillis() / 1000;
+							if (q.getTriggerTime() > currentTime)
+							{
+								Log.i(TAG, "Ignoring a QueueRecord for a " + q.getTask() + " task because its trigger time has not been reached yet.\n"
+										+ "Its trigger time will be reached in roughly " + TimeUtils.getTimeMessage(q.getTriggerTime() - currentTime));
+								continue;
+							}
+							
+							// Check which TTL value we should use
+							if (q.getRecordCount() == 0)
+							{
+								// Attempt to send the message
+								taskController.sendMessage(q, messageToSend, DO_POW, FIRST_ATTEMPT_TTL, FIRST_ATTEMPT_TTL);
+							}
+							else
+							{
+								// Create a new QueueRecord for re-sending this msg in the event that we do not receive an acknowledgement for it
+								// before its time to live expires. If we do receive the acknowledgement before then, this QueueRecord will be deleted
+								currentTime = System.currentTimeMillis() / 1000;
+								queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, currentTime + SUBSEQUENT_ATTEMPTS_TTL, q.getRecordCount() + 1, messageToSend, null, null);
+								
+								// Attempt to send the message
+								taskController.sendMessage(q, messageToSend, DO_POW, SUBSEQUENT_ATTEMPTS_TTL, SUBSEQUENT_ATTEMPTS_TTL);
+							}
+						}
+						catch (RuntimeException e)
+						{
+							Log.i(TAG, "While running BackgroundService.processTasks() and attempting to process a task of type\n"
+									+ TASK_SEND_MESSAGE + ", the attempt to retrieve the Message object from the database failed.\n"
+									+ "The message sending process will therefore be aborted.");
+							queueProv.deleteQueueRecord(q);
+							continue;
+						}
 					}
-					queueProc.deleteQueueRecord(q);
-					continue;
-				}
-				
-				if (task.equals(TASK_SEND_MESSAGE))
-				{
-					// Attempt to retrieve the Message from the database. If it has been deleted by the user
-					// then we should abort the sending process. 
-					try
+					
+					else if (task.equals(TASK_PROCESS_OUTGOING_MESSAGE))
 					{
-						MessageProvider msgProv = MessageProvider.get(getApplicationContext());
-						Message messageToSend = msgProv.searchForSingleRecord(q.getObject0Id());
-						
-						// Check whether there are any existing QueueRecords which should be processed before this one
-						if (checkForEarlierSendMsgQueueRecords(q))
+						// Attempt to retrieve the Message from the database. If it has been deleted by the user
+						// then we should abort the sending process. 
+						Message messageToSend = null;
+						try
 						{
+							MessageProvider msgProv = MessageProvider.get(getApplicationContext());
+							messageToSend = msgProv.searchForSingleRecord(q.getObject0Id());
+						}
+						catch (RuntimeException e)
+						{
+							Log.i(TAG, "While running BackgroundService.processTasks() and attempting to process a task of type\n"
+									+ TASK_PROCESS_OUTGOING_MESSAGE + ", the attempt to retrieve the Message object from the database failed.\n"
+									+ "The message sending process will therefore be aborted.");
+							queueProv.deleteQueueRecord(q);
 							continue;
 						}
-						
-						// Ignore any QueueRecords that have a 'trigger time' in the future
-						long currentTime = System.currentTimeMillis() / 1000;
-						if (q.getTriggerTime() > currentTime)
-						{
-							Log.i(TAG, "Ignoring a QueueRecord for a " + q.getTask() + " task because its trigger time has not been reached yet.\n"
-									+ "Its trigger time will be reached in roughly " + TimeUtils.getTimeMessage(q.getTriggerTime() - currentTime));
-							continue;
-						}
-						
-						// Check which TTL value we should use
+						 
+						// Now retrieve the pubkey for the address we are sending the message to
+						PubkeyProvider pubProv = PubkeyProvider.get(App.getContext());
+						Pubkey toPubkey = pubProv.searchForSingleRecord(q.getObject1Id());
+							 
+						// Attempt to process and send the message
 						if (q.getRecordCount() == 0)
 						{
-							// Attempt to send the message
-							taskController.sendMessage(q, messageToSend, DO_POW, FIRST_ATTEMPT_TTL, FIRST_ATTEMPT_TTL);
+							taskController.processOutgoingMessage(q, messageToSend, toPubkey, DO_POW, FIRST_ATTEMPT_TTL);
 						}
 						else
 						{
-							// Create a new QueueRecord for re-sending this msg in the event that we do not receive an acknowledgement for it
-							// before its time to live expires. If we do receive the acknowledgement before then, this QueueRecord will be deleted
-							currentTime = System.currentTimeMillis() / 1000;
-							queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, currentTime + SUBSEQUENT_ATTEMPTS_TTL, q.getRecordCount() + 1, messageToSend, null, null);
-							
-							// Attempt to send the message
-							taskController.sendMessage(q, messageToSend, DO_POW, SUBSEQUENT_ATTEMPTS_TTL, SUBSEQUENT_ATTEMPTS_TTL);
+							taskController.processOutgoingMessage(q, messageToSend, toPubkey, DO_POW, SUBSEQUENT_ATTEMPTS_TTL);
 						}
 					}
-					catch (RuntimeException e)
+					
+					else if (task.equals(TASK_DISSEMINATE_MESSAGE))
 					{
-						Log.i(TAG, "While running BackgroundService.processTasks() and attempting to process a task of type\n"
-								+ TASK_SEND_MESSAGE + ", the attempt to retrieve the Message object from the database failed.\n"
-								+ "The message sending process will therefore be aborted.");
-						queueProv.deleteQueueRecord(q);
-						continue;
+						// Check whether the msg payload is still valid (its time to live pay have expired)
+						PayloadProvider payProv = PayloadProvider.get(getApplicationContext());
+						Payload msgPayload = payProv.searchForSingleRecord(q.getObject1Id());
+						boolean msgValid = new ObjectProcessor().validateObject(msgPayload.getPayload());
+						if (msgValid == false)
+						{
+							Log.d(TAG, "Found a QueueRecord for a 'disseminate message' task with a msg payload which is due to expire soon.\n"
+									+ "We will now delete this QueueRecord and msg and create a new 'process outgoing message' QueueRecord.");
+							
+							// Delete the msg Payload from the database
+							payProv.deletePayload(msgPayload);
+							
+							// Delete this QueueRecord from the database
+							queueProv.deleteQueueRecord(q);
+							
+							// Retrieve the original Message that we are sending
+							MessageProvider msgProv = MessageProvider.get(getApplicationContext());
+							Message messageToSend = msgProv.searchForSingleRecord(q.getObject0Id());
+							
+							// Retrieve the pubkey for the address we are sending the message to
+							PubkeyProvider pubProv = PubkeyProvider.get(App.getContext());
+							Pubkey toPubkey = pubProv.searchForSingleRecord(q.getObject2Id());
+							
+							// Create a new QueueRecord for the 'process outgoing message' task. This will give us a new
+							// msg with an updated expiration time and proof of work
+							queueProc.createAndSaveQueueRecord(BackgroundService.TASK_PROCESS_OUTGOING_MESSAGE, 0, q.getRecordCount(), messageToSend, toPubkey, null);
+							
+							// Move on to the next QueueRecord
+							continue;
+						}
+						
+						// Check whether an Internet connection is available. If not, move on to the next QueueRecord
+						if (NetworkHelper.checkInternetAvailability() == true)
+						{
+							// Retrieve the pubkey for the address we are sending the message to
+							PubkeyProvider pubProv = PubkeyProvider.get(App.getContext());
+							Pubkey toPubkey = pubProv.searchForSingleRecord(q.getObject2Id());
+								 
+							// Attempt to send the msg
+							taskController.disseminateMessage(q, msgPayload, toPubkey, DO_POW);
+						}
+						else
+						{
+							MessageProvider messageProv = MessageProvider.get(getApplicationContext());
+							Message messageToSend = messageProv.searchForSingleRecord(q.getObject0Id());
+							MessageStatusHandler.updateMessageStatus(messageToSend, getApplicationContext().getString(R.string.message_status_waiting_for_connection));
+						}
 					}
-				}
-				
-				else if (task.equals(TASK_PROCESS_OUTGOING_MESSAGE))
-				{
-					// Attempt to retrieve the Message from the database. If it has been deleted by the user
-					// then we should abort the sending process. 
-					Message messageToSend = null;
-					try
+					
+					else if (task.equals(TASK_CREATE_IDENTITY))
 					{
-						MessageProvider msgProv = MessageProvider.get(getApplicationContext());
-						messageToSend = msgProv.searchForSingleRecord(q.getObject0Id());
+						taskController.createIdentity(q, DO_POW);
 					}
-					catch (RuntimeException e)
+					
+					else if (task.equals(TASK_DISSEMINATE_PUBKEY))
 					{
-						Log.i(TAG, "While running BackgroundService.processTasks() and attempting to process a task of type\n"
-								+ TASK_PROCESS_OUTGOING_MESSAGE + ", the attempt to retrieve the Message object from the database failed.\n"
-								+ "The message sending process will therefore be aborted.");
-						queueProv.deleteQueueRecord(q);
-						continue;
+						// Check whether the pubkey payload is still valid (its time to live may have expired)
+						PayloadProvider payProv = PayloadProvider.get(getApplicationContext());
+						Payload pubkeyPayload = payProv.searchForSingleRecord(q.getObject0Id());
+						boolean pubkeyValid = new ObjectProcessor().validateObject(pubkeyPayload.getPayload());
+						if (pubkeyValid)
+						{
+							// Check whether an Internet connection is available. If not, move on to the next QueueRecord
+							if (NetworkHelper.checkInternetAvailability() == true)
+							{
+								// Attempt to disseminate the pubkey payload
+								taskController.disseminatePubkey(q, pubkeyPayload, DO_POW);
+							}
+						}
+						else
+						{
+							Log.d(TAG, "Found a QueueRecord for a 'disseminate pubkey' task with a pubkey payload which has expired or is invalid.\n"
+									+ "We will now delete this QueueRecord and pubkey and create a new 'create identity' QueueRecord.");
+							
+							// Delete this QueueRecord from the database
+							queueProv.deleteQueueRecord(q);
+							
+							// Retrieve the original address for which we are trying to create and disseminate a pubkey
+							AddressProvider addProv = AddressProvider.get(getApplicationContext());
+							Address address = addProv.searchForSingleRecord(pubkeyPayload.getRelatedAddressId());
+							
+							// Create a new QueueRecord for the 'create identity' task. This will give us a new
+							// pubkey with an updated expiration time and proof of work
+							queueProc.createAndSaveQueueRecord(TASK_CREATE_IDENTITY, 0, q.getRecordCount(), address, null, null);
+						}
 					}
-					 
-					// Now retrieve the pubkey for the address we are sending the message to
-					PubkeyProvider pubProv = PubkeyProvider.get(App.getContext());
-					Pubkey toPubkey = pubProv.searchForSingleRecord(q.getObject1Id());
-						 
-					// Attempt to process and send the message
-					if (q.getRecordCount() == 0)
-					{
-						taskController.processOutgoingMessage(q, messageToSend, toPubkey, DO_POW, FIRST_ATTEMPT_TTL);
-					}
+					
 					else
 					{
-						taskController.processOutgoingMessage(q, messageToSend, toPubkey, DO_POW, SUBSEQUENT_ATTEMPTS_TTL);
+						Log.e(TAG, "While running BackgroundService.processTasks(), a QueueRecord with an invalid task " +
+								"field was found. The invalid task field was : " + task);
 					}
 				}
-				
-				else if (task.equals(TASK_DISSEMINATE_MESSAGE))
+				catch (Exception e)
 				{
-					// Check whether the msg payload is still valid (its time to live pay have expired)
-					PayloadProvider payProv = PayloadProvider.get(getApplicationContext());
-					Payload msgPayload = payProv.searchForSingleRecord(q.getObject1Id());
-					boolean msgValid = new ObjectProcessor().validateObject(msgPayload.getPayload());
-					if (msgValid == false)
-					{
-						Log.d(TAG, "Found a QueueRecord for a 'disseminate message' task with a msg payload which is due to expire soon.\n"
-								+ "We will now delete this QueueRecord and msg and create a new 'process outgoing message' QueueRecord.");
-						
-						// Delete the msg Payload from the database
-						payProv.deletePayload(msgPayload);
-						
-						// Delete this QueueRecord from the database
-						queueProv.deleteQueueRecord(q);
-						
-						// Retrieve the original Message that we are sending
-						MessageProvider msgProv = MessageProvider.get(getApplicationContext());
-						Message messageToSend = msgProv.searchForSingleRecord(q.getObject0Id());
-						
-						// Retrieve the pubkey for the address we are sending the message to
-						PubkeyProvider pubProv = PubkeyProvider.get(App.getContext());
-						Pubkey toPubkey = pubProv.searchForSingleRecord(q.getObject2Id());
-						
-						// Create a new QueueRecord for the 'process outgoing message' task. This will give us a new
-						// msg with an updated expiration time and proof of work
-						queueProc.createAndSaveQueueRecord(BackgroundService.TASK_PROCESS_OUTGOING_MESSAGE, 0, q.getRecordCount(), messageToSend, toPubkey, null);
-						
-						// Move on to the next QueueRecord
-						continue;
-					}
+					Log.e(TAG, "Exception occurred in BackgroundService.processTasks(). The exception message was:\n"
+							+ e.getMessage());
 					
-					// Check whether an Internet connection is available. If not, move on to the next QueueRecord
-					if (NetworkHelper.checkInternetAvailability() == true)
-					{
-						// Retrieve the pubkey for the address we are sending the message to
-						PubkeyProvider pubProv = PubkeyProvider.get(App.getContext());
-						Pubkey toPubkey = pubProv.searchForSingleRecord(q.getObject2Id());
-							 
-						// Attempt to send the msg
-						taskController.disseminateMessage(q, msgPayload, toPubkey, DO_POW);
-					}
-					else
-					{
-						MessageProvider messageProv = MessageProvider.get(getApplicationContext());
-						Message messageToSend = messageProv.searchForSingleRecord(q.getObject0Id());
-						MessageStatusHandler.updateMessageStatus(messageToSend, getApplicationContext().getString(R.string.message_status_waiting_for_connection));
-					}
-				}
-				
-				else if (task.equals(TASK_CREATE_IDENTITY))
-				{
-					taskController.createIdentity(q, DO_POW);
-				}
-				
-				else if (task.equals(TASK_DISSEMINATE_PUBKEY))
-				{
-					// Check whether the pubkey payload is still valid (its time to live pay have expired)
-					PayloadProvider payProv = PayloadProvider.get(getApplicationContext());
-					Payload pubkeyPayload = payProv.searchForSingleRecord(q.getObject0Id());
-					
-					boolean pubkeyValid = new ObjectProcessor().validateObject(pubkeyPayload.getPayload());
-					if (pubkeyValid == false)
-					{
-						Log.d(TAG, "Found a QueueRecord for a 'disseminate pubkey' task with a pubkey payload which is due to expire soon.\n"
-								+ "We will now delete this QueueRecord and pubkey and create a new 'create identity' QueueRecord.");
-						
-						// Delete the pubkey Payload from the database
-						payProv.deletePayload(pubkeyPayload);
-						
-						// Delete this QueueRecord from the database
-						queueProv.deleteQueueRecord(q);
-						
-						// Retrieve the original address for which we are trying to create and disseminate a pubkey
-						AddressProvider addProv = AddressProvider.get(getApplicationContext());
-						Address address = addProv.searchForSingleRecord(pubkeyPayload.getRelatedAddressId());
-						
-						// Create a new QueueRecord for the 'create identity' task. This will give us a new
-						// pubkey with an updated expiration time and proof of work
-						queueProc.createAndSaveQueueRecord(TASK_CREATE_IDENTITY, 0, q.getRecordCount(), address, null, null);
-						
-						// Move on to the next QueueRecord
-						continue;
-					}
-					
-					// Check whether an Internet connection is available. If not, move on to the next QueueRecord
-					if (NetworkHelper.checkInternetAvailability() == true)
-					{
-						// Attempt to disseminate the pubkey payload
-						taskController.disseminatePubkey(q, pubkeyPayload, DO_POW);
-					}
-				}
-				
-				else
-				{
-					Log.e(TAG, "While running BackgroundService.processTasks(), a QueueRecord with an invalid task " +
-							"field was found. The invalid task field was : " + task);
+					// Delete this QueueRecord from the database
+					queueProv.deleteQueueRecord(q);
 				}
 			}
 			
@@ -527,7 +534,7 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 	 */
 	private boolean checkForEarlierSendMsgQueueRecords(QueueRecord q)
 	{
-		// First we need to 
+		// First we need to get any QueueRecords which also refer to the msg in question
 		QueueRecordProvider queueProv = QueueRecordProvider.get(getApplicationContext());
 		ArrayList<QueueRecord> matchingRecords = queueProv.searchQueueRecords(QueueRecordsTable.COLUMN_OBJECT_0_ID, String.valueOf(q.getObject0Id()));
 		for (QueueRecord match : matchingRecords)
@@ -564,10 +571,18 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 	 */
 	private void runPeriodicTasks()
 	{
-		Log.i(TAG, "BackgroundService.runPeriodicTasks() called");
-		
-		runCheckForMessagesTask();
-		runCheckIfPubkeyReDisseminationIsDueTask();
+		try
+		{
+			Log.i(TAG, "BackgroundService.runPeriodicTasks() called");
+			
+			runCheckForMessagesTask();
+			runCheckIfPubkeyReDisseminationIsDueTask();
+		}
+		catch (Exception e)
+		{
+			Log.e(TAG, "Exception occurred in BackgroundService.runPeriodicTasks(). The exception message was:\n"
+					+ e.getMessage());
+		}
 	}
 	
 	/**
