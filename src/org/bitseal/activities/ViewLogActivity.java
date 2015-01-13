@@ -45,6 +45,9 @@ public class ViewLogActivity extends ListActivity implements ICacheWordSubscribe
     /** The frequency in milliseconds by which we will update the log view */
     private static final long UPDATE_FREQUENCY_MILLISECONDS = 1500;
     
+    /** The maximum number of lines that we will read from logcat's output */
+    private static final int LOGCAT_MAXIMUM_LINES = 2000;
+    
     /** The maximum number of log items to be displayed in the log view */
     private static final int LOG_MAXIMUM_ITEMS = 50;
 	
@@ -119,7 +122,7 @@ public class ViewLogActivity extends ListActivity implements ICacheWordSubscribe
             Process process = Runtime.getRuntime().exec("logcat -d");
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line = "";
-            
+                        
             // Check whether the last line of the log output is new
             String newLastLine = "";
             while ((line = bufferedReader.readLine()) != null)
@@ -162,23 +165,60 @@ public class ViewLogActivity extends ListActivity implements ICacheWordSubscribe
 			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 			ArrayList<String> logLines = new ArrayList<String>();
 			String line = "";
-			while ((line = bufferedReader.readLine()) != null)
-	        {
-	            // Filter log output by Bitseal's current process number and by removing unwanted lines
-	        	if (filterLogLine(line))
-	        	{
-	        		logLines.add(line);
-	            }
-	        }
-	        
-	        // Record the last read line
-	        mLastLine = line;
-	        
-	        // If the log text is over the maximum number of items, shorten it
-	        if (logLines.size() > LOG_MAXIMUM_ITEMS)
-	        {
-	        	logLines = new ArrayList<String>(logLines.subList(logLines.size() - LOG_MAXIMUM_ITEMS, logLines.size()));
-	        }
+			
+			// Count the number of lines from the logcat output
+            int lines = 0;
+            while ((bufferedReader.readLine()) != null)
+            {
+            	lines ++;
+            }
+            
+            // Create a new BufferedReader so we can read from the start
+            process = Runtime.getRuntime().exec("logcat -d");
+    		bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            
+            // If there are more lines than we are prepared to process, only process the most recent ones
+            int startPoint = lines - LOGCAT_MAXIMUM_LINES;
+            if (lines > LOGCAT_MAXIMUM_LINES)
+            {
+            	for (int i = 0; i < startPoint && bufferedReader.ready(); bufferedReader.readLine()) { }
+            	if (bufferedReader.ready())
+            	{
+            		// We are at the chosen start point
+            	}
+            	else
+            	{
+            		// There are few enough lines that we can process them all, so create a new BufferedReader so we can read from the start
+            		process = Runtime.getRuntime().exec("logcat -d");
+            		bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            	}
+            	
+            	while ((line = bufferedReader.readLine()) != null)
+    	        {
+    	            // Filter log output by Bitseal's current process number and by removing unwanted lines
+    	        	if (filterLogLine(line))
+    	        	{
+    	        		logLines.add(line);
+    	            }
+    	        }
+            	
+                // If there are no lines to read, return a placeholder message
+                if (logLines.size() == 0)
+                {
+                	logLines.add(getResources().getString(R.string.activity_view_log_placeholder_message));
+                }
+                else
+                {       
+	    	        // Record the last read line
+	    	        mLastLine = logLines.get(logLines.size() - 1);
+	    	        
+	    	        // If the log text is over the maximum number of items, shorten it
+	    	        if (logLines.size() > LOG_MAXIMUM_ITEMS)
+	    	        {
+	    	        	logLines = new ArrayList<String>(logLines.subList(logLines.size() - LOG_MAXIMUM_ITEMS, logLines.size()));
+	    	        }
+                }
+            }
 	        
 	        return logLines;
 		}

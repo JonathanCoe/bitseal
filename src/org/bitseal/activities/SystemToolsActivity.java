@@ -20,6 +20,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 /**
@@ -32,6 +33,8 @@ public class SystemToolsActivity extends Activity implements ICacheWordSubscribe
 	private Button mViewLogButton;
 	private Button mViewExceptionsButton;
     private Button mRestartBackgroundServiceButton;
+    
+    private TextView mAppVersionTextView;
     
     /** The key for a boolean variable that records whether or not a user-defined database encryption passphrase has been saved */
     private static final String KEY_DATABASE_PASSPHRASE_SAVED = "databasePassphraseSaved"; 
@@ -96,6 +99,18 @@ public class SystemToolsActivity extends Activity implements ICacheWordSubscribe
 				BackgroundService.sendWakefulWork(context, firstStartIntent);
 			}
 		});
+		
+		try
+		{
+			mAppVersionTextView = (TextView) findViewById(R.id.system_tools_app_version_textview);
+			String versionName = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+			String appName = getResources().getString(R.string.app_name);
+			mAppVersionTextView.setText(appName + " " + versionName);
+		}
+		catch (Exception e)
+		{
+			Log.e(TAG, "Execption occurred while trying to set up mAppVersionTextView in SystemToolsActivity.onCreate()");
+		}
 	}
 	
  	@Override

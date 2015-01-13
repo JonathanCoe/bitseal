@@ -49,6 +49,18 @@
 		    android:hint="@string/system_tools_restart_background_service_button_label"
 		    />
 		  
+		  <TextView
+		    android:id="@+id/system_tools_app_version_textview"
+		    android:layout_width="match_parent"
+		    android:layout_height="wrap_content"
+		    android:layout_marginTop="25dp"
+		    android:layout_marginBottom="10dp"
+		    android:layout_marginLeft="16dp"
+		    android:layout_marginRight="16dp"
+		    android:gravity="center_horizontal"
+		    android:textStyle="bold"
+		    />
+		  
 	</LinearLayout>
 
 </ScrollView>

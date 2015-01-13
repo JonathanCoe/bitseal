@@ -48,6 +48,9 @@ public class ViewErrorsActivity extends ListActivity implements ICacheWordSubscr
 	/** The key for a boolean variable that records whether or not a user-defined database encryption passphrase has been saved */
     private static final String KEY_DATABASE_PASSPHRASE_SAVED = "databasePassphraseSaved"; 
     
+    /** The maximum number of lines that we will read from logcat's output */
+    private static final int LOGCAT_MAXIMUM_LINES = 2000;
+    
     private static final String LOG_LEVEL_ERROR = "E";
     
     private CacheWordHandler mCacheWordHandler;
@@ -157,35 +160,66 @@ public class ViewErrorsActivity extends ListActivity implements ICacheWordSubscr
 			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 			ArrayList<String> logLines = new ArrayList<String>();
 			String line = "";
-			while ((line = bufferedReader.readLine()) != null)
-	        {
-	            // Filter log output by Bitseal's current process number and by removing unwanted lines
-	        	if (filterErrors(line))
-	        	{
-	        		logLines.add(line);
-	            }
-	        }
-	        
-	        // Record the last read line
-	        mLastLine = line;
-	        
-	        // If there are no errors display, supply a placeholder message instead
-	        if (logLines.size() == 0)
-	        {
-	        	logLines.add(getResources().getString(R.string.activity_view_errors_placeholder_message));
-	        }
-	        
-	        // If the log text is over the maximum number of items, shorten it
-	        if (logLines.size() > MAXIMUM_ERRORS_TO_DISPLAY)
-	        {
-	        	logLines = new ArrayList<String>(logLines.subList(logLines.size() - MAXIMUM_ERRORS_TO_DISPLAY, logLines.size()));
-	        }
+
+			// Count the number of lines from the logcat output
+            int lines = 0;
+            while ((bufferedReader.readLine()) != null)
+            {
+            	lines ++;
+            }
+        	
+        	// Create a new BufferedReader so we can read from the start
+            process = Runtime.getRuntime().exec("logcat -d");
+    		bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            
+            // If there are more lines than we are prepared to process, only process the most recent ones
+            int startPoint = lines - LOGCAT_MAXIMUM_LINES;
+            if (lines > LOGCAT_MAXIMUM_LINES)
+            {
+            	for (int i = 0; i < startPoint && bufferedReader.ready(); bufferedReader.readLine()) { }
+            	if (bufferedReader.ready())
+            	{
+            		// We are at the chosen start point
+            	}
+            	else
+            	{
+            		// There are few enough lines that we can process them all, so create a new BufferedReader so we can read from the start
+            		process = Runtime.getRuntime().exec("logcat -d");
+            		bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            	}
+            	
+            	while ((line = bufferedReader.readLine()) != null)
+    	        {
+    	            // Filter log output by Bitseal's current process number and by removing unwanted lines
+    	        	if (filterErrors(line))
+    	        	{
+    	        		logLines.add(line);
+    	            }
+    	        }
+	            
+                // If there are no lines to read, return a placeholder message
+                if (logLines.size() == 0)
+                {
+                	logLines.add(getResources().getString(R.string.activity_view_errors_placeholder_message));
+                }
+                else
+                {
+    		        // Record the last read line
+    		        mLastLine = logLines.get(logLines.size() - 1);
+    		        
+    		        // If the log text is over the maximum number of items, shorten it
+    		        if (logLines.size() > MAXIMUM_ERRORS_TO_DISPLAY)
+    		        {
+    		        	logLines = new ArrayList<String>(logLines.subList(logLines.size() - MAXIMUM_ERRORS_TO_DISPLAY, logLines.size()));
+    		        }
+                }
+            }
 	        
 	        return logLines;
 		}
 		catch (Exception e)
 		{
-			Log.e(TAG, "Exception ocurred in ViewErrorsActivity.getLogLines(). The exception message was:\n"
+			Log.e(TAG, "Exception ocurred in ViewErrorsActivity.getErrors(). The exception message was:\n"
 					+ e.getMessage());
 			ArrayList<String> emptyList = new ArrayList<String>();
 			emptyList.add("");

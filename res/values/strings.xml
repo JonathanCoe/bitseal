@@ -179,6 +179,7 @@
     
     <!-- View Log Activity: -->
     <string name="activity_view_log_title">System Log</string>
+    <string name="activity_view_log_placeholder_message">No log messages to display</string>
     <string name="activity_view_log_item_copied_toast">Log message copied to the clipboard</string>
     
     
