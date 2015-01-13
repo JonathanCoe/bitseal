@@ -93,6 +93,24 @@
         </activity>
         
         <activity
+            android:name="org.bitseal.activities.SystemToolsActivity"
+            android:label="@string/activity_system_tools_title"
+            android:windowSoftInputMode="stateHidden" >
+        </activity>
+        
+        <activity
+            android:name="org.bitseal.activities.ViewLogActivity"
+            android:label="@string/activity_view_log_title"
+            android:windowSoftInputMode="stateHidden" >
+        </activity>
+        
+        <activity
+            android:name="org.bitseal.activities.ViewErrorsActivity"
+            android:label="@string/activity_view_errors_title"
+            android:windowSoftInputMode="stateHidden" >
+        </activity>
+        
+        <activity
             android:name="org.bitseal.activities.LockScreenActivity"
             android:windowSoftInputMode="stateHidden"
             android:theme="@android:style/Theme.NoTitleBar" >

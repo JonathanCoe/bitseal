@@ -7,13 +7,11 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.bitseal.R;
-import org.bitseal.services.BackgroundService;
 import org.bitseal.services.AppLockHandler;
 import org.bitseal.util.TimeUtils;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -26,7 +24,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
-import android.widget.Toast;
 
 /**
  * The Activity class for the app's Settings screen. 
@@ -38,7 +35,7 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 	private Button mSecuritySettingsButton;
 	private Button mServerSettingsButton;
     private Button mImportOrExportButton;
-    private Button mRestartBackgroundServiceButton;
+    private Button mSystemToolsButton;
     
     private TextView mTimeBehindNetworkTextView;
     
@@ -97,7 +94,7 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 			{
 				Log.i(TAG, "Security settings button clicked");
 				
-		        Intent i = new Intent(getBaseContext(), SecurityActivity.class); // CHANGE!
+		        Intent i = new Intent(getBaseContext(), SecurityActivity.class);
 		        startActivityForResult(i, 0);
 			}
 		});
@@ -155,19 +152,16 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
         	}
         });
 		
-		mRestartBackgroundServiceButton = (Button) findViewById(R.id.settings_restart_background_service_button);
-		mRestartBackgroundServiceButton.setOnClickListener(new View.OnClickListener()
+		mSystemToolsButton = (Button) findViewById(R.id.settings_system_tools_button);
+		mSystemToolsButton.setOnClickListener(new View.OnClickListener()
 		{		
 			@Override
 			public void onClick(View v)
 			{
-				Toast.makeText(getApplicationContext(), R.string.settings_toast_background_service_restart, Toast.LENGTH_LONG).show();
+				Log.i(TAG, "Settings system tools button clicked");
 				
-				// Start the BackgroundService for the first time
-				Context context = getApplicationContext();
-				Intent firstStartIntent = new Intent(context, BackgroundService.class);
-				firstStartIntent.putExtra(BackgroundService.PERIODIC_BACKGROUND_PROCESSING_REQUEST, BackgroundService.BACKGROUND_PROCESSING_REQUEST);
-				BackgroundService.sendWakefulWork(context, firstStartIntent);
+		        Intent i = new Intent(getBaseContext(), SystemToolsActivity.class);
+		        startActivityForResult(i, 0);
 			}
 		});
 		
@@ -193,7 +187,7 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 	    mSecuritySettingsButton.setVisibility(View.VISIBLE);
 		mServerSettingsButton.setVisibility(View.VISIBLE);
 		mImportOrExportButton.setVisibility(View.VISIBLE);
-		mRestartBackgroundServiceButton.setVisibility(View.VISIBLE);
+		mSystemToolsButton.setVisibility(View.VISIBLE);
 		mTimeBehindNetworkTextView.setVisibility(View.VISIBLE);
 	}
 	
@@ -202,7 +196,7 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 	    mSecuritySettingsButton.setVisibility(View.GONE);
 		mServerSettingsButton.setVisibility(View.GONE);
 		mImportOrExportButton.setVisibility(View.GONE);
-		mRestartBackgroundServiceButton.setVisibility(View.GONE);
+		mSystemToolsButton.setVisibility(View.GONE);
 		mTimeBehindNetworkTextView.setVisibility(View.GONE);
 	}
 	

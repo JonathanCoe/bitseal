@@ -203,7 +203,7 @@ public class InboxMessageActivity extends Activity implements ICacheWordSubscrib
 				{
 				    android.text.ClipboardManager clipboard = (android.text.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
 				    clipboard.setText(mMessage.getBody());
-				} 
+				}
 				
 				else 
 				{

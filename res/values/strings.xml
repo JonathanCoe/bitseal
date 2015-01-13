@@ -164,10 +164,29 @@
     <string name="activity_settings_title">Settings</string>
     <string name="settings_security_settings_button_label">Security Settings</string>
     <string name="settings_server_settings_button_label">Server Settings</string>
-    <string name="settings_import_or_export_button_label">Import or export data</string>
-    <string name="settings_restart_background_service_button_label">Restart background service</string>
+    <string name="settings_import_or_export_button_label">Import or export data</string>  
+    <string name="settings_system_tools_button_label">System tools</string>
     <string name="settings_show_settings_textbox_label">Show settings (for advanced users only)</string>
-    <string name="settings_toast_background_service_restart">Background Service queued for restart</string>
+    
+    
+    <!-- System Tools Activity: -->
+    <string name="activity_system_tools_title">System Tools</string>
+    <string name="system_tools_restart_background_service_button_label">Restart background service</string>
+    <string name="system_tools_toast_background_service_restart">Background Service queued for restart</string>
+    <string name="system_tools_view_log_button_label">View log</string>
+    <string name="system_tools_view_exceptions_button_label">View recent errors</string>
+    
+    
+    <!-- View Log Activity: -->
+    <string name="activity_view_log_title">System Log</string>
+    <string name="activity_view_log_item_copied_toast">Log message copied to the clipboard</string>
+    
+    
+    <!-- View Errors Activity: -->
+    <string name="activity_view_errors_title">Recent Errors</string>
+    <string name="activity_view_errors_placeholder_message">No errors to display</string>
+    <string name="activity_view_errors_error_copied_toast">Error message copied to the clipboard</string>
+    
     
     <!-- Servers Activity: -->
     <string name="activity_servers_title">Servers</string>
@@ -245,8 +264,8 @@
     <string name="security_disable_database_encryption_confirm_confirm_button_label">Confirm</string>
     <string name="security_disable_database_encryption_confirm_cancel_button_label">Cancel</string>
     <string name="security_toast_changing_passphrase">Changing the database passphrase&#8230;</string>
-    <string name="security_toast_encrypting_database">Encrypting the database&#8230;</string>
-    <string name="security_toast_disabling_encryption">Disabling database encryption&#8230;</string>
+    <string name="security_toast_encrypting_database">Encrypting the database,\nplease wait&#8230;</string>
+    <string name="security_toast_disabling_encryption">Disabling database encryption,\nplease wait&#8230;</string>
     <string name="security_toast_passphrases_not_match">The passphrases do not match</string>
     <string name="security_toast_passphrase_at_least">The passphrase must be at least </string>
     <string name="security_toast_characters_long"> characters long</string>

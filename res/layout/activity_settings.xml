@@ -50,7 +50,7 @@
 		    />
 		  
 		  <Button 
-		    android:id="@+id/settings_restart_background_service_button"
+		    android:id="@+id/settings_system_tools_button"
 		    android:textSize="20sp"
 		    android:layout_width="match_parent"
 		    android:layout_height="50dp"
@@ -58,7 +58,7 @@
 		    android:layout_marginBottom="20dp"
 		    android:layout_marginLeft="16dp"
 		    android:layout_marginRight="16dp"
-		    android:hint="@string/settings_restart_background_service_button_label"
+		    android:hint="@string/settings_system_tools_button_label"
 		    />
 		  
 		  <TextView
@@ -79,6 +79,7 @@
 		    android:layout_height="wrap_content"
 		    android:layout_marginTop="10dp"
 		    android:layout_marginLeft="6dp"
+		    android:layout_marginStart="6dp"
 		    android:text="@string/settings_show_settings_textbox_label" 
 		    />
 		  

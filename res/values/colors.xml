@@ -10,4 +10,5 @@
     <color name="darkGrey_opaque">#FF444444</color>
     <color name="darkerGrey_opaque">#FF2E2E2E</color>
     <color name="red_opaque">#FFFF0000</color>
+    <color name="dark_green">#009933</color>
 </resources>
