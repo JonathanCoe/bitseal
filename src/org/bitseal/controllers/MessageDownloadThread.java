@@ -23,7 +23,7 @@ public class MessageDownloadThread
 	
 	private Thread downloadThread;
 	
-	private static final String TAG = "MessageDownloadThread";
+	private static final String TAG = "MESSAGE_DOWNLOAD_THREAD";
 	
 	private static class Holder 
     {

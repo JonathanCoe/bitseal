@@ -22,7 +22,7 @@ public class MessageProcessingThread
 	/** Stores the Unix timestamp of the last msg payload we processed. This can be used to tell us how far behind the network we are. */
 	private static final String LAST_PROCESSED_MSG_TIME = "lastProcessedMsgTime";
 	
-	private static final String TAG = "MessageProcessingThread";
+	private static final String TAG = "MESSAGE_PROCESSING_THREAD";
 	
 	private static class Holder 
     {
