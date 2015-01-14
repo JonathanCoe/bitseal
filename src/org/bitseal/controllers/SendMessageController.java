@@ -64,6 +64,7 @@ public class SendMessageController
 				if (getpubkeyPayload.getTime() != 0) // If the payload has been disseminated already
 				{
 					Log.i(TAG, "Skipping dissemination of getpubkey payload because it was successfully disseminated and its time to live has not yet expired");
+					MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_waiting_for_pubkey));
 					return getpubkeyPayload; // Do not disseminate the payload again - there is no need to
 				}
 				

@@ -24,7 +24,8 @@
     
     <!-- Message Status Strings: -->
     <string name="message_status_preparing_to_send">Preparing to send message</string>
-    <string name="message_status_requesting_pubkey">Retrieving encryption keys</string>
+    <string name="message_status_requesting_pubkey">Requesting encryption keys from server</string>
+    <string name="message_status_waiting_for_pubkey">Awaiting encryption keys from server</string>
     <string name="message_status_constructing_payload">Constructing message payload</string>
     <string name="message_status_doing_ack_pow">Doing proof of work for the acknowledgement</string>
     <string name="message_status_encrypting_message">Encrypting the message</string>
