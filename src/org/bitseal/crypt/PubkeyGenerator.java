@@ -18,7 +18,7 @@ public class PubkeyGenerator
 	private static final int OBJECT_TYPE_PUBKEY = 1;
 	
 	/** The 'time to live' value (in seconds) that we will use when creating new pubkey objects. */
-	private static final long PUBKEY_TTL = 604800; // Currently set to 7 days
+	private static final long PUBKEY_TTL = 259200; // Currently set to 3 days
 	
 	/** In Bitmessage protocol version 3, the network standard value for nonce trials per byte is 1000. */
 	public static final int NETWORK_NONCE_TRIALS_PER_BYTE = 1000;
