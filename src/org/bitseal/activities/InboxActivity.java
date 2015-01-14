@@ -166,7 +166,8 @@ public class InboxActivity extends ListActivity implements ICacheWordSubscriber
         }
         catch (Exception e)
         {
-        	Log.e(TAG, "While running InboxActivity.onCreate, our attempt to access the database failed.");
+        	Log.e(TAG, "While running InboxActivity.onCreate, our attempt to access the database failed.\n" +
+        			"The exception message was: " + e.getMessage());
         	
         	if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false))
         	{
