@@ -137,108 +137,118 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 	@Override
 	protected void doWakefulWork(Intent i)
 	{
-		Log.i(TAG, "BackgroundService.onHandleIntent() called");
-		
-		// Connect to the CacheWordService and check whether it is locked
-		mCacheWordHandler = new CacheWordHandler(this);
-		mCacheWordHandler.connectToService();
-		SystemClock.sleep(5000); // We need to allow some extra time to connect to the CacheWordService
-		if (mCacheWordHandler.isLocked())
+		try
 		{
+			Log.i(TAG, "BackgroundService.onHandleIntent() called");
+			
+			// Connect to the CacheWordService and check whether it is locked
+			mCacheWordHandler = new CacheWordHandler(this);
+			mCacheWordHandler.connectToService();
+			SystemClock.sleep(5000); // We need to allow some extra time to connect to the CacheWordService
+			if (mCacheWordHandler.isLocked())
+			{
+				scheduleRestart();
+				closeDatabaseIfLocked();
+				return;
+			}
+			
+			// Determine whether the intent came from a request for periodic
+			// background processing or from a UI request
+			if (i.hasExtra(PERIODIC_BACKGROUND_PROCESSING_REQUEST))
+			{
+				processTasks();
+			}
+			
+			else if (i.hasExtra(UI_REQUEST))
+			{
+				String uiRequest = i.getStringExtra(UI_REQUEST);
+				
+				TaskController taskController = new TaskController();
+				
+				if (uiRequest.equals(UI_REQUEST_SEND_MESSAGE))
+				{
+					Log.i(TAG, "Responding to UI request to run the 'send message' task");
+					
+					// Get the ID of the Message object from the intent
+					Bundle extras = i.getExtras();
+					long messageID = extras.getLong(MESSAGE_ID);
+					
+					// Attempt to retrieve the Message from the database. If it has been deleted by the user
+					// then we should abort the sending process. 
+					Message messageToSend = null;
+					try
+					{
+						MessageProvider msgProv = MessageProvider.get(getApplicationContext());
+						messageToSend = msgProv.searchForSingleRecord(messageID);
+					}
+					catch (RuntimeException e)
+					{
+						Log.i(TAG, "While running BackgroundService.onHandleIntent() and attempting to process a UI request of type\n"
+								+ UI_REQUEST_SEND_MESSAGE + ", the attempt to retrieve the Message object from the database failed.\n"
+								+ "The message sending process will therefore be aborted.");
+						return;
+					}
+									
+					// Create a new QueueRecord for the 'send message' task and save it to the database
+					QueueRecordProcessor queueProc = new QueueRecordProcessor();
+					QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, 0, 0, messageToSend, null, null);
+					
+					// Also create a new QueueRecord for re-sending this msg in the event that we do not receive an acknowledgement for it
+					// before its time to live expires. If we do receive the acknowledgement before then, this QueueRecord will be deleted
+					long currentTime = System.currentTimeMillis() / 1000;
+					queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, currentTime + FIRST_ATTEMPT_TTL, 1, messageToSend, null, null);
+					
+					// Attempt to send the message
+					taskController.sendMessage(queueRecord, messageToSend, DO_POW, FIRST_ATTEMPT_TTL, FIRST_ATTEMPT_TTL);
+				}
+				
+				else if (uiRequest.equals(UI_REQUEST_CREATE_IDENTITY))
+				{
+					Log.i(TAG, "Responding to UI request to run the 'create new identity' task");
+					
+					// Get the ID of the Address object from the intent
+					Bundle extras = i.getExtras();
+					long addressId = extras.getLong(ADDRESS_ID);
+					
+					// Attempt to retrieve the Address from the database. If it has been deleted by the user
+					// then we should abort the sending process. 
+					Address address = null;
+					try
+					{
+						AddressProvider addProv = AddressProvider.get(getApplicationContext());
+						address = addProv.searchForSingleRecord(addressId);
+					}
+					catch (RuntimeException e)
+					{
+						Log.i(TAG, "While running BackgroundService.onHandleIntent() and attempting to process a UI request of type\n"
+								+ UI_REQUEST_CREATE_IDENTITY + ", the attempt to retrieve the Address object from the database failed.\n"
+								+ "The identity creation process will therefore be aborted.");
+						return;
+					}
+					
+					// Create a new QueueRecord for the create identity task and save it to the database
+					QueueRecordProcessor queueProc = new QueueRecordProcessor();
+					QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(TASK_CREATE_IDENTITY, 0, 0, address, null, null);
+					
+					// Attempt to complete the create identity task
+					taskController.createIdentity(queueRecord, DO_POW);
+				}
+			}
+			else
+			{
+				Log.e(TAG, "BackgroundService.onHandleIntent() was called without a valid extra to specify what the service should do.");
+			}
+			
 			scheduleRestart();
 			closeDatabaseIfLocked();
-			return;
 		}
-		
-		// Determine whether the intent came from a request for periodic
-		// background processing or from a UI request
-		if (i.hasExtra(PERIODIC_BACKGROUND_PROCESSING_REQUEST))
+		catch (Exception e)
 		{
-			processTasks();
+			Log.e(TAG, "Exception occurred in BackgroundService.doWakefulWork(). The exception message was:\n"
+					+ e.getMessage());
+			scheduleRestart();
+			closeDatabaseIfLocked();
 		}
-		
-		else if (i.hasExtra(UI_REQUEST))
-		{
-			String uiRequest = i.getStringExtra(UI_REQUEST);
-			
-			TaskController taskController = new TaskController();
-			
-			if (uiRequest.equals(UI_REQUEST_SEND_MESSAGE))
-			{
-				Log.i(TAG, "Responding to UI request to run the 'send message' task");
-				
-				// Get the ID of the Message object from the intent
-				Bundle extras = i.getExtras();
-				long messageID = extras.getLong(MESSAGE_ID);
-				
-				// Attempt to retrieve the Message from the database. If it has been deleted by the user
-				// then we should abort the sending process. 
-				Message messageToSend = null;
-				try
-				{
-					MessageProvider msgProv = MessageProvider.get(getApplicationContext());
-					messageToSend = msgProv.searchForSingleRecord(messageID);
-				}
-				catch (RuntimeException e)
-				{
-					Log.i(TAG, "While running BackgroundService.onHandleIntent() and attempting to process a UI request of type\n"
-							+ UI_REQUEST_SEND_MESSAGE + ", the attempt to retrieve the Message object from the database failed.\n"
-							+ "The message sending process will therefore be aborted.");
-					return;
-				}
-								
-				// Create a new QueueRecord for the 'send message' task and save it to the database
-				QueueRecordProcessor queueProc = new QueueRecordProcessor();
-				QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, 0, 0, messageToSend, null, null);
-				
-				// Also create a new QueueRecord for re-sending this msg in the event that we do not receive an acknowledgement for it
-				// before its time to live expires. If we do receive the acknowledgement before then, this QueueRecord will be deleted
-				long currentTime = System.currentTimeMillis() / 1000;
-				queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, currentTime + FIRST_ATTEMPT_TTL, 1, messageToSend, null, null);
-				
-				// Attempt to send the message
-				taskController.sendMessage(queueRecord, messageToSend, DO_POW, FIRST_ATTEMPT_TTL, FIRST_ATTEMPT_TTL);
-			}
-			
-			else if (uiRequest.equals(UI_REQUEST_CREATE_IDENTITY))
-			{
-				Log.i(TAG, "Responding to UI request to run the 'create new identity' task");
-				
-				// Get the ID of the Address object from the intent
-				Bundle extras = i.getExtras();
-				long addressId = extras.getLong(ADDRESS_ID);
-				
-				// Attempt to retrieve the Address from the database. If it has been deleted by the user
-				// then we should abort the sending process. 
-				Address address = null;
-				try
-				{
-					AddressProvider addProv = AddressProvider.get(getApplicationContext());
-					address = addProv.searchForSingleRecord(addressId);
-				}
-				catch (RuntimeException e)
-				{
-					Log.i(TAG, "While running BackgroundService.onHandleIntent() and attempting to process a UI request of type\n"
-							+ UI_REQUEST_CREATE_IDENTITY + ", the attempt to retrieve the Address object from the database failed.\n"
-							+ "The identity creation process will therefore be aborted.");
-					return;
-				}
-				
-				// Create a new QueueRecord for the create identity task and save it to the database
-				QueueRecordProcessor queueProc = new QueueRecordProcessor();
-				QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(TASK_CREATE_IDENTITY, 0, 0, address, null, null);
-				
-				// Attempt to complete the create identity task
-				taskController.createIdentity(queueRecord, DO_POW);
-			}
-		}
-		else
-		{
-			Log.e(TAG, "BackgroundService.onHandleIntent() was called without a valid extra to specify what the service should do.");
-		}
-		
-		scheduleRestart();
-		closeDatabaseIfLocked();
 	}
 	
 	/**
