@@ -227,7 +227,7 @@ public final class AddressProcessor
 				byte[] zeroByte = new byte[]{0};
 				ripeHash = ByteUtils.concatenateByteArrays(zeroByte, ripeHash);
 			}
-			Log.i(TAG, "Ripe hash extracted from address string:                " + ByteFormatter.byteArrayToHexString(ripeHash));
+			Log.i(TAG, "Ripe hash extracted from address string: " + ByteFormatter.byteArrayToHexString(ripeHash));
 			
 			return ripeHash;
 		}
