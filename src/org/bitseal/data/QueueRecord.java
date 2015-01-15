@@ -26,7 +26,7 @@ public class QueueRecord implements Comparable<QueueRecord>
 	 * may need to be completed several times. <br><br>
 	 * 
 	 * For example, when we send a message, if we do not receive the acknowledgement for that message before its time to
-	 * live has expired, we will need to send that message again until we receive the acknowledgment. 
+	 * live has expired, we will need to send that message again until we receive the acknowledgement. 
 	 * */
 	private int recordCount;
 	
