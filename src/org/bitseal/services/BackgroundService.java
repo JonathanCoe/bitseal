@@ -289,7 +289,6 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 		// Check the database TaskQueue table for any queued tasks
 		QueueRecordProvider queueProv = QueueRecordProvider.get(getApplicationContext());
 		QueueRecordProcessor queueProc = new QueueRecordProcessor();
-		
 		ArrayList<QueueRecord> queueRecords = queueProv.getAllQueueRecords();
 		Log.i(TAG, "Number of QueueRecords found: " + queueRecords.size());
 		
@@ -303,7 +302,6 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 			{
 				try
 				{
-				
 					Log.i(TAG, "Found a QueueRecord with the task " + q.getTask() + " and number of attempts " + q.getAttempts());
 					
 					// First check how many times the task recorded by this QueueRecord has been attempted.
@@ -317,6 +315,7 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 						
 						if (task.equals(TASK_SEND_MESSAGE))
 						{
+							// Update the status of the Message we were trying to send to indicate that sending has failed
 							MessageProvider msgProv = MessageProvider.get(getApplicationContext());
 							Message messageToSend = msgProv.searchForSingleRecord(q.getObject0Id());
 							MessageStatusHandler.updateMessageStatus(messageToSend, getApplicationContext().getString(R.string.message_status_sending_failed));
@@ -325,7 +324,7 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 						continue;
 					}
 					
-					if (task.equals(TASK_SEND_MESSAGE))
+					else if (task.equals(TASK_SEND_MESSAGE))
 					{
 						// Attempt to retrieve the Message from the database. If it has been deleted by the user
 						// then we should abort the sending process. 
@@ -338,6 +337,16 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 							if (checkForEarlierSendMsgQueueRecords(q))
 							{
 								continue;
+							}
+							else
+							{
+								// If there are no earlier QueueRecords for this 'send message' task, set the record count
+								// of this QueueRecord to zero
+								if (q.getRecordCount() != 0)
+								{
+									q.setRecordCount(0);
+									queueProc.updateQueueRecord(q);
+								}
 							}
 							
 							// Ignore any QueueRecords that have a 'trigger time' in the future
