@@ -13,6 +13,7 @@ import org.bitseal.database.PayloadProvider;
 import org.bitseal.database.PayloadsTable;
 import org.bitseal.database.PubkeyProvider;
 import org.bitseal.database.PubkeysTable;
+import org.bitseal.util.ByteFormatter;
 import org.bitseal.util.TimeUtils;
 
 import android.util.Log;
@@ -25,7 +26,7 @@ import android.util.Log;
  * @author Jonathan Coe
  */
 public class ReDisseminatePubkeysController
-{	
+{
 	private static final String TAG = "RE_DISSEMINATE_PUBKEYS_CONTROLLER";
 	
 	/**
@@ -38,14 +39,29 @@ public class ReDisseminatePubkeysController
 	public ArrayList<Address> checkIfPubkeyDisseminationIsDue()
 	{
 		// Get all the user's pubkeys
-		ArrayList<Pubkey> myPubkeys = PubkeyProvider.get(App.getContext()).searchPubkeys(PubkeysTable.COLUMN_BELONGS_TO_ME, String.valueOf(1)); // 1 stands for true in the database
+		PubkeyProvider pubProv = PubkeyProvider.get(App.getContext());
+		ArrayList<Pubkey> myPubkeys = pubProv.searchPubkeys(PubkeysTable.COLUMN_BELONGS_TO_ME, String.valueOf(1)); // 1 stands for true in the database
 		
 		// Check whether any of our pubkeys need to be disseminated again
 		ArrayList<Address> addressesWithExpiredPubkeys = new ArrayList<Address>();
 		for (Pubkey p : myPubkeys)
 		{
-			Address address = AddressProvider.get(App.getContext()).searchForSingleRecord(p.getCorrespondingAddressId());
+			// Retrieve the Address object that corresponds to this pubkey
+			Address address = null;
+			try
+			{
+				address = AddressProvider.get(App.getContext()).searchForSingleRecord(p.getCorrespondingAddressId());
+			}
+			catch (RuntimeException e)
+			{
+				Log.e(TAG, "While running ReDisseminatePubkeysController.checkIfPubkeyDisseminationIsDue(), we were unable to find " 
+						+ "a database record of the Address for the Pubkey with the ripe hash " + ByteFormatter.byteArrayToHexString(p.getRipeHash()) + ". " 
+						+ "As the Pubkey is useless without its corresponding address, the Pubkey will now be deleted from the database.");
+				pubProv.deletePubkey(p);
+				continue;
+			}
 			
+			// Work out whether the pubkey is due for re-dissemination
 			long currentTime = System.currentTimeMillis() / 1000;
 			long expirationTime = p.getExpirationTime();
 			if (expirationTime < currentTime)
