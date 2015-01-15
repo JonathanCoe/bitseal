@@ -46,14 +46,7 @@ public class SigProcessor
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		try
 		{
-			if (pubkey.getObjectVersion() < 4)
-			{
-				outputStream.write(ByteUtils.intToBytes((int) pubkey.getExpirationTime())); // Pubkeys of version 3 and below use 4 byte time
-			}
-			else
-			{
-				outputStream.write(ByteUtils.longToBytes(pubkey.getExpirationTime())); // Pubkeys of version 4 and above use 8 byte time
-			}
+			outputStream.write(ByteUtils.longToBytes(pubkey.getExpirationTime()));
 			outputStream.write(ByteUtils.intToBytes(pubkey.getObjectType()));
 			outputStream.write(VarintEncoder.encode(pubkey.getObjectVersion()));
 			outputStream.write(VarintEncoder.encode(pubkey.getStreamNumber()));
