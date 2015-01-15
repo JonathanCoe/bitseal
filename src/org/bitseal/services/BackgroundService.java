@@ -302,7 +302,7 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 			{
 				try
 				{
-					Log.i(TAG, "Found a QueueRecord with the task " + q.getTask() + " and number of attempts " + q.getAttempts());
+					Log.i(TAG, "Found a QueueRecord with ID " + q.getId() + ", task " + q.getTask() + ", and number of attempts " + q.getAttempts());
 					
 					// First check how many times the task recorded by this QueueRecord has been attempted.
 					// If it has been attempted a very high number of times (all without success) then we
@@ -327,53 +327,12 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 					else if (task.equals(TASK_SEND_MESSAGE))
 					{
 						// Attempt to retrieve the Message from the database. If it has been deleted by the user
-						// then we should abort the sending process. 
+						// then we should abort the sending process.
+						Message messageToSend = null;
 						try
 						{
 							MessageProvider msgProv = MessageProvider.get(getApplicationContext());
-							Message messageToSend = msgProv.searchForSingleRecord(q.getObject0Id());
-							
-							// Check whether there are any existing QueueRecords which should be processed before this one
-							if (checkForEarlierSendMsgQueueRecords(q))
-							{
-								continue;
-							}
-							else
-							{
-								// If there are no earlier QueueRecords for this 'send message' task, set the record count
-								// of this QueueRecord to zero
-								if (q.getRecordCount() != 0)
-								{
-									q.setRecordCount(0);
-									queueProc.updateQueueRecord(q);
-								}
-							}
-							
-							// Ignore any QueueRecords that have a 'trigger time' in the future
-							long currentTime = System.currentTimeMillis() / 1000;
-							if (q.getTriggerTime() > currentTime)
-							{
-								Log.i(TAG, "Ignoring a QueueRecord for a " + q.getTask() + " task because its trigger time has not been reached yet.\n"
-										+ "Its trigger time will be reached in roughly " + TimeUtils.getTimeMessage(q.getTriggerTime() - currentTime));
-								continue;
-							}
-							
-							// Check which TTL value we should use
-							if (q.getRecordCount() == 0)
-							{
-								// Attempt to send the message
-								taskController.sendMessage(q, messageToSend, DO_POW, FIRST_ATTEMPT_TTL, FIRST_ATTEMPT_TTL);
-							}
-							else
-							{
-								// Create a new QueueRecord for re-sending this msg in the event that we do not receive an acknowledgement for it
-								// before its time to live expires. If we do receive the acknowledgement before then, this QueueRecord will be deleted
-								currentTime = System.currentTimeMillis() / 1000;
-								queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, currentTime + SUBSEQUENT_ATTEMPTS_TTL, q.getRecordCount() + 1, messageToSend, null, null);
-								
-								// Attempt to send the message
-								taskController.sendMessage(q, messageToSend, DO_POW, SUBSEQUENT_ATTEMPTS_TTL, SUBSEQUENT_ATTEMPTS_TTL);
-							}
+							messageToSend = msgProv.searchForSingleRecord(q.getObject0Id());
 						}
 						catch (RuntimeException e)
 						{
@@ -382,6 +341,61 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 									+ "The message sending process will therefore be aborted.");
 							queueProv.deleteQueueRecord(q);
 							continue;
+						}
+							
+						// Check whether there are any existing QueueRecords which should be processed before this one.
+						// If there are, this method will push the trigger time of this QueueRecord further into the future.
+						if (checkForEarlierSendMsgQueueRecords(q))
+						{
+							Log.i(TAG, "Ignoring QueueRecord with ID " + q.getId() + " and task " + q.getTask() + " because there is another QueueRecord for "
+									+ "the same task which should be processed first.");
+							continue;
+						}
+						
+						// Ignore any QueueRecords that have a 'trigger time' in the future
+						long currentTime = System.currentTimeMillis() / 1000;
+						if (q.getTriggerTime() > currentTime)
+						{
+							Log.i(TAG, "Ignoring a QueueRecord for a " + q.getTask() + " task because its trigger time has not been reached yet.\n"
+									+ "Its trigger time will be reached in roughly " + TimeUtils.getTimeMessage(q.getTriggerTime() - currentTime));
+							continue;
+						}
+						
+						// Work out which TTL value we should use and attempt to send the message
+						if (q.getRecordCount() == 0)
+						{
+							// Attempt to send the message
+							taskController.sendMessage(q, messageToSend, DO_POW, FIRST_ATTEMPT_TTL, FIRST_ATTEMPT_TTL);
+						}
+						else
+						{
+							// Unless we have already done so, we need to create a new QueueRecord for re-sending this msg in the event that we do not receive
+							// an acknowledgement for it before its time to live expires. If we do receive the acknowledgement before then, this
+							// QueueRecord will be deleted. 
+							
+							// First check whether there is already a QueueRecord for re-sending this message
+							ArrayList<QueueRecord> matchingRecords = queueProv.searchQueueRecords(QueueRecordsTable.COLUMN_OBJECT_0_ID, String.valueOf(q.getObject0Id()));
+							boolean matchingRecordExists = false;
+							for (QueueRecord match : matchingRecords)
+							{
+								if (match.getId() != q.getId())
+								{
+									matchingRecordExists = true;
+								}
+							}
+							
+							// If there is no other QueueRecord for sending this message, create one.
+							if (matchingRecordExists == false)
+							{
+								// Create a new QueueRecord for re-sending this msg in the event that we do not receive an acknowledgement for it
+								// before its time to live expires. If we do receive the acknowledgement before then, this QueueRecord will be deleted
+								Log.i(TAG, "Creating a QueueRecord to re-send message with ID " + messageToSend.getId());
+								currentTime = System.currentTimeMillis() / 1000;
+								queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, currentTime + SUBSEQUENT_ATTEMPTS_TTL, q.getRecordCount() + 1, messageToSend, null, null);
+							}
+							
+							// Attempt to send the message
+							taskController.sendMessage(q, messageToSend, DO_POW, SUBSEQUENT_ATTEMPTS_TTL, SUBSEQUENT_ATTEMPTS_TTL);
 						}
 					}
 					
