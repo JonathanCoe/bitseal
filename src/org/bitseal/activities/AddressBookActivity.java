@@ -739,8 +739,7 @@ public class AddressBookActivity extends ListActivity implements ICacheWordSubsc
  		        break;
  		        
  		    case R.id.menu_item_addressBook:
- 		        Intent intent5 = new Intent(this, AddressBookActivity.class);
- 		        startActivity(intent5);
+ 		        // We are already here, so there's nothing to do
  		        break;
  		        
  		    case R.id.menu_item_settings:

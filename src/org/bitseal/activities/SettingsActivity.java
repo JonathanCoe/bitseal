@@ -251,8 +251,7 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
  		        break;
  		        
  		    case R.id.menu_item_settings:
- 		        Intent intent6 = new Intent(this, SettingsActivity.class);
- 		        startActivity(intent6);
+ 		    	// We are already here, so there's nothing to do
  		        break;
  		        
  		    case R.id.menu_item_lock:

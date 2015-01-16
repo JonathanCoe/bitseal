@@ -548,8 +548,7 @@ public class InboxActivity extends ListActivity implements ICacheWordSubscriber
 	    switch(item.getItemId()) 
 	    {
 		    case R.id.menu_item_inbox:
-		        Intent intent1 = new Intent(this, InboxActivity.class);
-		        startActivity(intent1);
+		    	// We are already here, so there's nothing to do
 		        break;
 		        
 		    case R.id.menu_item_sent:

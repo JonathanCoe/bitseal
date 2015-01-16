@@ -687,8 +687,7 @@ public class IdentitiesActivity extends ListActivity implements ICacheWordSubscr
   		        break;
   		        
   		    case R.id.menu_item_identities:
-  		        Intent intent4 = new Intent(this, IdentitiesActivity.class);
-  		        startActivity(intent4);
+  		    	// We are already here, so there's nothing to do
   		        break;
   		        
   		    case R.id.menu_item_addressBook:

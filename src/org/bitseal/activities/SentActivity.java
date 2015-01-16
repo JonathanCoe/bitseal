@@ -379,8 +379,7 @@ public class SentActivity extends ListActivity implements ICacheWordSubscriber
  		        break;
  		        
  		    case R.id.menu_item_sent:
- 		        Intent intent2 = new Intent(this, SentActivity.class);
- 		        startActivity(intent2);
+ 		    	// We are already here, so there's nothing to do
  		        break;  
  		        
  		    case R.id.menu_item_compose:

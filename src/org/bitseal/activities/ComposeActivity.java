@@ -932,8 +932,7 @@ public class ComposeActivity extends Activity implements ICacheWordSubscriber
  		        break;  
  		        
  		    case R.id.menu_item_compose:
- 		        Intent intent3 = new Intent(this, ComposeActivity.class);
- 		        startActivity(intent3);
+ 		    	// We are already here, so there's nothing to do
  		        break;
  		        
  		    case R.id.menu_item_identities:
