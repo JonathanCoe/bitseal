@@ -41,7 +41,15 @@
     <string name="inbox_activity_title">Inbox</string>
     <string name="inbox_unread_tag">New</string>
     <string name="inbox_toast_unknown_database_error">An unknown error occurred while trying to access the database</string>
-        
+    <string name="inbox_welcome_message_to_address">Me</string>
+    <string name="inbox_welcome_message_from_address">BM-NC2oGii7w8UT4igUhsCBGBE7gngvoD83</string>
+    <string name="inbox_welcome_message_subject">Welcome to Bitseal. Please read this!</string>
+    <string name="inbox_welcome_message_body">Thanks for trying out Bitseal! We really hope you enjoy the app.\n\nIf you have any feedback, please feel free to send us a message.\n\nNote: When you first run Bitseal, a new Bitmessage address will be generated for you. Bitseal will then do proof of work to publish that address to the Bitmessage network. This will take a few minutes and may cause delays in sending and receiving messages until it has been completed.</string>
+    <string name="inbox_default_address_book_entry_0_label">Bitseal Developers</string>
+    <string name="inbox_default_address_book_entry_0_address">BM-NC2oGii7w8UT4igUhsCBGBE7gngvoD83</string>
+    <string name="inbox_default_address_book_entry_1_label">Darklogs.com</string>
+    <string name="inbox_default_address_book_entry_1_address">BM-2cTUZmrFaypXnAR4DAXLbAb6KrFPRhGyEe</string>
+    
     <!-- Inbox Message Activity: -->
     <string name="inbox_message_activity_title">Message</string>
     <string name="inbox_message_toAddress_label">To</string>

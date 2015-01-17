@@ -147,7 +147,7 @@ public class InboxMessageActivity extends Activity implements ICacheWordSubscrib
 			mToAddressTextView.setText(retrievedAddresses.get(0).getLabel());
 			mToAddressTextView.setTextSize(15);
 		}
-		else if (toAddressString.equals(InboxActivity.WELCOME_MESSAGE_TO_ADDRESS)) 
+		else if (toAddressString.equals(getResources().getString(R.string.inbox_welcome_message_to_address))) 
 		{
 			// If this is the welcome message, we want the "to" label to be full size, even though it isn't really a valid label
 			mToAddressTextView.setText(toAddressString);

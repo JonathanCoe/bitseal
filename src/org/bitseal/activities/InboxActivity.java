@@ -12,6 +12,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import org.bitseal.R;
+import org.bitseal.core.App;
 import org.bitseal.crypt.AddressGenerator;
 import org.bitseal.data.Address;
 import org.bitseal.data.AddressBookRecord;
@@ -21,8 +22,8 @@ import org.bitseal.database.AddressBookRecordsTable;
 import org.bitseal.database.AddressProvider;
 import org.bitseal.database.MessageProvider;
 import org.bitseal.database.MessagesTable;
-import org.bitseal.services.BackgroundService;
 import org.bitseal.services.AppLockHandler;
+import org.bitseal.services.BackgroundService;
 import org.bitseal.services.NotificationsService;
 import org.bitseal.util.ColourCalculator;
 
@@ -33,6 +34,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -60,24 +62,8 @@ public class InboxActivity extends ListActivity implements ICacheWordSubscriber
     private ListView mInboxListView;
         
     private int mListPosition = 0;
-    
-    // Some default entries for the address book
+        
     private static final String INBOX_FIRST_RUN = "inbox_first_run";
-    private static final String ADDRESS_BOOK_ENTRY_0_LABEL = "Bitseal Developers";
-    private static final String ADDRESS_BOOK_ENTRY_0_ADDRESS = "BM-NC2oGii7w8UT4igUhsCBGBE7gngvoD83";
-    private static final String ADDRESS_BOOK_ENTRY_1_LABEL = "Darklogs.com";
-    private static final String ADDRESS_BOOK_ENTRY_1_ADDRESS = "BM-2cTUZmrFaypXnAR4DAXLbAb6KrFPRhGyEe";
-    
-    // A welcome message for new users
-    protected static final String WELCOME_MESSAGE_TO_ADDRESS = "Me";
-    private static final String WELCOME_MESSAGE_FROM_ADDRESS = "BM-NC2oGii7w8UT4igUhsCBGBE7gngvoD83";
-    private static final String WELCOME_MESSAGE_SUBJECT = "Welcome to Bitseal. Please read this!";
-    private static final String WELCOME_MESSAGE_BODY = "Thanks for trying out Bitseal. We really hope you enjoy the app.\n\n" +
-    												   "If you have any feedback, please feel free to send us a message.\n\n" +
-    												   "Note: When you first run Bitseal, a new Bitmessage address will be generated " +
-    												   "for you. Bitseal will then do proof of work to publish that address " + 
-    												   "to the rest of the network. This will take a few minutes and " + 
-    												   "may cause delays in sending messages until it has been completed.";
     
     private static final String FIRST_ADDRESS_LABEL = "Me";
     
@@ -180,6 +166,11 @@ public class InboxActivity extends ListActivity implements ICacheWordSubscriber
         		Log.e(TAG, "Unknown exception occurred in InboxActivity.onCreate");
         	}
         }
+        
+        // If we have reached this point without crashing, then it should be safe to reset the uncaught exception handler flag
+		SharedPreferences.Editor editor = prefs.edit();
+	    editor.putBoolean(App.UNCAUGHT_EXCEPTION_HANDLED, true);
+	    editor.commit();
 	}
 	
 	@Override
@@ -264,13 +255,14 @@ public class InboxActivity extends ListActivity implements ICacheWordSubscriber
 	    editor.commit();
 	    
 	    // Add some default entries to the address book
+	    Resources resources = getResources();
 		AddressBookRecord addressBookEntry0 = new AddressBookRecord();
-		addressBookEntry0.setLabel(ADDRESS_BOOK_ENTRY_0_LABEL);
-		addressBookEntry0.setAddress(ADDRESS_BOOK_ENTRY_0_ADDRESS);
+		addressBookEntry0.setLabel(resources.getString(R.string.inbox_default_address_book_entry_0_label));
+		addressBookEntry0.setAddress(resources.getString(R.string.inbox_default_address_book_entry_0_address));
 		
 		AddressBookRecord addressBookEntry1 = new AddressBookRecord();
-		addressBookEntry1.setLabel(ADDRESS_BOOK_ENTRY_1_LABEL);
-		addressBookEntry1.setAddress(ADDRESS_BOOK_ENTRY_1_ADDRESS);
+		addressBookEntry1.setLabel(resources.getString(R.string.inbox_default_address_book_entry_1_label));
+		addressBookEntry1.setAddress(resources.getString(R.string.inbox_default_address_book_entry_1_address));
 		
 		AddressBookRecordProvider addBookProv = AddressBookRecordProvider.get(this);
 		addBookProv.addAddressBookRecord(addressBookEntry0);
@@ -279,10 +271,10 @@ public class InboxActivity extends ListActivity implements ICacheWordSubscriber
 	    // Add the 'Welcome to Bitseal' message to the inbox
 		Message welcomeMessage = new Message();
 		welcomeMessage.setBelongsToMe(false);
-		welcomeMessage.setToAddress(WELCOME_MESSAGE_TO_ADDRESS);
-		welcomeMessage.setFromAddress(WELCOME_MESSAGE_FROM_ADDRESS);
-		welcomeMessage.setSubject(WELCOME_MESSAGE_SUBJECT);
-		welcomeMessage.setBody(WELCOME_MESSAGE_BODY);
+		welcomeMessage.setToAddress(resources.getString(R.string.inbox_welcome_message_to_address));
+		welcomeMessage.setFromAddress(resources.getString(R.string.inbox_welcome_message_from_address));
+		welcomeMessage.setSubject(resources.getString(R.string.inbox_welcome_message_subject));
+		welcomeMessage.setBody(resources.getString(R.string.inbox_welcome_message_body));
 		welcomeMessage.setTime(System.currentTimeMillis() / 1000);
 		
 		MessageProvider msgProv = MessageProvider.get(getApplicationContext());
