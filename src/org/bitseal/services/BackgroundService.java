@@ -19,10 +19,13 @@ import org.bitseal.database.AddressProvider;
 import org.bitseal.database.DatabaseContentProvider;
 import org.bitseal.database.MessageProvider;
 import org.bitseal.database.PayloadProvider;
+import org.bitseal.database.PayloadsTable;
 import org.bitseal.database.PubkeyProvider;
+import org.bitseal.database.PubkeysTable;
 import org.bitseal.database.QueueRecordProvider;
 import org.bitseal.database.QueueRecordsTable;
 import org.bitseal.network.NetworkHelper;
+import org.bitseal.util.ByteUtils;
 import org.bitseal.util.TimeUtils;
 
 import android.annotation.SuppressLint;
@@ -31,6 +34,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
+import android.util.Base64;
 import android.util.Log;
 
 import com.commonsware.cwac.wakeful.WakefulIntentService;
@@ -667,6 +671,9 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 		ArrayList<Address> myAddresses = addProv.getAllAddresses();
 		if (myAddresses.size() > 0)
 		{
+			// First delete any duplicate pubkeys and corresponding objects
+			deleteDuplicatePubkeys(myAddresses);
+			
 			// Attempt to complete the task
 			TaskController taskController = new TaskController();
 			taskController.checkIfPubkeyDisseminationIsDue(DO_POW);
@@ -674,6 +681,100 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 		else
 		{
 			Log.i(TAG, "No Addresses were found in the application database, so we will not run the 'Check if pubkey re-dissemination is due' task");
+		}
+	}
+	
+	/**
+	 * Deletes any duplicate pubkeys and any Payloads or QueueRecords that
+	 * correspond to them. 
+	 */
+	private void deleteDuplicatePubkeys(ArrayList<Address> myAddresses)
+	{
+		try
+		{
+			// First find any duplicate Pubkeys
+			PubkeyProvider pubProv = PubkeyProvider.get(getApplicationContext());
+			ArrayList<Pubkey> duplicatePubkeys = new ArrayList<Pubkey>();
+			for (Address a : myAddresses)
+			{
+				// Find any duplicate pubkeys
+				ArrayList<Pubkey> correspondingPubkeys = pubProv.searchPubkeys(PubkeysTable.COLUMN_RIPE_HASH, Base64.encodeToString(ByteUtils.stripLeadingZeros(a.getRipeHash()), Base64.DEFAULT));
+				
+				if (correspondingPubkeys.size() > 1)
+				{
+					// Mark all the pubkeys as potential duplicates 
+					for (Pubkey p : correspondingPubkeys)
+					{
+						duplicatePubkeys.add(p);
+					}
+					
+					// Remove the pubkey with the latest expiration time - this is the one to keep
+					long latestTimeValue = 0;
+					for (Pubkey p : correspondingPubkeys)
+					{
+						if (latestTimeValue == 0)
+						{
+							latestTimeValue = p.getExpirationTime();
+						}
+						else if (p.getExpirationTime() > latestTimeValue)
+						{
+							latestTimeValue = p.getExpirationTime();
+						}
+					}
+					for (Pubkey p : correspondingPubkeys)
+					{
+						if (p.getExpirationTime() == latestTimeValue)
+						{
+							duplicatePubkeys.remove(p);
+						}
+					}					
+				}
+			}
+			
+			Log.i(TAG, "Found " + duplicatePubkeys.size() + " duplicate Pubkey(s)");
+			
+			for (Pubkey p : duplicatePubkeys)
+			{
+				try
+				{
+					// Get the corresponding address
+					AddressProvider addProv = AddressProvider.get(getApplicationContext());
+					Address correspondingAddress = addProv.searchForSingleRecord(p.getCorrespondingAddressId());
+					
+					// Delete their corresponding pubkey Payloads and any QueueRecords for disseminating those payloads
+					PayloadProvider payProv = PayloadProvider.get(getApplicationContext());
+					ArrayList<Payload> correspondingPayloads = payProv.searchPayloads(PayloadsTable.COLUMN_RELATED_ADDRESS_ID, String.valueOf(correspondingAddress.getId()));
+					for (Payload payload : correspondingPayloads)
+					{
+						payProv.deletePayload(payload);
+						
+						// Delete any QueueRecords for disseminating this Payload
+						QueueRecordProvider queueProv = QueueRecordProvider.get(getApplicationContext());
+						ArrayList<QueueRecord> allQueueRecords = queueProv.getAllQueueRecords();
+						for (QueueRecord q : allQueueRecords)
+						{
+							if (q.getTask().equals(QueueRecordProcessor.TASK_DISSEMINATE_PUBKEY) && q.getObject0Id() == payload.getId())
+							{
+								queueProv.deleteQueueRecord(q);
+							}
+						}
+					}
+					
+					// Delete the duplicate Pubkey
+					pubProv.deletePubkey(p);
+				}
+				catch (Exception e)
+				{
+					Log.e(TAG, "Exception occurred while processing duplicate pubkeys in BackgroundService.deleteDuplicatePubkeys(). The exception message was:\n"
+							+ e.getMessage() + "\n Moving on to the next duplicate pubkey.");
+					continue;
+				}
+			}
+		}
+		catch (Exception e)
+		{
+			Log.e(TAG, "Exception occurred in BackgroundService.deleteDuplicatePubkeys(). The exception message was:\n"
+					+ e.getMessage());
 		}
 	}
 	

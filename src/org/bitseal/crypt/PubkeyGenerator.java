@@ -46,9 +46,9 @@ public class PubkeyGenerator
 		pubkey.setId(pubkeyId);
 		
 		// Finally, set the "correspondingPubkeyId" of the Address we started with to match the ID of the Pubkey we have just generated
-		AddressProvider addProv = AddressProvider.get(App.getContext());
 		// Note: We retrieve the Address from the database rather than using the one passed to this method so that any changes
 		// that have been made to the address since this method began (e.g. the user updating the address's label) will not be lost.
+		AddressProvider addProv = AddressProvider.get(App.getContext());
 		Address addressFromDatabase = addProv.searchForSingleRecord(address.getId());
 		addressFromDatabase.setCorrespondingPubkeyId(pubkeyId);
 		addProv.updateAddress(addressFromDatabase);

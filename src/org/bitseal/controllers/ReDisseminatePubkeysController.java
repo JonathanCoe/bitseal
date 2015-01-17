@@ -45,7 +45,7 @@ public class ReDisseminatePubkeysController
 		// Check whether any of our pubkeys need to be disseminated again
 		ArrayList<Address> addressesWithExpiredPubkeys = new ArrayList<Address>();
 		for (Pubkey p : myPubkeys)
-		{
+		{			
 			// Retrieve the Address object that corresponds to this pubkey
 			Address address = null;
 			try
@@ -97,8 +97,21 @@ public class ReDisseminatePubkeysController
 		
 		// Delete the old pubkey
 		PubkeyProvider pubProv = PubkeyProvider.get(App.getContext());
-		Pubkey oldPubkey = pubProv.searchForSingleRecord(address.getCorrespondingPubkeyId());
-		pubProv.deletePubkey(oldPubkey);
+		Pubkey oldPubkey = null;
+		try
+		{
+			oldPubkey = pubProv.searchForSingleRecord(address.getCorrespondingPubkeyId());
+		}
+		catch (Exception e)
+		{
+			Log.e(TAG, "While running ReDisseminatePubkeysController.regeneratePubkey(), we were unable to retrieve the pubkey "
+					+ "with ID " + address.getCorrespondingPubkeyId() + ". The address with ID " + address.getId() + " and address " + address.getAddress() + " " 
+					+ "has this pubkey registered as its corresponding pubkey. Skipping deletion, since the pubkey cannot be found.");
+		}
+		if (oldPubkey != null)
+		{
+			pubProv.deletePubkey(oldPubkey);
+		}
 		
 		// Delete the old pubkey's corresponding Payload(s)
 		PayloadProvider payProv = PayloadProvider.get(App.getContext());
