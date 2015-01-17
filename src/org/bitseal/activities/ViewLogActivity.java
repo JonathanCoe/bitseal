@@ -40,7 +40,7 @@ import android.widget.Toast;
 public class ViewLogActivity extends ListActivity implements ICacheWordSubscriber
 {   
     /** A set of log tags that we want filtered out of the log */
-	private static final String[] UNWANTED_LOG_TAGS = {"art", "Choreographer", "dalvikvm", "InputMethodManager", "CacheWordService", "CacheWordBinder"};
+	private static final String[] UNWANTED_LOG_TAGS = {"art", "Choreographer", "dalvikvm", "qdmemalloc", "System", "InputMethodManager", "CacheWordService", "CacheWordBinder"};
     
     /** The frequency in milliseconds by which we will update the log view */
     private static final long UPDATE_FREQUENCY_MILLISECONDS = 1500;
@@ -63,6 +63,8 @@ public class ViewLogActivity extends ListActivity implements ICacheWordSubscribe
     private ListView mLogListView;
     private LogAdapter mLogAdapter;    
     private ArrayList<String> mLogItems;
+    
+    private TimerTask refreshListTask;
     
     private String mLastLine;
     
@@ -91,9 +93,22 @@ public class ViewLogActivity extends ListActivity implements ICacheWordSubscribe
 		// Populate a ListView with Bitseal's log output
         mLogListView = (ListView)findViewById(android.R.id.list);
         updateListView();
+	}
+	
+	@Override
+	protected void onPause() 
+	{
+		super.onPause();
+		
+		refreshListTask.cancel();
+	}
+	
+	protected void onResume() 
+	{
+		super.onResume();
 		
 		// Check for new log lines regularly and update the ListView if any are found
-	    new Timer().schedule(new TimerTask()
+        refreshListTask = new TimerTask()
 	    {
 	        @Override
 	        public void run() 
@@ -109,7 +124,8 @@ public class ViewLogActivity extends ListActivity implements ICacheWordSubscribe
 	                }
 	            });
 	        }
-	    }, 0, UPDATE_FREQUENCY_MILLISECONDS);
+	    };
+	    new Timer().schedule(refreshListTask, 0, UPDATE_FREQUENCY_MILLISECONDS);
 	}
 	
 	/**
@@ -160,7 +176,7 @@ public class ViewLogActivity extends ListActivity implements ICacheWordSubscribe
 	{
 		try
 		{
-			// Read from the start of the log file
+			// Get the logcat output and prepare to read it
 			Process process = Runtime.getRuntime().exec("logcat -d");
 			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 			ArrayList<String> logLines = new ArrayList<String>();
@@ -181,43 +197,35 @@ public class ViewLogActivity extends ListActivity implements ICacheWordSubscribe
             int startPoint = lines - LOGCAT_MAXIMUM_LINES;
             if (lines > LOGCAT_MAXIMUM_LINES)
             {
+            	// Skip through lines until we are at the correct start point
             	for (int i = 0; i < startPoint && bufferedReader.ready(); bufferedReader.readLine()) { }
-            	if (bufferedReader.ready())
-            	{
-            		// We are at the chosen start point
-            	}
-            	else
-            	{
-            		// There are few enough lines that we can process them all, so create a new BufferedReader so we can read from the start
-            		process = Runtime.getRuntime().exec("logcat -d");
-            		bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            	}
+            }
+            
+            // Read the selected lines
+        	while ((line = bufferedReader.readLine()) != null)
+	        {
+	            // Filter log output by Bitseal's current process number and by removing unwanted lines
+	        	if (filterLogLine(line))
+	        	{
+	        		logLines.add(line);
+	            }
+	        }
             	
-            	while ((line = bufferedReader.readLine()) != null)
+            // If there are no lines to read, return a placeholder message
+            if (logLines.size() == 0)
+            {
+            	logLines.add(getResources().getString(R.string.activity_view_log_placeholder_message));
+            }
+            else
+            {       
+    	        // Record the last read line
+    	        mLastLine = logLines.get(logLines.size() - 1);
+    	        
+    	        // If the log text is over the maximum number of items, shorten it
+    	        if (logLines.size() > LOG_MAXIMUM_ITEMS)
     	        {
-    	            // Filter log output by Bitseal's current process number and by removing unwanted lines
-    	        	if (filterLogLine(line))
-    	        	{
-    	        		logLines.add(line);
-    	            }
+    	        	logLines = new ArrayList<String>(logLines.subList(logLines.size() - LOG_MAXIMUM_ITEMS, logLines.size()));
     	        }
-            	
-                // If there are no lines to read, return a placeholder message
-                if (logLines.size() == 0)
-                {
-                	logLines.add(getResources().getString(R.string.activity_view_log_placeholder_message));
-                }
-                else
-                {       
-	    	        // Record the last read line
-	    	        mLastLine = logLines.get(logLines.size() - 1);
-	    	        
-	    	        // If the log text is over the maximum number of items, shorten it
-	    	        if (logLines.size() > LOG_MAXIMUM_ITEMS)
-	    	        {
-	    	        	logLines = new ArrayList<String>(logLines.subList(logLines.size() - LOG_MAXIMUM_ITEMS, logLines.size()));
-	    	        }
-                }
             }
 	        
 	        return logLines;
@@ -226,9 +234,9 @@ public class ViewLogActivity extends ListActivity implements ICacheWordSubscribe
 		{
 			Log.e(TAG, "Exception ocurred in ViewLogActivity.getLogLines(). The exception message was:\n"
 					+ e.getMessage());
-			ArrayList<String> emptyList = new ArrayList<String>();
-			emptyList.add("");
-			return emptyList;
+			ArrayList<String> placeholderList = new ArrayList<String>();
+			placeholderList.add(getResources().getString(R.string.activity_view_log_placeholder_message));
+			return placeholderList;
 	    }
 	}
 	
@@ -277,12 +285,20 @@ public class ViewLogActivity extends ListActivity implements ICacheWordSubscribe
 		// Restore previous state (including selected item index and scroll position)
 		mLogListView.onRestoreInstanceState(state);
 		
-		// If the user has scrolled to the bottom of the ListView, keep scrolling to the
-		// bottom as new items are added
-		if (mLogListView.getLastVisiblePosition() == mLogListView.getAdapter().getCount() -1 &&
-				mLogListView.getChildAt(mLogListView.getChildCount() - 1).getBottom() <= mLogListView.getHeight())
+		try
 		{
-			scrollMyListViewToBottom();
+			// If the user has scrolled to the bottom of the ListView, keep scrolling to the
+			// bottom as new items are added
+			if (mLogListView.getLastVisiblePosition() == mLogListView.getAdapter().getCount() -1 &&
+					mLogListView.getChildAt(mLogListView.getChildCount() - 1).getBottom() <= mLogListView.getHeight())
+			{
+				scrollMyListViewToBottom();
+			}
+		}
+		catch (Exception e)
+		{
+			Log.e(TAG, "Exception ocurred in ViewLogActivity.updateListView(). The exception message was:\n"
+					+ e.getMessage());
 		}
     }
     

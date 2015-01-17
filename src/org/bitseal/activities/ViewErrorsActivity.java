@@ -59,6 +59,8 @@ public class ViewErrorsActivity extends ListActivity implements ICacheWordSubscr
     private LogAdapter mErrorAdapter;    
     private ArrayList<String> mErrors;
     
+    private TimerTask refreshListTask;
+    
     private String mLastLine;
     
     private int mProcessID;
@@ -71,24 +73,45 @@ public class ViewErrorsActivity extends ListActivity implements ICacheWordSubscr
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_view_errors);
 		
-        // Check whether the user has set a database encryption passphrase
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false))
+		try
 		{
-			// Connect to the CacheWordService
-			mCacheWordHandler = new CacheWordHandler(this);
-			mCacheWordHandler.connectToService();
+			// Check whether the user has set a database encryption passphrase
+			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+			if (prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false))
+			{
+				// Connect to the CacheWordService
+				mCacheWordHandler = new CacheWordHandler(this);
+				mCacheWordHandler.connectToService();
+			}
+			
+			// Get Bitseal's current process ID
+			mProcessID = android.os.Process.myPid();
+			
+			// Populate a ListView with Bitseal's recent errors
+	        mErrorListView = (ListView) findViewById(android.R.id.list);
+	        updateListView();
 		}
+		catch (Exception e)
+		{
+			Log.e(TAG, "Exception ocurred in ViewErrorsActivity.onCreate(). The exception message was:\n"
+					+ e.getMessage());
+	    }
+	}
+	
+	@Override
+	protected void onPause() 
+	{
+		super.onPause();
 		
-		// Get Bitseal's current process ID
-		mProcessID = android.os.Process.myPid();
+		refreshListTask.cancel();
+	}
+	
+	protected void onResume() 
+	{
+		super.onResume();
 		
-		// Populate a ListView with Bitseal's recent errors
-        mErrorListView = (ListView)findViewById(android.R.id.list);
-        updateListView();
-		
-		// Check for new errors regularly and update the ListView if any are found
-	    new Timer().schedule(new TimerTask()
+		// Check for new log lines regularly and update the ListView if any are found
+        refreshListTask = new TimerTask()
 	    {
 	        @Override
 	        public void run() 
@@ -104,7 +127,8 @@ public class ViewErrorsActivity extends ListActivity implements ICacheWordSubscr
 	                }
 	            });
 	        }
-	    }, 0, UPDATE_FREQUENCY_MILLISECONDS);
+	    };
+	    new Timer().schedule(refreshListTask, 0, UPDATE_FREQUENCY_MILLISECONDS);
 	}
 	
 	/**
@@ -155,20 +179,20 @@ public class ViewErrorsActivity extends ListActivity implements ICacheWordSubscr
 	{
 		try
 		{
-			// Read from the start of the log file
+			// Get the logcat output and prepare to read it
 			Process process = Runtime.getRuntime().exec("logcat -d");
 			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-			ArrayList<String> logLines = new ArrayList<String>();
+			ArrayList<String> errorLines = new ArrayList<String>();
 			String line = "";
 
-			// Count the number of lines from the logcat output
+			// Count the number of lines in the logcat output
             int lines = 0;
             while ((bufferedReader.readLine()) != null)
             {
             	lines ++;
             }
         	
-        	// Create a new BufferedReader so we can read from the start
+        	// Create a new BufferedReader so we can read from the start again
             process = Runtime.getRuntime().exec("logcat -d");
     		bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             
@@ -176,54 +200,46 @@ public class ViewErrorsActivity extends ListActivity implements ICacheWordSubscr
             int startPoint = lines - LOGCAT_MAXIMUM_LINES;
             if (lines > LOGCAT_MAXIMUM_LINES)
             {
+            	// Skip through lines until we are at the correct start point
             	for (int i = 0; i < startPoint && bufferedReader.ready(); bufferedReader.readLine()) { }
-            	if (bufferedReader.ready())
-            	{
-            		// We are at the chosen start point
-            	}
-            	else
-            	{
-            		// There are few enough lines that we can process them all, so create a new BufferedReader so we can read from the start
-            		process = Runtime.getRuntime().exec("logcat -d");
-            		bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            	}
-            	
-            	while ((line = bufferedReader.readLine()) != null)
-    	        {
-    	            // Filter log output by Bitseal's current process number and by removing unwanted lines
-    	        	if (filterErrors(line))
-    	        	{
-    	        		logLines.add(line);
-    	            }
-    	        }
-	            
-                // If there are no lines to read, return a placeholder message
-                if (logLines.size() == 0)
-                {
-                	logLines.add(getResources().getString(R.string.activity_view_errors_placeholder_message));
-                }
-                else
-                {
-    		        // Record the last read line
-    		        mLastLine = logLines.get(logLines.size() - 1);
-    		        
-    		        // If the log text is over the maximum number of items, shorten it
-    		        if (logLines.size() > MAXIMUM_ERRORS_TO_DISPLAY)
-    		        {
-    		        	logLines = new ArrayList<String>(logLines.subList(logLines.size() - MAXIMUM_ERRORS_TO_DISPLAY, logLines.size()));
-    		        }
-                }
+            }
+        	
+            // Read the selected lines
+        	while ((line = bufferedReader.readLine()) != null)
+	        {
+	            // Filter log output by Bitseal's current process number and by removing unwanted lines
+	        	if (filterErrors(line))
+	        	{
+	        		errorLines.add(line);
+	            }
+	        }
+            
+            // If there are no lines to display, return a placeholder message
+            if (errorLines.size() == 0)
+            {
+            	errorLines.add(getResources().getString(R.string.activity_view_errors_placeholder_message));
+            }
+            else
+            {
+		        // Record the last read line
+		        mLastLine = errorLines.get(errorLines.size() - 1);
+		        
+		        // If the log text is over the maximum number of items, shorten it
+		        if (errorLines.size() > MAXIMUM_ERRORS_TO_DISPLAY)
+		        {
+		        	errorLines = new ArrayList<String>(errorLines.subList(errorLines.size() - MAXIMUM_ERRORS_TO_DISPLAY, errorLines.size()));
+		        }
             }
 	        
-	        return logLines;
+	        return errorLines;
 		}
 		catch (Exception e)
 		{
 			Log.e(TAG, "Exception ocurred in ViewErrorsActivity.getErrors(). The exception message was:\n"
 					+ e.getMessage());
-			ArrayList<String> emptyList = new ArrayList<String>();
-			emptyList.add("");
-			return emptyList;
+			ArrayList<String> placeholderList = new ArrayList<String>();
+			placeholderList.add(getResources().getString(R.string.activity_view_errors_placeholder_message));
+			return placeholderList;
 	    }
 	}
 	
@@ -259,7 +275,7 @@ public class ViewErrorsActivity extends ListActivity implements ICacheWordSubscr
     {
     	// Get the error log lines to display
     	mErrors = getErrors();
-		
+    	
 		// Save ListView state so that we can resume at the same scroll position
 		Parcelable state = mErrorListView.onSaveInstanceState();
 		
@@ -268,16 +284,24 @@ public class ViewErrorsActivity extends ListActivity implements ICacheWordSubscr
         mErrorListView = (ListView)findViewById(android.R.id.list);
         mErrorAdapter = new LogAdapter(mErrors);
 		mErrorListView.setAdapter(mErrorAdapter);
-
+		
 		// Restore previous state (including selected item index and scroll position)
 		mErrorListView.onRestoreInstanceState(state);
-		
+				
 		// If the user has scrolled to the bottom of the ListView, keep scrolling to the
 		// bottom as new items are added
-		if (mErrorListView.getLastVisiblePosition() == mErrorListView.getAdapter().getCount() -1 &&
-				mErrorListView.getChildAt(mErrorListView.getChildCount() - 1).getBottom() <= mErrorListView.getHeight())
+		try
 		{
-			scrollMyListViewToBottom();
+			if (mErrorListView.getLastVisiblePosition() == mErrorListView.getAdapter().getCount() -1 &&
+					mErrorListView.getChildAt(mErrorListView.getChildCount() - 1).getBottom() <= mErrorListView.getHeight())
+			{
+				scrollMyListViewToBottom();;
+			}
+		}
+		catch (Exception e)
+		{
+			Log.e(TAG, "Exception ocurred in ViewErrorsActivity.updateListView(). The exception message was:\n"
+					+ e.getMessage());
 		}
     }
     
