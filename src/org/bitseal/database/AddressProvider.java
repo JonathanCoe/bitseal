@@ -200,7 +200,7 @@ public class AddressProvider
     {
     	ArrayList<Address> addresses = new ArrayList<Address>();
     	
-        // Specify which colums from the table we are interested in
+        // Specify which columns from the table we are interested in
 		String[] projection = {
 				AddressesTable.COLUMN_ID, 
 				AddressesTable.COLUMN_CORRESPONDING_PUBKEY_ID,
