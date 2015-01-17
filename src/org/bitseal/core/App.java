@@ -4,6 +4,7 @@ import info.guardianproject.cacheword.CacheWordHandler;
 import info.guardianproject.cacheword.ICacheWordSubscriber;
 
 import org.bitseal.crypt.PRNGFixes;
+import org.bitseal.services.ExceptionHandler;
 
 import android.annotation.SuppressLint;
 import android.app.Application;
@@ -17,8 +18,8 @@ public class App extends Application implements ICacheWordSubscriber
      */
     private static Context sContext;
     
-    private CacheWordHandler mCacheWordHandler;
-    
+    private CacheWordHandler mCacheWordHandler;   
+	    
     private static final String TAG = "APP";
     
     @Override
@@ -32,6 +33,9 @@ public class App extends Application implements ICacheWordSubscriber
 		// Start and subscribe to the CacheWordService
         mCacheWordHandler = new CacheWordHandler(sContext, this);
         mCacheWordHandler.connectToService();
+        
+        // Set up the uncaught exception handler for the application's main thread
+        Thread.setDefaultUncaughtExceptionHandler(new ExceptionHandler());
     }
 
     /**

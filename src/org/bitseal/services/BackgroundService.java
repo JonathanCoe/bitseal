@@ -125,6 +125,9 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 	public BackgroundService() 
 	{
 		super("BackgroundService");
+		
+		// Set up the uncaught exception handler for this thread
+		Thread.setDefaultUncaughtExceptionHandler(new ExceptionHandler());
 	}
 	
 	/**

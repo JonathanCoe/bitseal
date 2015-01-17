@@ -91,7 +91,7 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 		{		
 			@Override
 			public void onClick(View v)
-			{
+			{	
 				Log.i(TAG, "Security settings button clicked");
 				
 		        Intent i = new Intent(getBaseContext(), SecurityActivity.class);
@@ -104,7 +104,7 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 		{		
 			@Override
 			public void onClick(View v)
-			{
+			{				
 				Log.i(TAG, "Server settings button clicked");
 				
 		        Intent i = new Intent(getBaseContext(), ServersActivity.class);

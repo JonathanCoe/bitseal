@@ -12,7 +12,6 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import org.bitseal.R;
-import org.bitseal.core.App;
 import org.bitseal.crypt.AddressGenerator;
 import org.bitseal.data.Address;
 import org.bitseal.data.AddressBookRecord;
@@ -24,6 +23,7 @@ import org.bitseal.database.MessageProvider;
 import org.bitseal.database.MessagesTable;
 import org.bitseal.services.AppLockHandler;
 import org.bitseal.services.BackgroundService;
+import org.bitseal.services.ExceptionHandler;
 import org.bitseal.services.NotificationsService;
 import org.bitseal.util.ColourCalculator;
 
@@ -169,7 +169,7 @@ public class InboxActivity extends ListActivity implements ICacheWordSubscriber
         
         // If we have reached this point without crashing, then it should be safe to reset the uncaught exception handler flag
 		SharedPreferences.Editor editor = prefs.edit();
-	    editor.putBoolean(App.UNCAUGHT_EXCEPTION_HANDLED, true);
+	    editor.putBoolean(ExceptionHandler.UNCAUGHT_EXCEPTION_HANDLED, false);
 	    editor.commit();
 	}
 	
@@ -253,7 +253,7 @@ public class InboxActivity extends ListActivity implements ICacheWordSubscriber
 		SharedPreferences.Editor editor = prefs.edit();
 	    editor.putBoolean(INBOX_FIRST_RUN, false);
 	    editor.commit();
-	    
+	    	    
 	    // Add some default entries to the address book
 	    Resources resources = getResources();
 		AddressBookRecord addressBookEntry0 = new AddressBookRecord();

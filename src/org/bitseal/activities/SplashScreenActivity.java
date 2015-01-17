@@ -16,6 +16,7 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -34,6 +35,12 @@ public class SplashScreenActivity extends Activity implements ICacheWordSubscrib
     
     /** The key for a boolean variable that records whether or not a user-defined database encryption passphrase has been saved */
     private static final String KEY_DATABASE_PASSPHRASE_SAVED = "databasePassphraseSaved";
+    
+    /** The key for an extra that tells this activity to delay opening the main application for a few seconds */
+	public static final String EXTRA_DELAY_APP_OPENING = "delayAppOpening";
+	
+	/** The amount of time in seconds by which we delay the app's opening when requested to do so */
+	private static final int DELAY_OPENING_PERIOD_SECONDS = 3;
     
     private static final String TAG = "SPLASH_SCREEN_ACTIVITY";
 	
@@ -110,7 +117,28 @@ public class SplashScreenActivity extends Activity implements ICacheWordSubscrib
 		NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
 		notificationManager.cancel(NotificationsService.getUnlockNotificationId());
 		
-		// Open the Inbox Activity
+		// If the extra to delay opening the main app has been set, wait for a couple of seconds
+		if (this.getIntent().hasExtra(EXTRA_DELAY_APP_OPENING))
+		{
+			Log.i(TAG, "Delaying the opening of the inbox by " + DELAY_OPENING_PERIOD_SECONDS + " seconds");
+			new Handler().postDelayed(new Runnable()
+			{
+                @Override
+                public void run()
+                {
+                	openInboxActivity();
+                }
+            }, DELAY_OPENING_PERIOD_SECONDS * 1000);
+		}
+		else
+		{
+			openInboxActivity();
+		}
+	}
+	
+	/** Opens the Inbox Activity */
+	private void openInboxActivity()
+	{
 		Intent intent = new Intent(getBaseContext(), InboxActivity.class);
 		intent.putExtra(EXTRA_DATABASE_UNLOCKED, true);
         startActivityForResult(intent, 0);
