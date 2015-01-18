@@ -218,7 +218,6 @@ public class IncomingMessageProcessor
 		
 		// Get all acknowledgements that I am awaiting
 		PayloadProvider payProv = PayloadProvider.get(App.getContext());
-		
 		String[] columnNames = new String[]{PayloadsTable.COLUMN_ACK, PayloadsTable.COLUMN_BELONGS_TO_ME};
 		String[] searchTerms = new String[]{"1", "1"}; // 1 stands for true in the database
 		ArrayList<Payload> expectedAckPayloads = payProv.searchPayloads(columnNames, searchTerms);
@@ -244,7 +243,7 @@ public class IncomingMessageProcessor
 					Intent intent = new Intent(UI_NOTIFICATION);
 					App.getContext().sendBroadcast(intent);
 					
-					// Delete any QueueRecords for re-sending this message
+					// Delete any QueueRecords for sending this message
 					QueueRecordProvider queueProv = QueueRecordProvider.get(App.getContext());
 					ArrayList<QueueRecord> retrievedRecords = queueProv.searchQueueRecords(QueueRecordsTable.COLUMN_OBJECT_0_ID, String.valueOf(originalMessage.getId()));
 					for (QueueRecord q : retrievedRecords)
