@@ -4,6 +4,7 @@ import info.guardianproject.cacheword.ICacheWordSubscriber;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 
 import org.bitseal.R;
 import org.bitseal.controllers.TaskController;
@@ -334,7 +335,7 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 					else if (task.equals(TASK_SEND_MESSAGE))
 					{
 						// Attempt to retrieve the Message from the database. If it has been deleted by the user
-						// then we should abort the sending process.
+						// then we should delete this QueueRecord and abort the sending process.
 						Message messageToSend = null;
 						try
 						{
@@ -351,8 +352,9 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 						}
 							
 						// Check whether there are any existing QueueRecords which should be processed before this one.
-						// If there are, this method will push the trigger time of this QueueRecord further into the future.
-						if (checkForEarlierSendMsgQueueRecords(q))
+						// If there are, this method will push the trigger time of this QueueRecord further into the future and
+						// any duplicates will be deleted.
+						if (checkAndAdjustQueueRecords(q))
 						{
 							Log.i(TAG, "Ignoring QueueRecord with ID " + q.getId() + " and task " + q.getTask() + " because there is another QueueRecord for "
 									+ "the same task which should be processed first.");
@@ -368,34 +370,19 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 							continue;
 						}
 						
-						// Work out which TTL value we should use and attempt to send the message
-						if (q.getRecordCount() == 0)
+						// Work out which TTL value we should use, then attempt to send the message
+						if (q.getRecordCount() == 0) // This is the first attempt to send this message, so use the 'first attempt' TTL value
 						{
 							// Attempt to send the message
 							taskController.sendMessage(q, messageToSend, DO_POW, FIRST_ATTEMPT_TTL, FIRST_ATTEMPT_TTL);
 						}
-						else
+						else // This is not the first attempt to send this message, so use the 'subsequent attempts' TTL value
 						{
 							// Unless we have already done so, we need to create a new QueueRecord for re-sending this msg in the event that we do not receive
 							// an acknowledgement for it before its time to live expires. If we do receive the acknowledgement before then, this
-							// QueueRecord will be deleted. 
-							
-							// First check whether there is already a QueueRecord for re-sending this message
-							ArrayList<QueueRecord> matchingRecords = queueProv.searchQueueRecords(QueueRecordsTable.COLUMN_OBJECT_0_ID, String.valueOf(q.getObject0Id()));
-							boolean matchingRecordExists = false;
-							for (QueueRecord match : matchingRecords)
+							// QueueRecord will be deleted.
+							if (checkForMatchingSendMsgQueueRecords(q) == false)
 							{
-								if (match.getId() != q.getId())
-								{
-									matchingRecordExists = true;
-								}
-							}
-							
-							// If there is no other QueueRecord for sending this message, create one.
-							if (matchingRecordExists == false)
-							{
-								// Create a new QueueRecord for re-sending this msg in the event that we do not receive an acknowledgement for it
-								// before its time to live expires. If we do receive the acknowledgement before then, this QueueRecord will be deleted
 								Log.i(TAG, "Creating a QueueRecord to re-send message with ID " + messageToSend.getId());
 								currentTime = System.currentTimeMillis() / 1000;
 								queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, currentTime + SUBSEQUENT_ATTEMPTS_TTL, q.getRecordCount() + 1, messageToSend, null, null);
@@ -572,38 +559,124 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 	 * 
 	 * @return A boolean indicating whether a QueueRecord of greater precedence was found
 	 */
-	private boolean checkForEarlierSendMsgQueueRecords(QueueRecord q)
+	private boolean checkAndAdjustQueueRecords(QueueRecord q)
+	{
+		ArrayList<QueueRecord> matchingRecords = getMatchingSendMsgQueueRecords(q);
+		
+		// If there is more than 1 matching record, delete all but the one with the earliest trigger time. 
+		// There should never be more than 2 QueueRecords for sending a given message. 
+		if (matchingRecords.size() > 1)
+		{
+			matchingRecords = deleteDuplicateSendMsgQueueRecords(matchingRecords);
+		}
+		
+		for (QueueRecord match : matchingRecords)
+		{
+			// Check whether this matching record has a trigger time earlier than the current QueueRecord
+			if (match.getTriggerTime() < q.getTriggerTime())
+			{
+				// Push the trigger time of the current QueueRecord further into the future				
+				if (match.getRecordCount() == 0) // If the QueueRecord with the earlier trigger time is the first QueueRecord for attempting to send this message
+				{
+					q.setTriggerTime(match.getTriggerTime() + FIRST_ATTEMPT_TTL);
+				}
+				else // If the QueueRecord with the earlier trigger time is not the first QueueRecord for attempting to send this message
+				{
+					q.setTriggerTime(match.getTriggerTime() + SUBSEQUENT_ATTEMPTS_TTL);
+				}
+				
+				long timeTillTriggerTime =  q.getTriggerTime() - (System.currentTimeMillis() / 1000);
+				Log.i(TAG, "Updating the trigger time of a QueueRecord for a " + q.getTask() + " task because there is another QueueRecord for sending the same "
+						+ "message which has an earlier trigger time. The updated trigger time of this QueueRecord is " + TimeUtils.getTimeMessage(timeTillTriggerTime) + " from now.");;
+				
+				QueueRecordProvider.get(getApplicationContext()).updateQueueRecord(q);
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/** 
+	 * Returns a boolean indicating whether there are any other QueueRecords for
+	 * sending the same message as the one referred to by the supplied QueueRecord. 
+	 */
+	private boolean checkForMatchingSendMsgQueueRecords (QueueRecord q)
+	{		
+		return getMatchingSendMsgQueueRecords(q).size() > 0;
+	}
+	
+	/** Returns an ArrayList<QueueRecord> containing any other QueueRecords for
+	 * sending the same message as the one referred to by the supplied QueueRecord. 
+	 */
+	private ArrayList<QueueRecord> getMatchingSendMsgQueueRecords(QueueRecord q)
 	{
 		// First we need to get any QueueRecords which also refer to the msg in question
 		QueueRecordProvider queueProv = QueueRecordProvider.get(getApplicationContext());
 		ArrayList<QueueRecord> matchingRecords = queueProv.searchQueueRecords(QueueRecordsTable.COLUMN_OBJECT_0_ID, String.valueOf(q.getObject0Id()));
-		for (QueueRecord match : matchingRecords)
+				
+		// Now iterate through the list and remove any QueueRecords which are either
+		// i)  The same as the current record
+		// ii) Not QueueRecord for one of the three 'send message' tasks
+		Iterator<QueueRecord> iterator = matchingRecords.iterator();
+		while(iterator.hasNext())
 		{
-			if (match.getTask().equals(TASK_SEND_MESSAGE) || match.getTask().equals(TASK_PROCESS_OUTGOING_MESSAGE) || match.getTask().equals(TASK_DISSEMINATE_MESSAGE))
+			QueueRecord match = iterator.next();
+			
+			// Remove the current QueueRecord from the list of 'matching' QueueRecods
+		    if(match.getId() == (q.getId()))
+		    {
+		    	iterator.remove();
+		    }
+			
+			// Filter the list of QueueRecords so that we only deal with QueueRecords for the three 'send message' tasks
+		    else if ((match.getTask().equals(TASK_SEND_MESSAGE) || match.getTask().equals(TASK_PROCESS_OUTGOING_MESSAGE) || match.getTask().equals(TASK_DISSEMINATE_MESSAGE)) == false)
 			{
-				if (match.getTriggerTime() < q.getTriggerTime())
-				{
-					long currentTime = System.currentTimeMillis() / 1000;
-					
-					if (match.getRecordCount() == 0)
-					{
-						q.setTriggerTime(currentTime + FIRST_ATTEMPT_TTL);
-					}
-					else
-					{
-						q.setTriggerTime(currentTime + SUBSEQUENT_ATTEMPTS_TTL);
-					}
-					
-					long timeTillTriggerTime =  q.getTriggerTime() - currentTime;
-					Log.i(TAG, "Updating the trigger time of a QueueRecord for a " + q.getTask() + " task because there is another QueueRecord for sending the same "
-							+ "message which has an earlier trigger time. The updated trigger time of this QueueRecord is " + TimeUtils.getTimeMessage(timeTillTriggerTime) + " from now.");;
-					
-					queueProv.updateQueueRecord(q);
-					return true;
-				}
+		    	iterator.remove();
 			}
 		}
-		return false;
+				
+		return matchingRecords;
+	}
+	
+	/**
+	 * Takes an ArrayList<QueueRecord> of duplicate QueueRecords for sending a single message
+	 * and returns only the one with the earliest trigger time
+	 */
+	private ArrayList<QueueRecord> deleteDuplicateSendMsgQueueRecords (ArrayList<QueueRecord> matchingRecords)
+	{
+		// Find the QueueRecord with the earliest trigger time
+		long earliestTriggerTime = 0;
+		long earliestRecordId = 0;
+		for (QueueRecord q : matchingRecords)
+		{
+			if (earliestTriggerTime == 0)
+			{
+				earliestTriggerTime = q.getTriggerTime();
+				earliestRecordId = q.getId();
+			}
+			
+			else if (q.getTriggerTime() < earliestTriggerTime)
+			{
+				earliestTriggerTime = q.getTriggerTime();
+				earliestRecordId = q.getId();
+			}
+		}
+		
+		// Return only the QueueRecord with the earliest trigger time
+		ArrayList<QueueRecord> recordToReturn = new ArrayList<QueueRecord>();
+		for (QueueRecord q : matchingRecords)
+		{
+			if (q.getId() == earliestRecordId)
+			{
+				recordToReturn.add(q);
+			}
+			else
+			{
+				new QueueRecordProcessor().deleteQueueRecord(q);
+			}
+		}
+		
+		return recordToReturn;
 	}
 	
 	/**
