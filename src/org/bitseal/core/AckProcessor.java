@@ -12,7 +12,7 @@ import android.util.Log;
 
 /**
  * This class handles all the processing that needs to be
- * done for handling acknowledgments. 
+ * done for handling acknowledgements. 
  * 
  * @author Jonathan Coe
  */
@@ -22,11 +22,11 @@ public class AckProcessor
 	
 	/**
 	 * This method will look in the application database's "Payloads" table
-	 * for any acknowledgment payloads that 'belong to me', and are thus 
-	 * acknowledgments that are waiting to be sent for messages that the user
+	 * for any acknowledgement payloads that 'belong to me', and are thus 
+	 * acknowledgements that are waiting to be sent for messages that the user
 	 * of the app has received. 
 	 * 
-	 * @return - A boolean indicating whether or not all outstanding acknowledgments
+	 * @return - A boolean indicating whether or not all outstanding acknowledgements
 	 * were successfully processed 
 	 */
 	public boolean sendAcknowledgments()
@@ -88,26 +88,26 @@ public class AckProcessor
 	}
 	
 	/**
-	 * This method checks an acknowledgment message and, if it is found to be valid, 
+	 * This method checks an acknowledgement message and, if it is found to be valid, 
 	 * attempts to disseminate it to the Bitmessage network. 
 	 * 
-	 * @param p - A Payload object containing the acknowledgment msg to be sent
+	 * @param p - A Payload object containing the acknowledgement msg to be sent
 	 * 
-	 * @return - A boolean indicating whether or not the acknowledgment was successfully
+	 * @return - A boolean indicating whether or not the acknowledgement was successfully
 	 * processed 
 	 */
 	private boolean checkAndSendAcknowledgment(Payload p)
 	{
 		byte[] fullAckMessage = p.getPayload();
 		
-		// Bitmessage acknowledgments are full Message objects, including the header data (magic bytes, command, length, checksum). 
+		// Bitmessage acknowledgements are full Message objects, including the header data (magic bytes, command, length, checksum). 
 		// We only need the payload, so we will skip over the first 24 bytes. 
 		byte[] ackObjectBytes = ArrayCopier.copyOfRange(fullAckMessage, 24, fullAckMessage.length);
 				
 		// Check whether this ack is a valid Bitmessage Object
 		new ObjectProcessor().parseObject(ackObjectBytes);
 		
-		// Attempt to send the acknowledgment. 
+		// Attempt to send the acknowledgement. 
 		ServerCommunicator servCom = new ServerCommunicator();
 		boolean disseminationSuccessful = servCom.disseminateMsg(ackObjectBytes);
 		
