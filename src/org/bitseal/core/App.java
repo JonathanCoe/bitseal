@@ -9,7 +9,6 @@ import org.bitseal.services.ExceptionHandler;
 import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
-import android.util.Log;
 
 public class App extends Application implements ICacheWordSubscriber 
 {
@@ -19,8 +18,6 @@ public class App extends Application implements ICacheWordSubscriber
     private static Context sContext;
     
     private CacheWordHandler mCacheWordHandler;   
-	    
-    private static final String TAG = "APP";
     
     @Override
     public void onCreate() 
@@ -56,22 +53,18 @@ public class App extends Application implements ICacheWordSubscriber
 	@Override
 	public void onCacheWordLocked()
 	{
-		Log.d(TAG, "TEMPORARY: App.onCacheWordLocked() called.");
-			
-		// We don't want to do anything here - if we do then the lock screen activity is always launched as soon
-		// as the user's device finishes booting
+		// Nothing to do here currently
 	}
 
 	@Override
 	public void onCacheWordOpened()
 	{
-		Log.d(TAG, "TEMPORARY: App.onCacheWordOpened() called.");
+		// Nothing to do here currently
 	}
 
 	@Override
 	public void onCacheWordUninitialized()
 	{
-		Log.d(TAG, "TEMPORARY: App.onCacheWordUninitialized() called.");
-	    // Nothing to do here currently
+		// Nothing to do here currently
 	}
 }
