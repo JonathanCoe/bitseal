@@ -105,7 +105,19 @@ public class AckProcessor
 		byte[] ackObjectBytes = ArrayCopier.copyOfRange(fullAckMessage, 24, fullAckMessage.length);
 				
 		// Check whether this ack is a valid Bitmessage Object
-		new ObjectProcessor().parseObject(ackObjectBytes);
+		try
+		{
+			new ObjectProcessor().parseObject(ackObjectBytes);
+		}
+		catch (RuntimeException e)
+		{
+			Log.e(TAG, "Runtime exception occurred while running ObjectProcessor.parseObject() from AckProcessor.checkAndSendAcknowledgment(). " + 
+					"This indicates that the acknowledgement payload is not a valid Bitmessage object. Therefore the ack payload will be deleted " + 
+					"and the attempt to send it will be cancelled. The full RuntimeException message was:\n" + 
+					e.getMessage());
+			PayloadProvider.get(App.getContext()).deletePayload(p);
+			return false;
+		}
 		
 		// Attempt to send the acknowledgement. 
 		ServerCommunicator servCom = new ServerCommunicator();
