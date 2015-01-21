@@ -164,7 +164,7 @@ public class SystemToolsActivity extends Activity implements ICacheWordSubscribe
  		        break;
  		        
  		    case R.id.menu_item_settings:
- 		        Intent intent6 = new Intent(this, SystemToolsActivity.class);
+ 		        Intent intent6 = new Intent(this, SettingsActivity.class);
  		        startActivity(intent6);
  		        break;
  		        
