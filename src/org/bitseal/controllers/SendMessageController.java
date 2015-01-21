@@ -15,7 +15,6 @@ import org.bitseal.services.MessageStatusHandler;
 
 import android.util.Log;
 
-
 /**
  * This class controls the operations necessary to send a message.
  * 
