@@ -38,6 +38,14 @@ public final class TimeUtils
 	}
 	
 	/**
+	 * Returns a long containing the Unix timestamp for the current time, in seconds.
+	 */
+	public static long getUnixTime()
+	{
+		return System.currentTimeMillis() / 1000;
+	}
+	
+	/**
 	 * Returns a 'time to live' value and uses it to produce a
 	 * fuzzed expiration time - which is the current time plus
 	 * the time to live, giving us a time value in the future. 
