@@ -17,8 +17,7 @@ public class QueueRecord implements Comparable<QueueRecord>
 	/** The task that this record refers to - e.g. "sendMsg" */
 	private String task;
 	
-	/** A Unix time value (in seconds). If this is set to a time in the future, this QueueRecord will not 
-	 * be processed until that time. This value can also be set to zero, in which case the QueueRecord will be processed immediately. */
+	/** A Unix time value (in seconds) that defines the time at which this QueueRecord becomes due to be processed. */
 	private long triggerTime;
 	
 	/** 
