@@ -199,7 +199,7 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 									
 					// Create a new QueueRecord for the 'send message' task and save it to the database
 					QueueRecordProcessor queueProc = new QueueRecordProcessor();
-					QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, 0, 0, messageToSend, null, null);
+					QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(TASK_SEND_MESSAGE, TimeUtils.getUnixTime(), 0, messageToSend, null, null);
 					
 					// Also create a new QueueRecord for re-sending this msg in the event that we do not receive an acknowledgement for it
 					// before its time to live expires. If we do receive the acknowledgement before then, this QueueRecord will be deleted
@@ -236,7 +236,7 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 					
 					// Create a new QueueRecord for the create identity task and save it to the database
 					QueueRecordProcessor queueProc = new QueueRecordProcessor();
-					QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(TASK_CREATE_IDENTITY, 0, 0, address, null, null);
+					QueueRecord queueRecord = queueProc.createAndSaveQueueRecord(TASK_CREATE_IDENTITY, TimeUtils.getUnixTime(), 0, address, null, null);
 					
 					// Attempt to complete the create identity task
 					taskController.createIdentity(queueRecord, DO_POW);
@@ -311,7 +311,7 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 				try
 				{
 					Log.i(TAG, "Found a QueueRecord with ID " + q.getId() + ", task " + q.getTask() + ", and number of attempts " + q.getAttempts());
-					
+										
 					// First check how many times the task recorded by this QueueRecord has been attempted.
 					// If it has been attempted a very high number of times (all without success) then we
 					// will delete it.
@@ -365,8 +365,8 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 						long currentTime = System.currentTimeMillis() / 1000;
 						if (q.getTriggerTime() > currentTime)
 						{
-							Log.i(TAG, "Ignoring a QueueRecord for a " + q.getTask() + " task because its trigger time has not been reached yet.\n"
-									+ "Its trigger time will be reached in roughly " + TimeUtils.getTimeMessage(q.getTriggerTime() - currentTime));
+							Log.i(TAG, "Ignoring a QueueRecord for a " + q.getTask() + " task because its trigger time has not been reached yet. "
+									+ "Its trigger time will be reached in roughly " + TimeUtils.getTimeMessage(q.getTriggerTime() - currentTime) + ".");
 							continue;
 						}
 						
@@ -454,7 +454,7 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 							
 							// Create a new QueueRecord for the 'process outgoing message' task. This will give us a new
 							// msg with an updated expiration time and proof of work
-							queueProc.createAndSaveQueueRecord(BackgroundService.TASK_PROCESS_OUTGOING_MESSAGE, 0, q.getRecordCount(), messageToSend, toPubkey, null);
+							queueProc.createAndSaveQueueRecord(BackgroundService.TASK_PROCESS_OUTGOING_MESSAGE, TimeUtils.getUnixTime(), q.getRecordCount(), messageToSend, toPubkey, null);
 							
 							// Move on to the next QueueRecord
 							continue;
@@ -512,7 +512,7 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 							
 							// Create a new QueueRecord for the 'create identity' task. This will give us a new
 							// pubkey with an updated expiration time and proof of work
-							queueProc.createAndSaveQueueRecord(TASK_CREATE_IDENTITY, 0, q.getRecordCount(), address, null, null);
+							queueProc.createAndSaveQueueRecord(TASK_CREATE_IDENTITY, TimeUtils.getUnixTime(), q.getRecordCount(), address, null, null);
 						}
 					}
 					
@@ -628,8 +628,8 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 		    	iterator.remove();
 		    }
 			
-			// Filter the list of QueueRecords so that we only deal with QueueRecords for the three 'send message' tasks
-		    else if ((match.getTask().equals(TASK_SEND_MESSAGE) || match.getTask().equals(TASK_PROCESS_OUTGOING_MESSAGE) || match.getTask().equals(TASK_DISSEMINATE_MESSAGE)) == false)
+			// Filter the list of QueueRecords so that we only consider two QueueRecords to match if they refer to the same task
+		    else if (match.getTask().equals(q.getTask()) == false)
 			{
 		    	iterator.remove();
 			}
