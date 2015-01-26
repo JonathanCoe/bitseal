@@ -35,7 +35,6 @@ public class AlarmScheduler implements WakefulIntentService.AlarmListener
 	 */
 	public void scheduleAlarms(AlarmManager manager, PendingIntent intent, Context context)
 	{
-		Log.d(TAG, "AlarmScheduler.scheduleAlarms() called");
 		Log.d(TAG, "Scheduling a restart of the BackgroundService in roughly " + TimeUtils.getTimeMessage(BACKGROUND_SERVICE_NORMAL_START_INTERVAL));		
 		
 		// Create an intent that will be used to restart the BackgroundService
@@ -54,8 +53,6 @@ public class AlarmScheduler implements WakefulIntentService.AlarmListener
 	 */
 	public void sendWakefulWork(Context context)
 	{
-		Log.d(TAG, "AlarmScheduler.sendWakefulWork() called");
-		
 		// Create a new intent that will be used to run BackgroundService.processTasks(), then execute it
 		Intent intent = new Intent(context, BackgroundService.class);
 		intent.putExtra(BackgroundService.PERIODIC_BACKGROUND_PROCESSING_REQUEST, BackgroundService.BACKGROUND_PROCESSING_REQUEST);
@@ -68,8 +65,6 @@ public class AlarmScheduler implements WakefulIntentService.AlarmListener
 	 */
 	public long getMaxAge()
 	{
-		Log.d(TAG, "AlarmScheduler.getMaxAge() called");
-		
 		// Return double the standard restart interval. CommonsWare states that this is a sensible approach. 
 		return BACKGROUND_SERVICE_NORMAL_START_INTERVAL * 2000;
 	}
