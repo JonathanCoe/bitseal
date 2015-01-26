@@ -28,8 +28,10 @@ public class ExceptionHandler implements UncaughtExceptionHandler
 	@Override
     public void uncaughtException(Thread thread, Throwable ex)
 	{
-		Log.e(TAG, "Handling an uncaught exception thrown by thread " + thread.getName() + ". The exception message was:\n"
-				+ ex.getMessage());
+		Log.e(TAG, "Handling an uncaught exception thrown by thread " + thread.getName() + ". The exception message was:\n" 
+				+ ex.getMessage() + "\n"
+				+ "The exception stack trace was: \n"
+				+ Log.getStackTraceString(ex));
 		
 		// Check the 'uncaught exception handled' flag
 		Context appContext = App.getContext();
