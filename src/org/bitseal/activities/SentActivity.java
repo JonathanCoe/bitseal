@@ -106,8 +106,11 @@ public class SentActivity extends ListActivity implements ICacheWordSubscriber
 		// Register the broadcast receiver
 		registerReceiver(receiver, new IntentFilter(UI_NOTIFICATION));
 		
+		// Refresh the list view
+		updateListView();
+		
 		// If we are returning to this activity after a sent message has been deleted, we need to do a
-		// special adjustment to the list positon
+		// special adjustment to the list position
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		if (prefs.getBoolean(SentMessageActivity.FLAG_SENT_MESSAGE_DELETED, false))
 		{
@@ -145,7 +148,7 @@ public class SentActivity extends ListActivity implements ICacheWordSubscriber
 		@Override
 		public void onReceive(Context context, Intent intent) 
 		{
-			Log.i(TAG, "SentActivity.BroadcastReceiver.onReceive() called");
+			Log.i(TAG, "SentActivity.BroadcastReceiver.onReceive() called. About to refresh list of sent messages.");
 			updateListView();
 		}
 	};
