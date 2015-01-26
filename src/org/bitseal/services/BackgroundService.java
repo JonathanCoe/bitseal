@@ -147,7 +147,7 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 	{
 		try
 		{
-			Log.i(TAG, "BackgroundService.onHandleIntent() called");
+			Log.i(TAG, "BackgroundService.doWakefulWork() called");
 			
 			// Connect to the CacheWordService and check whether it is locked
 			mCacheWordHandler = new CacheWordHandler(this);
