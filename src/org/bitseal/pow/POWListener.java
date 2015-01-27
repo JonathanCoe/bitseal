@@ -1,7 +1,7 @@
 package org.bitseal.pow;
 
 /**
- * Interface to notify objects if a pow-calculation is finished.
+ * Interface to notify objects if a POW calculation is finished.
  * 
  * @author Sebastian Schmidt
  */
