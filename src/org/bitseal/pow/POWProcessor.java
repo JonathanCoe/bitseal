@@ -25,10 +25,7 @@ public class POWProcessor
 	public static final long NETWORK_NONCE_TRIALS_PER_BYTE = 1000;
 	/** In Bitmessage protocol version 3, the network standard value for extra bytes is 1000. */
 	public static final long NETWORK_EXTRA_BYTES = 1000;
-	
-	/** The maximum time in seconds that will be allowed for the app to attempt to complete a POW calculation */
-	private static final long MAX_TIME_ALLOWED = 7200; // Currently set to 2 hours
-	
+		
 	/** The minimum 'time to live' value to use when checking if a given payload's POW is sufficient */
 	private static final int MINIMUM_TIME_TO_LIVE_VALUE = 300;
 	
@@ -69,7 +66,6 @@ public class POWProcessor
 		long powTarget = calculatePOWTarget(payload.length, nonceTrialsPerByte, extraBytes, timeToLive);
 		powCalc.setTarget(powTarget);
 		powCalc.setInitialHash(SHA512.sha512(payload));
-		powCalc.setTargetLoad(1);
 		
 		Log.d(TAG, "Doing POW calculations for a payload.\n" +
 				"Payload length        : " + NumberFormat.getIntegerInstance().format(payload.length) + " bytes\n" +
@@ -78,7 +74,7 @@ public class POWProcessor
 				"Time to live          : " + TimeUtils.getTimeMessage(timeToLive) + "\n" +
 				"Target                : " + NumberFormat.getIntegerInstance().format(powTarget));
 		
-		return powCalc.execute(MAX_TIME_ALLOWED);
+		return powCalc.execute();
 	}
 	
 	/**

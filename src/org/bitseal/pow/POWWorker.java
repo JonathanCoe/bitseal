@@ -16,13 +16,7 @@ import android.util.Log;
 public class POWWorker implements Runnable 
 {
 	protected boolean POWSuccessful;
-
-	/**
-	 * The time period in milliseconds to check if the pow calculation should be
-	 * aborted.
-	 */
-	private static final int ROUND_TIME = 100;
-
+	
 	/** The collision quality that should be achieved. */
 	private long target;
 
@@ -31,6 +25,9 @@ public class POWWorker implements Runnable
 
 	/** The initial hash value. */
 	private byte[] initialHash;
+	
+	/** The increment that should be used for finding the next nonce. */
+	private long increment;
 
 	/** True if the calculation is running. */
 	private volatile boolean running;
@@ -40,19 +37,9 @@ public class POWWorker implements Runnable
 
 	/** The listener to inform if we found the result. */
 	private POWListener listener;
-
-	/** The system load that should be created by this worker. */
-	private float targetLoad;
-
-	/** The increment that should be used for finding the next nonce. */
-	private long increment;
-	
-	private long maxTime; 
 	
 	private MessageDigest sha512;
-	
-	private long startTime;
-	
+		
 	/** The number of double SHA-512 hashes calculated by this worker so far. */
 	private int doubleHashesCalculated = 0;
 	
@@ -67,11 +54,8 @@ public class POWWorker implements Runnable
 	 * startNonce + increment, startNonce + 2 * increment.
 	 * @param initialHash - A byte[] containing the hash of the message.
 	 * @param listener - The POWListener object to inform if a result was found.
-	 * @param targetLoad - A float representing the system load that should be created by this worker.
-	 * @param maxTime - A long representing the maximum amount of time in seconds to be allowed for a POW calculation
 	 */
-	public POWWorker(long target, long startNonce, long increment, byte[] initialHash, POWListener listener,
-			float targetLoad, long maxTime) 
+	public POWWorker(long target, long startNonce, long increment, byte[] initialHash, POWListener listener) 
 	{
 		if (listener == null) 
 		{
@@ -80,11 +64,9 @@ public class POWWorker implements Runnable
 
 		this.target = target;
 		this.nonce = startNonce;
+		this.increment = increment;
 		this.initialHash = initialHash;
 		this.listener = listener;
-		this.targetLoad = targetLoad;
-		this.increment = increment;
-		this.maxTime = maxTime;
 		
 		try 
 		{
@@ -143,86 +125,36 @@ public class POWWorker implements Runnable
 	{
 		running = true;
 		
-		startTime = System.currentTimeMillis();
-
-		int iterations = 100 * ROUND_TIME;
-		long sleepTime = (long) (ROUND_TIME * (1 - targetLoad));
-		long result = Long.MAX_VALUE;
 		long nonce = this.nonce;
-
-		float topLoad = targetLoad * 1.1f;
-		float bottomLoad = targetLoad * 0.9f;
-
-		while (!stop) 
+		
+		while (!stop)
 		{
-			long ls = System.nanoTime();
-			byte[] hash;
-
-			for (int i = 0; i < iterations; i++) 
+			// Calculate the double SHA512 hash of the current nonce concatenated with the payload (initial) hash
+			sha512.reset();
+			sha512.update(ByteUtils.longToBytes(nonce));
+			byte[] hash = sha512.digest(initialHash);
+			sha512.reset();
+			hash = sha512.digest(hash);
+			
+			doubleHashesCalculated ++;
+			
+			// Get the resulting hash as a long
+			long result = ByteUtils.bytesToLong(hash);
+			
+			// Check whether the current nonce gives a result that meets the POW target
+			if (result <= target && result >= 0)
 			{
-				sha512.reset();
-				sha512.update(ByteUtils.longToBytes(nonce));
-				hash = sha512.digest(initialHash);
-				sha512.reset();
-				hash = sha512.digest(hash);
-				
-				doubleHashesCalculated ++;
-				
-				result = ByteUtils.bytesToLong(hash);
-
-				if (result <= target && result >= 0)
-				{
-					Log.d(TAG, "Found a valid nonce!     : " + NumberFormat.getIntegerInstance().format(nonce));
-					stop();
-					this.nonce = nonce;
-					POWSuccessful = true;
-					listener.powFinished(this);
-					break;
-				}
-				
-				if ((startTime + (maxTime * 1000)) < System.currentTimeMillis())
-				{
-					// Throwing exceptions in this instance has proven to be very problematic, with the exceptions
-					// causing the worker threads to crash instead of propagating up the call hierarchy correctly. 
-					// Therefore we return 0 to convey that the POW calculations were not successful within the time allowed.
-					stop();
-					this.nonce = 0;
-					POWSuccessful = false;
-					listener.powFinished(this);
-					break;
-				}
-
+				Log.d(TAG, "Found a valid nonce!     : " + NumberFormat.getIntegerInstance().format(nonce));
+				stop();
+				this.nonce = nonce;
+				POWSuccessful = true;
+				listener.powFinished(this);
+				break;
+			}
+			// Increment the POW nonce
+			else
+			{
 				nonce += increment;
-			}
-
-			long lh = System.nanoTime();
-
-			if (sleepTime > 0)
-			{
-				try 
-				{
-					Thread.sleep(sleepTime);
-				} 
-				catch (InterruptedException e) 
-				{
-					throw new RuntimeException("InterruptedException occurred in POWWorker.run()", e);
-				}
-			}
-
-			long lf = System.nanoTime();
-
-			float load = ((float) (lh - ls) / (float) (lf - ls));
-			//System.out.println("Load: " + load);
-
-			if (load > topLoad) 
-			{
-				iterations -= iterations >> 8;
-				System.out.println("iterations: " + iterations);
-			} 
-			else if (load < bottomLoad) 
-			{
-				iterations += iterations >> 8;
-				System.out.println("iterations: " + iterations);
 			}
 		}
 

@@ -13,7 +13,7 @@ import android.util.Log;
  */
 public class POWCalculator implements POWListener 
 {
-	/** The amount of threads to use per CPU. */
+	/** The number of threads to use per CPU. */
 	private static final int THREADS_PER_CPU = 1;
 
 	/** The target collision quality. */
@@ -21,10 +21,7 @@ public class POWCalculator implements POWListener
 
 	/** The hash of the message. */
 	private byte[] initialHash;
-
-	/** The target system load created by the calculation. (Per CPU) */
-	private float targetLoad;
-
+	
 	/** The worker that found a valid nonce. */
 	private POWWorker finishedWorker;
 	
@@ -42,11 +39,6 @@ public class POWCalculator implements POWListener
 	{
 		initialHash = newInitialHash;
 	}
-	
-	public void setTargetLoad(long newTargetLoad)
-	{
-		targetLoad = newTargetLoad;
-	}
 
 	/**
 	 * Do the Proof of Work calculations.<br><br>
@@ -54,23 +46,23 @@ public class POWCalculator implements POWListener
 	 * 
 	 * <b>Note: If POW is not completed within the time allowed, this method will return 0.</b>
 	 * 
-	 * @param maxTime - An int representing the maximum amount of time in seconds that will be
-	 * allowed for the POW calculation to be completed
-	 * 
 	 * @return A long containing a nonce that fulfils the collision quality condition.
 	 */
-	public synchronized long execute(long maxTime) 
+	public synchronized long execute() 
 	{
+		// Create a new worker thread for each CPU core
 		POWWorker[] workers = new POWWorker[Runtime.getRuntime().availableProcessors() * THREADS_PER_CPU];
 		
 		long startTime = System.currentTimeMillis();
-
+		
+		// Start the worker threads
 		for (int i = 0; i < workers.length; i++) 
 		{
-			workers[i] = new POWWorker(target, i, workers.length, initialHash, this, targetLoad / THREADS_PER_CPU, maxTime);
+			workers[i] = new POWWorker(target, i, workers.length, initialHash, this);
 			new Thread(workers[i], "POW Worker No. " + i).start();
 		}
-
+		
+		// Wait for POW to be completed
 		try 
 		{
 			wait();
@@ -80,6 +72,7 @@ public class POWCalculator implements POWListener
 			throw new RuntimeException("InterruptedException occurred in POWCalculator.execute()", e);
 		}
 		
+		// Once POW has completed successfully or been interrupted, stop any worker threads that are still running
 		for (POWWorker w : workers) 
 		{
 			w.stop();
@@ -87,6 +80,7 @@ public class POWCalculator implements POWListener
 			doubleHashesCalculated = doubleHashesCalculated + w.getDoubleHashesCalculated();
 		}
 		
+		// Calculate the time statistics for this POW session
 		long endTime = System.currentTimeMillis();
 		long totalTime = (endTime - startTime) / 1000;
 		Log.d(TAG, "Double hashes calculated : " + NumberFormat.getIntegerInstance().format(doubleHashesCalculated));
