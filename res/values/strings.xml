@@ -109,7 +109,6 @@
     <string name="compose_toast_sending_message">Sending the message</string>
     <string name="compose_toast_error">An error occurred</string>
     
-
     <!-- Identities Activity: -->
     <string name="identities_activity_title">My Addresses</string>
     <string name="identities_confirm_address_creation_textView_text">Are you sure you want to create a new address?\n\nYou can have 
@@ -168,63 +167,60 @@
     <string name="addressBook_toast_address_copied">Address copied to the clipboard</string>
     <string name="addressBook_toast_entry_deleted">Address book entry deleted</string>
     
-    
     <!-- Settings Activity: -->
     <string name="activity_settings_title">Settings</string>
     <string name="settings_security_settings_button_label">Security Settings</string>
-    <string name="settings_server_settings_button_label">Server Settings</string>
+    <string name="settings_network_settings_button_label">Network Settings</string>
     <string name="settings_import_or_export_button_label">Import or export data</string>  
     <string name="settings_system_tools_button_label">System tools</string>
-    <string name="settings_show_settings_textbox_label">Show settings (for advanced users only)</string>
-    
-    
+    <string name="settings_show_settings_checkbox_label">Show settings (for advanced users only)</string>
+        
     <!-- System Tools Activity: -->
     <string name="activity_system_tools_title">System Tools</string>
     <string name="system_tools_restart_background_service_button_label">Restart background service</string>
     <string name="system_tools_toast_background_service_restart">Background Service queued for restart</string>
     <string name="system_tools_view_log_button_label">View log</string>
     <string name="system_tools_view_exceptions_button_label">View recent errors</string>
-    
-    
+        
     <!-- View Log Activity: -->
     <string name="activity_view_log_title">Bitseal Log</string>
     <string name="activity_view_log_placeholder_message">No log messages to display</string>
     <string name="activity_view_log_item_copied_toast">Log message copied to the clipboard</string>
-    
-    
+        
     <!-- View Errors Activity: -->
     <string name="activity_view_errors_title">Recent Errors</string>
     <string name="activity_view_errors_placeholder_message">No errors to display</string>
     <string name="activity_view_errors_error_copied_toast">Error message copied to the clipboard</string>
-    
-    
-    <!-- Servers Activity: -->
-    <string name="activity_servers_title">Servers</string>
-    <string name="servers_servers_section_label">Servers</string>
-    <string name="servers_dialog_list_item_url_title">URL</string>
-    <string name="servers_dialog_list_item_username_title">API Username</string>
-    <string name="servers_dialog_list_item_password_title">API Password</string>
-    <string name="servers_dialog_list_item_save_button_label">Save</string>
-    <string name="servers_dialog_list_item_copy_button_label">Copy</string>
-    <string name="servers_dialog_list_item_delete_button_label">Delete</string>
-    <string name="servers_delete_dialog_textView_text">Delete this server?</string>
-    <string name="servers_delete_dialog_confirm_button_label">Delete</string>
-    <string name="servers_delete_dialog_cancel_button_label">Cancel</string>
-    <string name="servers_add_new_button_label">Add new server</string>
-    <string name="servers_restore_defaults_button_label">Restore default servers</string>
-    <string name="servers_restore_defaults_dialog_title_textView_text">Restore the default set of servers?</string>
-    <string name="servers_restore_defaults_dialog_confirm_button_label">Yes</string>
-    <string name="servers_restore_defaults_dialog_cancel_button_label">No</string>
-    <string name="servers_dialog_add_new_url_title">URL</string>
-    <string name="servers_dialog_add_new_username_title">API Username</string>
-    <string name="servers_dialog_add_new_password_title">API Password</string>
-    <string name="servers_dialog_add_new_save_button_label">Save</string>
-    <string name="servers_dialog_add_new_cancel_button_label">Cancel</string>
-    <string name="servers_note">Note: Bitseal will use all the servers listed</string>
-    <string name="servers_toast_url_blank">The URL must not be blank</string>
-    <string name="servers_toast_username_blank">The Username must not be blank</string>
-    <string name="servers_toast_password_blank">The Password must not be blank</string>
-    <string name="servers_toast_url_copied">Server URL copied to the clipboard</string>
+        
+    <!-- Network Settings Activity: -->
+    <string name="activity_network_settings_title">Network Settings</string>
+    <string name="network_settings_connection_section_label">Connection</string>
+    <string name="network_settings_wifi_only_checkbox_label">Use wifi only</string>
+    <string name="network_settings_servers_section_label">Servers</string>
+    <string name="network_settings_server_list_item_dialog_url_title">URL</string>
+    <string name="network_settings_server_list_item_dialog_username_title">API Username</string>
+    <string name="network_settings_server_list_item_dialog_password_title">API Password</string>
+    <string name="network_settings_server_list_item_dialog_save_button_label">Save</string>
+    <string name="network_settings_server_list_item_dialog_copy_button_label">Copy</string>
+    <string name="network_settings_server_list_item_dialog_delete_button_label">Delete</string>
+    <string name="network_settings_server_list_item_dialog_delete_dialog_title">Delete this server?</string>
+    <string name="network_settings_server_list_item_dialog_delete_dialog_confirm_button_label">Delete</string>
+    <string name="network_settings_server_list_item_dialog_delete_dialog_cancel_button_label">Cancel</string>
+    <string name="network_settings_add_new_server_button_label">Add new server</string>
+    <string name="network_settings_restore_default_servers_button_label">Restore default servers</string>
+    <string name="network_settings_restore_default_servers_dialog_title">Restore the default set of servers?</string>
+    <string name="network_settings_restore_default_servers_dialog_confirm_button_label">Yes</string>
+    <string name="network_settings_restore_default_servers_dialog_cancel_button_label">No</string>
+    <string name="network_settings_add_new_server_dialog_url_title">URL</string>
+    <string name="network_settings_add_new_server_dialog_username_title">API Username</string>
+    <string name="network_settings_add_new_server_dialog_password_title">API Password</string>
+    <string name="network_settings_add_new_server_dialog_save_button_label">Save</string>
+    <string name="network_settings_add_new_server_dialog_cancel_button_label">Cancel</string>
+    <string name="network_settings_note">Note: Bitseal will use all the servers listed</string>
+    <string name="network_settings_toast_url_blank">The URL must not be blank</string>
+    <string name="network_settings_toast_username_blank">The Username must not be blank</string>
+    <string name="network_settings_toast_password_blank">The Password must not be blank</string>
+    <string name="network_settings_toast_url_copied">Server URL copied to the clipboard</string>
     
     <!-- Import or Export Activity: -->
     <string name="activity_import_or_export_title">Import or Export Data</string>
@@ -287,7 +283,7 @@
     
     <!-- Lock Screen Activity: -->
     <string name="lock_screen_enter_passphrase_edittext_hint">Enter passphrase</string>
-    <string name="lock_screen_toast_checking_passphrase">Checking passphrase...</string>
+    <string name="lock_screen_toast_checking_passphrase">Checking passphrase&#8230;</string>
     <string name="lock_screen_toast_invalid_passphrase">Invalid passphrase</string>
         
 </resources>

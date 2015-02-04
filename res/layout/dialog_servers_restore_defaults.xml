@@ -8,7 +8,7 @@
   android:background="@android:color/white" >
     
   <TextView
-    android:id="@+id/servers_restore_defaults_dialog_title_textView"
+    android:id="@+id/network_settings_restore_default_servers_dialog_title_textview"
     android:layout_width="wrap_content"
     android:layout_height="35dp"
     android:layout_marginTop="2dp"
@@ -18,7 +18,7 @@
     android:textIsSelectable="true"
     android:textSize="16sp"
     android:textStyle="bold"
-    android:text="@string/servers_restore_defaults_dialog_title_textView_text"
+    android:text="@string/network_settings_restore_default_servers_dialog_title"
     />
   
   	<LinearLayout 
@@ -28,7 +28,7 @@
  	  >
   
 	  <Button 
-	    android:id="@+id/servers_restore_defaults_dialog_confirm_button"
+	    android:id="@+id/network_settings_restore_default_servers_dialog_confirm_button"
 	    android:layout_width="70dp"
 	    android:layout_height="40dp"
 	    android:layout_weight="1"
@@ -37,11 +37,11 @@
 	    android:layout_marginLeft="6dp"
 	    android:layout_marginRight="2dp"
 	    android:textSize="14sp"
-	    android:hint="@string/servers_restore_defaults_dialog_confirm_button_label" 
+	    android:hint="@string/network_settings_restore_default_servers_dialog_confirm_button_label" 
 	    />
   
 	  <Button 
-	    android:id="@+id/servers_restore_defaults_dialog_cancel_button"
+	    android:id="@+id/network_settings_restore_default_servers_dialog_cancel_button"
 	    android:layout_width="70dp"
 	    android:layout_height="40dp"
 	    android:layout_weight="1"
@@ -50,7 +50,7 @@
 	    android:layout_marginLeft="2dp"
 	    android:layout_marginRight="6dp"
 	    android:textSize="14sp"
-	    android:hint="@string/servers_restore_defaults_dialog_cancel_button_label"
+	    android:hint="@string/network_settings_restore_default_servers_dialog_cancel_button_label"
 	    />
 	  
 	</LinearLayout>

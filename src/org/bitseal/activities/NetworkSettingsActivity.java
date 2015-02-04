@@ -34,6 +34,7 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -45,27 +46,32 @@ import android.widget.Toast;
  * 
  * @author Jonathan Coe
  */
-public class ServersActivity extends ListActivity implements ICacheWordSubscriber
-{
-	private ArrayList<ServerRecord> mServerRecords;
-    
+public class NetworkSettingsActivity extends ListActivity implements ICacheWordSubscriber
+{    
+	private CheckBox mWifiOnlyCheckbox;
+	
 	private Button mAddNewServerButton;
 	private Button mRestoreDefaultServersButton;
 	private TextView mListItemUrlTextView;
     private ListView mServersListView;
     
+    private ArrayList<ServerRecord> mServerRecords;
+    
     /** The key for a boolean variable that records whether or not a user-defined database encryption passphrase has been saved */
     private static final String KEY_DATABASE_PASSPHRASE_SAVED = "databasePassphraseSaved"; 
     
+    /** The key for a boolean variable that records whether or not the user has selected the 'wifi only' option*/
+    private static final String WIFI_ONLY_SELECTED = "wifiOnlySelected";
+    
     private CacheWordHandler mCacheWordHandler;
     
-    private static final String TAG = "SERVERS_ACTIVITY";
+    private static final String TAG = "NETWORK_SETTINGS_ACTIVITY";
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_servers);
+		setContentView(R.layout.activity_network_settings);
 		
         // Check whether the user has set a database encryption passphrase
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -87,12 +93,43 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 		}
 		
 		// Set up this activity's view
+		mWifiOnlyCheckbox = (CheckBox) findViewById(R.id.network_settings_wifi_only_checkbox);
+		if (prefs.getBoolean(WIFI_ONLY_SELECTED, false))
+		{
+			mWifiOnlyCheckbox.setChecked(true);
+		}
+		mWifiOnlyCheckbox.setOnClickListener(new View.OnClickListener() 
+        {
+        	@Override
+			public void onClick(View v) 
+        	{
+	            if (mWifiOnlyCheckbox.isChecked()) 
+	            {
+	            	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+	            	SharedPreferences.Editor editor = prefs.edit();
+	    		    editor.putBoolean(WIFI_ONLY_SELECTED, true);
+	    		    editor.commit();
+	    		    
+	    		    Log.i(TAG, "Wifi-only checkbox set to true");
+	            } 
+	            else 
+	            {
+	            	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+	            	SharedPreferences.Editor editor = prefs.edit();
+	    		    editor.putBoolean(WIFI_ONLY_SELECTED, false);
+	    		    editor.commit();
+	    		    
+	    		    Log.i(TAG, "Wifi-only checkbox set to false");
+	            }
+        	}
+        });
+		
 		ServerRecordAdapter adapter = new ServerRecordAdapter(mServerRecords);
         mServersListView = new ListView(this);
         mServersListView = (ListView)findViewById(android.R.id.list);         
         setListAdapter(adapter);
 		
-		mAddNewServerButton = (Button) findViewById(R.id.servers_add_new_button);
+		mAddNewServerButton = (Button) findViewById(R.id.network_settings_add_new_server_button);
 		mAddNewServerButton.setOnClickListener(new View.OnClickListener()
 		{		
 			@Override
@@ -101,8 +138,8 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 				Log.i(TAG, "Add new server button clicked");
 			    
 		        // Open a dialog to enter the data for the new server record
-				final Dialog listItemDialog = new Dialog(ServersActivity.this);
-				LinearLayout dialogLayout = (LinearLayout) View.inflate(ServersActivity.this, R.layout.dialog_servers_add_new, null);
+				final Dialog listItemDialog = new Dialog(NetworkSettingsActivity.this);
+				LinearLayout dialogLayout = (LinearLayout) View.inflate(NetworkSettingsActivity.this, R.layout.dialog_servers_add_new, null);
 				listItemDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 				listItemDialog.setContentView(dialogLayout);
 				
@@ -113,9 +150,9 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 			    listItemDialog.show();
 			    listItemDialog.getWindow().setAttributes(lp);
 			    
-			    final EditText listItemDialogUrlEditText= (EditText) dialogLayout.findViewById(R.id.servers_dialog_add_new_url_edittext);
-			    final EditText listItemDialogUsernameEditText = (EditText) dialogLayout.findViewById(R.id.servers_dialog_add_new_username_edittext);
-			    final EditText listItemDialogPasswordEditText = (EditText) dialogLayout.findViewById(R.id.servers_dialog_add_new_password_edittext);
+			    final EditText listItemDialogUrlEditText= (EditText) dialogLayout.findViewById(R.id.network_settings_add_new_server_dialog_url_edittext);
+			    final EditText listItemDialogUsernameEditText = (EditText) dialogLayout.findViewById(R.id.network_settings_add_new_server_dialog_username_edittext);
+			    final EditText listItemDialogPasswordEditText = (EditText) dialogLayout.findViewById(R.id.network_settings_add_new_server_dialog_password_edittext);
 			    
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
 				{
@@ -171,7 +208,7 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 			        });
 				}
 			    
-			    Button saveButton = (Button) dialogLayout.findViewById(R.id.servers_dialog_add_new_save_button);
+			    Button saveButton = (Button) dialogLayout.findViewById(R.id.network_settings_add_new_server_dialog_save_button);
 			    saveButton.setOnClickListener(new View.OnClickListener()
 				{
 					@Override
@@ -182,21 +219,21 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 						String url = listItemDialogUrlEditText.getText().toString();
 						if (url.equals(""))
 						{
-							Toast.makeText(getApplicationContext(), R.string.servers_toast_url_blank, Toast.LENGTH_LONG).show();
+							Toast.makeText(getApplicationContext(), R.string.network_settings_toast_url_blank, Toast.LENGTH_LONG).show();
 							return;
 						}
 						
 						String username = listItemDialogUsernameEditText.getText().toString();
 						if (username.equals(""))
 						{
-							Toast.makeText(getApplicationContext(), R.string.servers_toast_username_blank, Toast.LENGTH_LONG).show();
+							Toast.makeText(getApplicationContext(), R.string.network_settings_toast_username_blank, Toast.LENGTH_LONG).show();
 							return;
 						}
 						
 						String password = listItemDialogPasswordEditText.getText().toString();
 						if (password.equals(""))
 						{
-							Toast.makeText(getApplicationContext(), R.string.servers_toast_password_blank, Toast.LENGTH_LONG).show();
+							Toast.makeText(getApplicationContext(), R.string.network_settings_toast_password_blank, Toast.LENGTH_LONG).show();
 							return;
 						}
 						
@@ -218,7 +255,7 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 					}
 				});
 			    
-			    Button cancelButton = (Button) dialogLayout.findViewById(R.id.servers_dialog_add_new_cancel_button);
+			    Button cancelButton = (Button) dialogLayout.findViewById(R.id.network_settings_add_new_server_dialog_cancel_button);
 			    cancelButton.setOnClickListener(new View.OnClickListener()
 				{
 					@Override
@@ -232,7 +269,7 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 			}
 		});
 		
-		mRestoreDefaultServersButton = (Button) findViewById(R.id.servers_restore_defaults_button);
+		mRestoreDefaultServersButton = (Button) findViewById(R.id.network_settings_restore_default_servers_button);
 		mRestoreDefaultServersButton.setOnClickListener(new View.OnClickListener()
 		{		
 			@Override
@@ -241,8 +278,8 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 				Log.i(TAG, "Restore default servers button clicked");
 				
 				// Open a dialog to confirm or cancel the restoration of the default set of servers
-				final Dialog restoreDefaultsDialog = new Dialog(ServersActivity.this);
-				LinearLayout dialogLayout = (LinearLayout) View.inflate(ServersActivity.this, R.layout.dialog_servers_restore_defaults, null);
+				final Dialog restoreDefaultsDialog = new Dialog(NetworkSettingsActivity.this);
+				LinearLayout dialogLayout = (LinearLayout) View.inflate(NetworkSettingsActivity.this, R.layout.dialog_servers_restore_defaults, null);
 				restoreDefaultsDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 				restoreDefaultsDialog.setContentView(dialogLayout);
 				
@@ -253,7 +290,7 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 			    restoreDefaultsDialog.show();
 			    restoreDefaultsDialog.getWindow().setAttributes(lp);		  
 			    
-			    Button confirmButton = (Button) dialogLayout.findViewById(R.id.servers_restore_defaults_dialog_confirm_button);
+			    Button confirmButton = (Button) dialogLayout.findViewById(R.id.network_settings_restore_default_servers_dialog_confirm_button);
 			    confirmButton.setOnClickListener(new View.OnClickListener()
 				{
 					@Override
@@ -275,7 +312,7 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 					}
 				});
 			    
-			    Button cancelButton = (Button) dialogLayout.findViewById(R.id.servers_restore_defaults_dialog_cancel_button);
+			    Button cancelButton = (Button) dialogLayout.findViewById(R.id.network_settings_restore_default_servers_dialog_cancel_button);
 			    cancelButton.setOnClickListener(new View.OnClickListener()
 				{
 					@Override
@@ -344,8 +381,8 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 		final ServerRecord selectedRecord = ((ServerRecordAdapter)mServersListView.getAdapter()).getItem(position);
 	    
         // Open a dialog to view the data for the selected server record
-		final Dialog listItemDialog = new Dialog(ServersActivity.this);
-		LinearLayout dialogLayout = (LinearLayout) View.inflate(ServersActivity.this, R.layout.dialog_servers_list_item_options, null);
+		final Dialog listItemDialog = new Dialog(NetworkSettingsActivity.this);
+		LinearLayout dialogLayout = (LinearLayout) View.inflate(NetworkSettingsActivity.this, R.layout.dialog_servers_list_item_options, null);
 		listItemDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		listItemDialog.setContentView(dialogLayout);
 		
@@ -356,9 +393,9 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 	    listItemDialog.show();
 	    listItemDialog.getWindow().setAttributes(lp);
 	    
-	    final EditText listItemDialogUrlEditText= (EditText) dialogLayout.findViewById(R.id.servers_dialog_list_item_url_edittext);
-	    final EditText listItemDialogUsernameEditText = (EditText) dialogLayout.findViewById(R.id.servers_dialog_list_item_username_edittext);
-	    final EditText listItemDialogPasswordEditText = (EditText) dialogLayout.findViewById(R.id.servers_dialog_list_item_password_edittext);
+	    final EditText listItemDialogUrlEditText= (EditText) dialogLayout.findViewById(R.id.network_settings_server_list_item_dialog_url_edittext);
+	    final EditText listItemDialogUsernameEditText = (EditText) dialogLayout.findViewById(R.id.network_settings_server_list_item_dialog_username_edittext);
+	    final EditText listItemDialogPasswordEditText = (EditText) dialogLayout.findViewById(R.id.network_settings_server_list_item_dialog_password_edittext);
 	    
 	    // Set the text of the two EditTexts in the dialog
 	    listItemDialogUrlEditText.setText(selectedRecord.getURL());
@@ -424,7 +461,7 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 	        });
 		}
 	    
-	    Button saveButton = (Button) dialogLayout.findViewById(R.id.servers_dialog_list_item_save_button);
+	    Button saveButton = (Button) dialogLayout.findViewById(R.id.network_settings_server_list_item_dialog_save_button);
 	    saveButton.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
@@ -435,21 +472,21 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 				String url = listItemDialogUrlEditText.getText().toString();
 				if (url.equals(""))
 				{
-					Toast.makeText(getApplicationContext(), R.string.servers_toast_url_blank, Toast.LENGTH_LONG).show();
+					Toast.makeText(getApplicationContext(), R.string.network_settings_toast_url_blank, Toast.LENGTH_LONG).show();
 					return;
 				}
 				
 				String username = listItemDialogUsernameEditText.getText().toString();
 				if (username.equals(""))
 				{
-					Toast.makeText(getApplicationContext(), R.string.servers_toast_username_blank, Toast.LENGTH_LONG).show();
+					Toast.makeText(getApplicationContext(), R.string.network_settings_toast_username_blank, Toast.LENGTH_LONG).show();
 					return;
 				}
 				
 				String password = listItemDialogPasswordEditText.getText().toString();
 				if (password.equals(""))
 				{
-					Toast.makeText(getApplicationContext(), R.string.servers_toast_password_blank, Toast.LENGTH_LONG).show();
+					Toast.makeText(getApplicationContext(), R.string.network_settings_toast_password_blank, Toast.LENGTH_LONG).show();
 					return;
 				}
 				
@@ -468,7 +505,7 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 			}
 		});
 	    
-	    Button copyButton = (Button) dialogLayout.findViewById(R.id.servers_dialog_list_item_copy_button);
+	    Button copyButton = (Button) dialogLayout.findViewById(R.id.network_settings_server_list_item_dialog_copy_button);
 	    copyButton.setOnClickListener(new View.OnClickListener()
 		{
 			@SuppressWarnings("deprecation")
@@ -497,11 +534,11 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 				
 				listItemDialog.dismiss();
 				
-				Toast.makeText(getApplicationContext(), R.string.servers_toast_url_copied, Toast.LENGTH_LONG).show();
+				Toast.makeText(getApplicationContext(), R.string.network_settings_toast_url_copied, Toast.LENGTH_LONG).show();
 			}
 		});
 	    
-	    Button deleteButton = (Button) dialogLayout.findViewById(R.id.servers_dialog_list_item_delete_button);
+	    Button deleteButton = (Button) dialogLayout.findViewById(R.id.network_settings_server_list_item_dialog_delete_button);
 	    deleteButton.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
@@ -510,8 +547,8 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 				Log.i(TAG, "List item dialog delete button pressed");
 				
 		        // Open a dialog to confirm or cancel the deletion of the message
-				final Dialog deleteDialog = new Dialog(ServersActivity.this);
-				LinearLayout dialogLayout = (LinearLayout) View.inflate(ServersActivity.this, R.layout.dialog_servers_server_record_delete, null);
+				final Dialog deleteDialog = new Dialog(NetworkSettingsActivity.this);
+				LinearLayout dialogLayout = (LinearLayout) View.inflate(NetworkSettingsActivity.this, R.layout.dialog_servers_server_record_delete, null);
 				deleteDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 				deleteDialog.setContentView(dialogLayout);
 				
@@ -522,7 +559,7 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 			    deleteDialog.show();
 			    deleteDialog.getWindow().setAttributes(lp);		  
 			    
-			    Button confirmButton = (Button) dialogLayout.findViewById(R.id.servers_delete_dialog_confirm_button);
+			    Button confirmButton = (Button) dialogLayout.findViewById(R.id.network_settings_server_list_item_dialog_delete_dialog_confirm_button);
 			    confirmButton.setOnClickListener(new View.OnClickListener()
 				{
 					@Override
@@ -542,7 +579,7 @@ public class ServersActivity extends ListActivity implements ICacheWordSubscribe
 					}
 				});
 			    
-			    Button cancelButton = (Button) dialogLayout.findViewById(R.id.servers_delete_dialog_cancel_button);
+			    Button cancelButton = (Button) dialogLayout.findViewById(R.id.network_settings_server_list_item_dialog_delete_dialog_cancel_button);
 			    cancelButton.setOnClickListener(new View.OnClickListener()
 				{
 					@Override

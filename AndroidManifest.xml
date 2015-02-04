@@ -69,8 +69,8 @@
         </activity>
         
         <activity
-            android:name="org.bitseal.activities.ServersActivity"
-            android:label="@string/activity_servers_title"
+            android:name="org.bitseal.activities.NetworkSettingsActivity"
+            android:label="@string/activity_network_settings_title"
             android:windowSoftInputMode="stateUnchanged" >
         </activity>
         

@@ -7,7 +7,7 @@
   android:background="@android:color/white" >
     
   <TextView
-    android:id="@+id/servers_dialog_add_new_url_title_textview"
+    android:id="@+id/network_settings_add_new_server_dialog_url_title_textview"
     android:layout_width="fill_parent"
     android:layout_height="20dp"
     android:layout_marginTop="2dp"
@@ -15,13 +15,13 @@
     android:layout_marginLeft="5dp"
     android:layout_marginRight="5dp"
     android:textIsSelectable="true"
-    android:textSize="16sp"
+    android:textSize="16sp" 
     android:textStyle="bold"
-    android:text="@string/servers_dialog_add_new_url_title"
+    android:text="@string/network_settings_add_new_server_dialog_url_title"
     />
     
   <EditText
-    android:id="@+id/servers_dialog_add_new_url_edittext"
+    android:id="@+id/network_settings_add_new_server_dialog_url_edittext"
     android:layout_width="fill_parent"
     android:layout_height="35dp"
     android:layout_marginTop="2dp"
@@ -34,7 +34,7 @@
     />
   
   <TextView
-    android:id="@+id/servers_dialog_add_new_username_textview"
+    android:id="@+id/network_settings_add_new_server_dialog_username_textview"
     android:layout_width="fill_parent"
     android:layout_height="20dp"
     android:layout_marginTop="2dp"
@@ -44,11 +44,11 @@
     android:textIsSelectable="true"
     android:textSize="16sp"
     android:textStyle="bold"
-    android:text="@string/servers_dialog_add_new_username_title" 
+    android:text="@string/network_settings_add_new_server_dialog_username_title" 
     />
   
   <EditText
-    android:id="@+id/servers_dialog_add_new_username_edittext"
+    android:id="@+id/network_settings_add_new_server_dialog_username_edittext"
     android:layout_width="fill_parent"
     android:layout_height="35dp"
     android:layout_marginTop="0dp"
@@ -61,7 +61,7 @@
     />
   
   <TextView
-    android:id="@+id/servers_dialog_add_new_password_textview"
+    android:id="@+id/network_settings_add_new_server_dialog_password_textview"
     android:layout_width="fill_parent"
     android:layout_height="20dp"
     android:layout_marginTop="2dp"
@@ -71,11 +71,11 @@
     android:textIsSelectable="true"
     android:textSize="16sp"
     android:textStyle="bold"
-    android:text="@string/servers_dialog_add_new_password_title" 
+    android:text="@string/network_settings_add_new_server_dialog_password_title" 
     />
   
   <EditText
-    android:id="@+id/servers_dialog_add_new_password_edittext"
+    android:id="@+id/network_settings_add_new_server_dialog_password_edittext"
     android:layout_width="fill_parent"
     android:layout_height="35dp"
     android:layout_marginTop="0dp"
@@ -94,7 +94,7 @@
  	  >
   	    	
 	  <Button 
-	    android:id="@+id/servers_dialog_add_new_save_button"
+	    android:id="@+id/network_settings_add_new_server_dialog_save_button"
 	    android:layout_width="wrap_content"
 	    android:layout_height="40dp"
 	    android:layout_weight="2"
@@ -103,11 +103,11 @@
 	    android:layout_marginLeft="6dp"
 	    android:layout_marginRight="2dp"
 	    android:textSize="14sp"
-	    android:hint="@string/servers_dialog_add_new_save_button_label" 
+	    android:hint="@string/network_settings_add_new_server_dialog_save_button_label" 
 	    />
   
 	  <Button 
-	    android:id="@+id/servers_dialog_add_new_cancel_button"
+	    android:id="@+id/network_settings_add_new_server_dialog_cancel_button"
 	    android:layout_width="wrap_content"
 	    android:layout_height="40dp"
 	    android:layout_weight="2"
@@ -116,7 +116,7 @@
 	    android:layout_marginLeft="2dp"
 	    android:layout_marginRight="2dp"
 	    android:textSize="14sp"
-	    android:hint="@string/servers_dialog_add_new_cancel_button_label"
+	    android:hint="@string/network_settings_add_new_server_dialog_cancel_button_label"
 	    />
 	  
 	</LinearLayout>

@@ -33,7 +33,7 @@ import android.widget.TextView;
 public class SettingsActivity extends Activity implements ICacheWordSubscriber
 {	   
 	private Button mSecuritySettingsButton;
-	private Button mServerSettingsButton;
+	private Button mNetworkSettingsButton;
     private Button mImportOrExportButton;
     private Button mSystemToolsButton;
     
@@ -99,15 +99,15 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 			}
 		});
 	    
-		mServerSettingsButton = (Button) findViewById(R.id.settings_server_settings_button);
-		mServerSettingsButton.setOnClickListener(new View.OnClickListener()
+		mNetworkSettingsButton = (Button) findViewById(R.id.settings_network_settings_button);
+		mNetworkSettingsButton.setOnClickListener(new View.OnClickListener()
 		{		
 			@Override
 			public void onClick(View v)
 			{				
-				Log.i(TAG, "Server settings button clicked");
+				Log.i(TAG, "Network settings button clicked");
 				
-		        Intent i = new Intent(getBaseContext(), ServersActivity.class);
+		        Intent i = new Intent(getBaseContext(), NetworkSettingsActivity.class);
 		        startActivityForResult(i, 0);
 			}
 		});
@@ -185,7 +185,7 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 	private void showSettings()
 	{
 	    mSecuritySettingsButton.setVisibility(View.VISIBLE);
-		mServerSettingsButton.setVisibility(View.VISIBLE);
+		mNetworkSettingsButton.setVisibility(View.VISIBLE);
 		mImportOrExportButton.setVisibility(View.VISIBLE);
 		mSystemToolsButton.setVisibility(View.VISIBLE);
 		mTimeBehindNetworkTextView.setVisibility(View.VISIBLE);
@@ -194,7 +194,7 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 	private void hideSettings()
 	{
 	    mSecuritySettingsButton.setVisibility(View.GONE);
-		mServerSettingsButton.setVisibility(View.GONE);
+		mNetworkSettingsButton.setVisibility(View.GONE);
 		mImportOrExportButton.setVisibility(View.GONE);
 		mSystemToolsButton.setVisibility(View.GONE);
 		mTimeBehindNetworkTextView.setVisibility(View.GONE);

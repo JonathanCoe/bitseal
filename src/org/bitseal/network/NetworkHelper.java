@@ -10,8 +10,10 @@ import java.util.Collections;
 import org.bitseal.core.App;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 /**
@@ -30,6 +32,9 @@ public class NetworkHelper
 	private static final int MAX_RESPONSE_TIME_MILLISECONDS = 1500;
 	private static final int HTTP_RESPONSE_CODE_OK = 200;
 	
+    /** The key for a boolean variable that records whether or not the user has selected the 'wifi only' option*/
+    private static final String WIFI_ONLY_SELECTED = "wifiOnlySelected";
+	
 	private static final String TAG = "NETWORK_UTILS";
 	
 	/**
@@ -43,11 +48,23 @@ public class NetworkHelper
 	 */
 	public static boolean checkInternetAvailability()
 	{
-		// First check whether any network connection is available
+		// Check whether any network connection is available
 		Context appContext = App.getContext();
-		if (checkNetworkAvailablility(appContext) == true)
+		if (checkNetworkAvailablility(appContext))
 	    {
-	        ArrayList<String> urls = new ArrayList<String>();
+			// If the user has the 'wifi only' option enabled, check whether we are connected to a wifi network
+			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
+			if (prefs.getBoolean(WIFI_ONLY_SELECTED, false))
+			{
+				if (checkWifiConnected(appContext) == false)
+			    {
+			        Log.d(TAG, "The user has the 'wifi only' option enabled and we are not currently connected to a wifi network.");
+			        return false;
+			    }
+			}
+	
+			// Set up the list of URLs used to check for an active internet connection
+			ArrayList<String> urls = new ArrayList<String>();
 	        urls.add(URL_USED_TO_CHECK_CONNECTION_0);
 	        urls.add(URL_USED_TO_CHECK_CONNECTION_1);
 	        urls.add(URL_USED_TO_CHECK_CONNECTION_2);
@@ -82,9 +99,37 @@ public class NetworkHelper
 	    } 
 	    else 
 	    {
-	        Log.i(TAG, "No network connection available!");
+	        Log.d(TAG, "No network connection available!");
 	    }
+		
 	    return false;
+	}
+	
+	/**
+	 * Checks whether the Android device is connected to a wifi network.<br><br>
+	 * 
+	 * Credit to 'Sandeep' on StackOverflow for this method.<br> 
+	 * See: https://stackoverflow.com/questions/16689711
+	 * 
+	 * @param context - The Context for the currently running
+	 * application
+	 * 
+	 * @return A boolean indicating whether or not the Android device
+	 * is connected to a wifi network
+	 */
+	private static boolean checkWifiConnected(Context context)
+	{
+         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+         NetworkInfo wifiNetwork = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+         
+         if (wifiNetwork != null && wifiNetwork.isConnected())
+         {
+        	 return true;
+         }
+         else
+         {
+        	 return false;
+         }
 	}
 	
 	/**
