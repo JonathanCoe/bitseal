@@ -621,37 +621,37 @@ public class ComposeActivity extends Activity implements ICacheWordSubscriber
 	{
 		Bundle extras = intent.getExtras();
 		
-		if(intent.hasExtra(EXTRA_TO_ADDRESS) == true)
+		if(intent.hasExtra(EXTRA_TO_ADDRESS))
 		{
 			mToAddress = extras.getString(EXTRA_TO_ADDRESS);
 		}
 
-		if(intent.hasExtra(EXTRA_FROM_ADDRESS) == true)
+		if(intent.hasExtra(EXTRA_FROM_ADDRESS))
 		{
 			mFromAddress = extras.getString(EXTRA_FROM_ADDRESS);		
 		}
 		
-		if(intent.hasExtra(EXTRA_SUBJECT) == true)
+		if(intent.hasExtra(EXTRA_SUBJECT))
 		{
 			mSubject = extras.getString(EXTRA_SUBJECT);
 		}
 		
-		if(intent.hasExtra(EXTRA_BODY) == true)
+		if(intent.hasExtra(EXTRA_BODY))
 		{
 			mBody = extras.getString(EXTRA_BODY);
 		}
 		
-		if(intent.hasExtra(EXTRA_COLOUR_R) == true)
+		if(intent.hasExtra(EXTRA_COLOUR_R))
 		{
 			mColourR = extras.getInt(EXTRA_COLOUR_R);
 		}
 		
-		if(intent.hasExtra(EXTRA_COLOUR_G) == true)
+		if(intent.hasExtra(EXTRA_COLOUR_G))
 		{
 			mColourG = extras.getInt(EXTRA_COLOUR_G);
 		}
 		
-		if(intent.hasExtra(EXTRA_COLOUR_B) == true)
+		if(intent.hasExtra(EXTRA_COLOUR_B))
 		{
 			mColourB = extras.getInt(EXTRA_COLOUR_B);
 		}

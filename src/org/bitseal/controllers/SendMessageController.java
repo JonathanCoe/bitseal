@@ -126,7 +126,7 @@ public class SendMessageController
 	 */
 	public boolean disseminateMessage(Payload msgPayload, Pubkey toPubkey, boolean POWDone)
 	{
-		if (POWDone == true)
+		if (POWDone)
 		{
 			return new ServerCommunicator().disseminateMsg(msgPayload.getPayload());
 		}

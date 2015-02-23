@@ -53,7 +53,7 @@ public class CreateIdentityController
 		
 		boolean disseminationSuccessful;
 		
-		if (POWDone == true)
+		if (POWDone)
 		{
 			disseminationSuccessful = new ServerCommunicator().disseminatePubkey(payload);
 		}

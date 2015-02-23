@@ -163,7 +163,7 @@ public class ApiCaller
 		{
 			boolean connectionSuccessful = doConnectionTest();
 			
-			if (connectionSuccessful == true)
+			if (connectionSuccessful)
 			{
 				Log.i(TAG, "Successfully connected to " + url.toString());
 				

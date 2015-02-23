@@ -68,7 +68,7 @@ public class MessageProvider
     public long addMessage(Message m)
     {
     	int belongsToMe = 0;
-    	if (m.belongsToMe() == true)
+    	if (m.belongsToMe())
     	{
     		belongsToMe = 1;
     	}
@@ -320,7 +320,7 @@ public class MessageProvider
     public void updateMessage(Message m)
     {
     	int belongsToMe = 0;
-    	if (m.belongsToMe() == true)
+    	if (m.belongsToMe())
     	{
     		belongsToMe = 1;
     	}

@@ -125,7 +125,7 @@ public class AckProcessor
 		
 		// If it is sent successfully, delete it from the database. If not, it will be kept
 		// and we will try to send it again later. 
-		if (disseminationSuccessful == true)
+		if (disseminationSuccessful)
 		{
 			PayloadProvider payProv = PayloadProvider.get(App.getContext());
 			payProv.deletePayload(p);

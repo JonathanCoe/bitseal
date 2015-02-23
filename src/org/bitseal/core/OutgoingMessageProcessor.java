@@ -291,7 +291,7 @@ public class OutgoingMessageProcessor
 		msg.setStreamNumber(toPubkey.getStreamNumber());
 		msg.setPayload(encryptedPayload);
 		
-		if (doPOW == true)
+		if (doPOW)
 		{
 			MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_doing_pow));
 			
@@ -428,7 +428,7 @@ public class OutgoingMessageProcessor
 		
 		// Create the payload for the ack msg
 		byte[] payload = new byte[0];
-		if (doPOW == true)
+		if (doPOW)
 		{
 			// Update the status of this message displayed in the UI
 			String messageStatus = App.getContext().getString(R.string.message_status_doing_ack_pow);
@@ -485,7 +485,7 @@ public class OutgoingMessageProcessor
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		try 
 		{
-			if (powDone == true)
+			if (powDone)
 			{
 				outputStream.write(powNonceBytes);
 			}

@@ -94,7 +94,7 @@ public class NotificationsService extends IntentService
 		boolean newMessagesNotificationCurrentlyDisplayed = prefs.getBoolean(NotificationsService.KEY_NEW_MESSAGES_NOTIFICATION_CURRENTLY_DISPLAYED, false);
 		
 		// If there is, cancel the current notification and show a new one that takes account of the number of messages referred to in the last notification
-		if (newMessagesNotificationCurrentlyDisplayed == true)
+		if (newMessagesNotificationCurrentlyDisplayed)
 		{
 			NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 			notificationManager.cancel(NEW_MESSAGES_NOTIFICATION_ID);

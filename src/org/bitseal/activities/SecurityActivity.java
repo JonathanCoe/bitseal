@@ -260,7 +260,7 @@ public class SecurityActivity extends Activity implements ICacheWordSubscriber
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		boolean databasePassphraseSaved = prefs.getBoolean(KEY_DATABASE_PASSPHRASE_SAVED, false);
 		Log.i(TAG, "Database passphrase saved is set to " + databasePassphraseSaved);
-		if (databasePassphraseSaved == true)
+		if (databasePassphraseSaved)
 		{
 			changePassphraseButton.setVisibility(View.VISIBLE);
 			

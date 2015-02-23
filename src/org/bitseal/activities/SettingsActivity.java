@@ -168,7 +168,7 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 		// Read the Shared Preferences to determine whether or not the settings should be visible
 		boolean showSettings = prefs.getBoolean(KEY_SHOW_SETTINGS, false);
 		Log.i(TAG, "Show settings is set to " + showSettings);
-		if (showSettings == true)
+		if (showSettings)
 		{
 			showSettings();
 			

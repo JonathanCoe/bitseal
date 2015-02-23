@@ -64,7 +64,7 @@ public class PubkeyProvider
     public long addPubkey(Pubkey p)
     {
     	int belongsToMe = 0;
-    	if (p.belongsToMe() == true)
+    	if (p.belongsToMe())
     	{
     		belongsToMe = 1;
     	}
@@ -341,7 +341,7 @@ public class PubkeyProvider
     public void updatePubkey(Pubkey p)
     {
     	int belongsToMe = 0;
-    	if (p.belongsToMe() == true)
+    	if (p.belongsToMe())
     	{
     		belongsToMe = 1;
     	}

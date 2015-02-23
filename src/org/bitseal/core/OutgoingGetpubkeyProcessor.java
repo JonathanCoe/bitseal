@@ -44,7 +44,7 @@ public class OutgoingGetpubkeyProcessor
 		// Disseminate the getpubkey payload
 		ServerCommunicator servCom = new ServerCommunicator();
 		boolean disseminationSuccessful = servCom.disseminateGetpubkey(getpubkeyPayload.getPayload());
-		if (disseminationSuccessful == true)
+		if (disseminationSuccessful)
 		{
 			getpubkeyPayload.setTime(System.currentTimeMillis() / 1000); // Set the 'time' value of the getpubkey Payload to be the last time at which the payload
 																		 // was successfully disseminated. This allows us to determine when to disseminate it again. 
@@ -86,7 +86,7 @@ public class OutgoingGetpubkeyProcessor
 			{
 				ServerCommunicator servCom = new ServerCommunicator();
 				boolean disseminationSuccessful = servCom.disseminateGetpubkey(getpubkeyPayload.getPayload());
-				if (disseminationSuccessful == true)
+				if (disseminationSuccessful)
 				{
 					getpubkeyPayload.setTime(System.currentTimeMillis() / 1000);
 					payProv.updatePayload(getpubkeyPayload);

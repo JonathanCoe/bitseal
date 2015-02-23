@@ -457,7 +457,7 @@ public class PubkeyProcessor
 			throw new RuntimeException("IOException occurred in PubkeyProcessor.constructPubkeyPayloadForDissemination()", e);
 		}
 			
-		if (doPOW == true)
+		if (doPOW)
 		{
 			long powNonce = new POWProcessor().doPOW(payload, pubkey.getExpirationTime(), POWProcessor.NETWORK_NONCE_TRIALS_PER_BYTE, POWProcessor.NETWORK_EXTRA_BYTES);
 			payload = ByteUtils.concatenateByteArrays(ByteUtils.longToBytes(powNonce), payload);

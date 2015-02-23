@@ -63,19 +63,19 @@ public class PayloadProvider
     public long addPayload(Payload p)
     {
     	int belongsToMe = 0;
-    	if (p.belongsToMe() == true)
+    	if (p.belongsToMe())
     	{
     		belongsToMe = 1;
     	}
     	
     	int processingComplete = 0;
-    	if (p.processingComplete() == true)
+    	if (p.processingComplete())
     	{
     		processingComplete = 1;
     	}
     	
     	int powDone = 0;
-    	if (p.powDone() == true)
+    	if (p.powDone())
     	{
     		powDone = 1;
     	}
@@ -426,19 +426,19 @@ public class PayloadProvider
     public void updatePayload(Payload p)
     {
     	int belongsToMe = 0;
-    	if (p.belongsToMe() == true)
+    	if (p.belongsToMe())
     	{
     		belongsToMe = 1;
     	}
     	
     	int processingComplete = 0;
-    	if (p.processingComplete() == true)
+    	if (p.processingComplete())
     	{
     		processingComplete = 1;
     	}
     	
     	int powDone = 0;
-    	if (p.powDone() == true)
+    	if (p.powDone())
     	{
     		powDone = 1;
     	}

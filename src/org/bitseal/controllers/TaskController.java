@@ -365,7 +365,7 @@ public class TaskController
 	/**
 	 * Takes all Address objects saved in the database and checks with servers 
 	 * to retrieve any new messages that have been sent to them. If any new messages
-	 * are retrieved, they are processed, and acknowledgments for them are sent. <br><br>
+	 * are retrieved, they are processed, and acknowledgements for them are sent. <br><br>
 	 * 
 	 * Note that we do NOT create QueueRecords for the 'check for messages and send acks'
 	 * task, because it is a default action that will be carried out regularly anyway. See 
