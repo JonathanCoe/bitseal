@@ -70,9 +70,6 @@ public class ApiCaller
 			retrievedServerRecords = servProv.getAllServerRecords();
 		}
 		numberOfServers = retrievedServerRecords.size();
-		
-		// TODO: This can be removed in the version after 0.5.1
-		retrievedServerRecords = updateDefaultServers(retrievedServerRecords);
 				
         // Set up ArrayLists for the URLs, usernames, and passwords of the servers
     	urlList = new ArrayList<URL>();
@@ -115,35 +112,7 @@ public class ApiCaller
 		
 		Log.i(TAG, "ApiCaller setup completed");
 	}
-	
-	/**
-	 * Temporary code used to update the IP address of one of the
-	 * default servers. 
-	 */
-	private ArrayList<ServerRecord> updateDefaultServers(ArrayList<ServerRecord> currentServerRecords)
-	{
-		// Check whether the old server IP address is in use
-		for (ServerRecord s : currentServerRecords)
-		{
-			if (s.getURL().equals("http://128.199.211.11:8442"))
-			{
-				// Restore the default server list (which now contains the updated IP address)
-				Log.d(TAG, "Updating the list of servers");
-				
-				ServerRecordProvider servProv = ServerRecordProvider.get(App.getContext());
-				servProv.deleteAllServerRecords();
-				
-				ServerHelper servHelp = new ServerHelper();
-				servHelp.setupDefaultServers();
-				
-				return servProv.getAllServerRecords();
-			}
-		}
 		
-		// If the old IP address is not in use
-		return currentServerRecords;
-	}
-	
 	/**
      * Makes a call to the PyBitmessage XMLRPC API. <br><br>
      * 
