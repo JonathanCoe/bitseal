@@ -326,7 +326,8 @@ public class BackgroundService extends WakefulIntentService  implements ICacheWo
 							// Update the status of the Message we were trying to send to indicate that sending has failed
 							MessageProvider msgProv = MessageProvider.get(getApplicationContext());
 							Message messageToSend = msgProv.searchForSingleRecord(q.getObject0Id());
-							MessageStatusHandler.updateMessageStatus(messageToSend, getApplicationContext().getString(R.string.message_status_sending_failed));
+							String messageStatus = App.getContext().getString(R.string.message_status_sending_failed);
+							MessageStatusHandler.updateMessageStatus(messageToSend, messageStatus);
 						}
 						queueProc.deleteQueueRecord(q);
 						continue;

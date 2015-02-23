@@ -273,8 +273,10 @@ public class OutgoingMessageProcessor
 		
 		// Construct the payload to be encrypted
 		byte[] msgDataForEncryption = constructMsgPayloadForEncryption(unencMsg);
-		
-		MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_encrypting_message));
+				
+		// Update the status of this message displayed in the UI
+		String messageStatus = App.getContext().getString(R.string.message_status_encrypting_message);
+		MessageStatusHandler.updateMessageStatus(message, messageStatus);
 		
 		// Encrypt the payload
 		CryptProcessor cryptProc = new CryptProcessor();
@@ -428,7 +430,9 @@ public class OutgoingMessageProcessor
 		byte[] payload = new byte[0];
 		if (doPOW == true)
 		{
-			MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_doing_ack_pow));
+			// Update the status of this message displayed in the UI
+			String messageStatus = App.getContext().getString(R.string.message_status_doing_ack_pow);
+			MessageStatusHandler.updateMessageStatus(message, messageStatus);
 			
 			// Do proof of work for the acknowledgement payload
 			Log.i(TAG, "About to do POW calculations for the acknowledgment payload of a msg that we are sending");

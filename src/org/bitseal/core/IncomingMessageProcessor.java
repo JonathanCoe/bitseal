@@ -33,7 +33,6 @@ import org.bitseal.util.VarintEncoder;
 import org.spongycastle.jce.interfaces.ECPrivateKey;
 import org.spongycastle.jce.interfaces.ECPublicKey;
 
-import android.content.Intent;
 import android.util.Base64;
 import android.util.Log;
 
@@ -233,15 +232,16 @@ public class IncomingMessageProcessor
 				ArrayList<Message> retrievedMessages = msgProv.searchMessages(MessagesTable.COLUMN_ACK_PAYLOAD_ID, String.valueOf(p.getId()));
 				if (retrievedMessages.size() == 1)
 				{
+					// Retrieve the original message
 					Message originalMessage = retrievedMessages.get(0);
-					MessageStatusHandler.updateMessageStatus(originalMessage, App.getContext().getString(R.string.message_status_ack_received));
+					
+					// Update the status of this message displayed in the UI
+					String messageStatus = App.getContext().getString(R.string.message_status_ack_received);
+					MessageStatusHandler.updateMessageStatus(originalMessage, messageStatus);
+					
 					Log.d(TAG, "Acknowledgement received!\n" +
 							"Message subject:    " + originalMessage.getSubject() + "\n" +
 							"Message to address: " +  originalMessage.getToAddress());
-					
-					// Update the UI
-					Intent intent = new Intent(UI_NOTIFICATION);
-					App.getContext().sendBroadcast(intent);
 					
 					// Delete any QueueRecords for sending this message
 					QueueRecordProvider queueProv = QueueRecordProvider.get(App.getContext());

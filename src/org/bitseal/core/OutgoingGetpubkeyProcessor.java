@@ -77,7 +77,9 @@ public class OutgoingGetpubkeyProcessor
 		// Check whether an Internet connection is available. 
 		if (NetworkHelper.checkInternetAvailability() == true)
 		{
-			MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_requesting_pubkey));
+			// Update the status of this message displayed in the UI
+			String messageStatus = App.getContext().getString(R.string.message_status_requesting_pubkey);
+			MessageStatusHandler.updateMessageStatus(message, messageStatus);
 			
 			// Disseminate the getpubkey payload
 			try

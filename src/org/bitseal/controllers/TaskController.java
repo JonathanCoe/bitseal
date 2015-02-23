@@ -254,8 +254,10 @@ public class TaskController
 		
 		QueueRecordProcessor queueProc = new QueueRecordProcessor();
 		
-		MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_constructing_payload));
-		
+		// Update the status of this message displayed in the UI
+		String messageStatus = App.getContext().getString(R.string.message_status_constructing_payload);
+		MessageStatusHandler.updateMessageStatus(message, messageStatus);
+				
 		// Attempt to construct the message payload
 		Payload msgPayload = null;
 		try
@@ -340,14 +342,16 @@ public class TaskController
 				Message originalMessage = retrievedMessages.get(0);
 				
 				// Check whether we should expect an acknowledgement and update the original Message's status accordingly
+				String messageStatus;
 				if (BehaviourBitfieldProcessor.checkSendsAcks(toPubkey.getBehaviourBitfield()))
 				{
-					MessageStatusHandler.updateMessageStatus(originalMessage, App.getContext().getString(R.string.message_status_message_sent));
+					messageStatus = App.getContext().getString(R.string.message_status_message_sent);
 				}
 				else
 				{
-					MessageStatusHandler.updateMessageStatus(originalMessage, App.getContext().getString(R.string.message_status_message_sent_no_ack_expected));
+					messageStatus = App.getContext().getString(R.string.message_status_message_sent_no_ack_expected);
 				}
+				MessageStatusHandler.updateMessageStatus(originalMessage, messageStatus);
 			}
 			else
 			{
