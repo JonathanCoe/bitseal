@@ -74,9 +74,13 @@ public class SendMessageController
 				// Check whether an Internet connection is available. 
 				if (NetworkHelper.checkInternetAvailability() == true)
 				{
+					// Update the status of this message displayed in the UI
+					String messageStatus = App.getContext().getString(R.string.message_status_requesting_pubkey);
+					MessageStatusHandler.updateMessageStatus(message, messageStatus);
+										
 					// Disseminate the getpubkey Payload that we created earlier
-					MessageStatusHandler.updateMessageStatus(message, App.getContext().getString(R.string.message_status_requesting_pubkey));
-					new OutgoingGetpubkeyProcessor().disseminateGetpubkeyRequest(getpubkeyPayload);
+					OutgoingGetpubkeyProcessor outGetProc = new OutgoingGetpubkeyProcessor();
+					outGetProc.disseminateGetpubkeyRequest(getpubkeyPayload);
 				}
 				else
 				{
@@ -87,7 +91,8 @@ public class SendMessageController
 			else
 			{
 				// Create a new getpubkey Payload and disseminate it
-				return new OutgoingGetpubkeyProcessor().constructAndDisseminateGetpubkeyRequst(message, timeToLive);
+				OutgoingGetpubkeyProcessor outGetProc = new OutgoingGetpubkeyProcessor();
+				return outGetProc.constructAndDisseminateGetpubkeyRequst(message, timeToLive);
 			}
 		}
 	}
