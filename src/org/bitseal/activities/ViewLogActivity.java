@@ -40,7 +40,9 @@ import android.widget.Toast;
 public class ViewLogActivity extends ListActivity implements ICacheWordSubscriber
 {   
     /** A set of log tags that we want filtered out of the log */
-	private static final String[] UNWANTED_LOG_TAGS = {"art", "Choreographer", "dalvikvm", "qdmemalloc", "System", "InputMethodManager", "CacheWordService", "CacheWordBinder"};
+	private static final String[] UNWANTED_LOG_TAGS = {"art", "Choreographer", "dalvikvm", "qdmemalloc", "System",
+													"InputMethodManager", "CacheWordService", "CacheWordBinder", 
+													"Resources"};
     
     /** The frequency in milliseconds by which we will update the log view */
     private static final long UPDATE_FREQUENCY_MILLISECONDS = 1500;
