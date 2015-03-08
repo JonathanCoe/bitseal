@@ -95,6 +95,7 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 				Log.i(TAG, "Security settings button clicked");
 				
 		        Intent i = new Intent(getBaseContext(), SecurityActivity.class);
+		        i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 		        startActivityForResult(i, 0);
 			}
 		});
@@ -108,6 +109,7 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 				Log.i(TAG, "Network settings button clicked");
 				
 		        Intent i = new Intent(getBaseContext(), NetworkSettingsActivity.class);
+		        i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 		        startActivityForResult(i, 0);
 			}
 		});
@@ -121,6 +123,21 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 				Log.i(TAG, "Import or export button clicked");
 				
 		        Intent i = new Intent(getBaseContext(), ImportOrExportActivity.class);
+		        i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+		        startActivityForResult(i, 0);
+			}
+		});
+		
+		mSystemToolsButton = (Button) findViewById(R.id.settings_system_tools_button);
+		mSystemToolsButton.setOnClickListener(new View.OnClickListener()
+		{		
+			@Override
+			public void onClick(View v)
+			{
+				Log.i(TAG, "Settings system tools button clicked");
+				
+		        Intent i = new Intent(getBaseContext(), SystemToolsActivity.class);
+		        i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 		        startActivityForResult(i, 0);
 			}
 		});
@@ -151,19 +168,6 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 	            }
         	}
         });
-		
-		mSystemToolsButton = (Button) findViewById(R.id.settings_system_tools_button);
-		mSystemToolsButton.setOnClickListener(new View.OnClickListener()
-		{		
-			@Override
-			public void onClick(View v)
-			{
-				Log.i(TAG, "Settings system tools button clicked");
-				
-		        Intent i = new Intent(getBaseContext(), SystemToolsActivity.class);
-		        startActivityForResult(i, 0);
-			}
-		});
 		
 		// Read the Shared Preferences to determine whether or not the settings should be visible
 		boolean showSettings = prefs.getBoolean(KEY_SHOW_SETTINGS, false);

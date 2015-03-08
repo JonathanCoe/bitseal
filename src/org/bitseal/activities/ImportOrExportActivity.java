@@ -90,6 +90,7 @@ public class ImportOrExportActivity extends Activity implements ICacheWordSubscr
 				Log.i(TAG, "Export address button clicked");
 				
 		        Intent i = new Intent(getBaseContext(), ExportAddressesActivity.class);
+		        i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 		        startActivityForResult(i, 0);
 			}
 		});

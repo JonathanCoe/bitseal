@@ -67,6 +67,7 @@ public class SystemToolsActivity extends Activity implements ICacheWordSubscribe
 				Log.i(TAG, "System tools view log button clicked");
 				
 		        Intent i = new Intent(getBaseContext(), ViewLogActivity.class);
+		        i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 		        startActivityForResult(i, 0);
 			}
 		});
@@ -80,6 +81,7 @@ public class SystemToolsActivity extends Activity implements ICacheWordSubscribe
 				Log.i(TAG, "System tools view exceptions button clicked");
 				
 		        Intent i = new Intent(getBaseContext(), ViewErrorsActivity.class);
+		        i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 		        startActivityForResult(i, 0);
 			}
 		});
