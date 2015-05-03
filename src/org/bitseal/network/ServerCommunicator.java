@@ -40,19 +40,19 @@ public class ServerCommunicator
 	 * this should not create any problems from duplication(e.g. a recipient getting
 	 * the same message multiple times). 
 	 */
-	private static final int MSG_DISSEMINATION_REDUNDANCY_FACTOR = 3;
+	private static final int MSG_DISSEMINATION_REDUNDANCY_FACTOR = 2;
 	
 	/**
 	 * Determines the level of redundancy the client will attempt to maintain when
 	 * attempting to disseminate pubkeys to the rest of the Bitmessage network.
 	 */
-	private static final int PUBKEY_DISSEMINATION_REDUNDANCY_FACTOR = 4;
+	private static final int PUBKEY_DISSEMINATION_REDUNDANCY_FACTOR = 2;
 	
 	/**
 	 * Determines the level of redundancy the client will attempt to maintain when
 	 * attempting to disseminate getpubkeys to the rest of the Bitmessage network.
 	 */
-	private static final int GETPUBKEY_DISSEMINATION_REDUNDANCY_FACTOR = 4;
+	private static final int GETPUBKEY_DISSEMINATION_REDUNDANCY_FACTOR = 2;
 	
 	/**
 	 * The modifier that we use to calculate the 'received since' time
