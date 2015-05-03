@@ -40,7 +40,9 @@ import android.widget.Toast;
 public class ViewLogActivity extends ListActivity implements ICacheWordSubscriber
 {   
     /** A set of log tags that we want filtered out of the log */
-	private static final String[] UNWANTED_LOG_TAGS = {"art", "Choreographer", "dalvikvm", "qdmemalloc", "System", "InputMethodManager", "CacheWordService", "CacheWordBinder"};
+	private static final String[] UNWANTED_LOG_TAGS = {"art", "Choreographer", "dalvikvm", "qdmemalloc", "System",
+													"InputMethodManager", "CacheWordService", "CacheWordBinder", 
+													"Resources"};
     
     /** The frequency in milliseconds by which we will update the log view */
     private static final long UPDATE_FREQUENCY_MILLISECONDS = 1500;
@@ -433,31 +435,37 @@ public class ViewLogActivity extends ListActivity implements ICacheWordSubscribe
  	    {
  		    case R.id.menu_item_inbox:
  		        Intent intent1 = new Intent(this, InboxActivity.class);
+ 		        intent1.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
  		        startActivity(intent1);
  		        break;
  		        
  		    case R.id.menu_item_sent:
  		        Intent intent2 = new Intent(this, SentActivity.class);
+ 		        intent2.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
  		        startActivity(intent2);
  		        break;  
  		        
  		    case R.id.menu_item_compose:
  		        Intent intent3 = new Intent(this, ComposeActivity.class);
+ 		        intent3.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
  		        startActivity(intent3);
  		        break;
  		        
  		    case R.id.menu_item_identities:
  		        Intent intent4 = new Intent(this, IdentitiesActivity.class);
+ 		        intent4.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
  		        startActivity(intent4);
  		        break;
  		        
  		    case R.id.menu_item_addressBook:
  		        Intent intent5 = new Intent(this, AddressBookActivity.class);
+ 		        intent5.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
  		        startActivity(intent5);
  		        break;
  		        
  		    case R.id.menu_item_settings:
  		        Intent intent6 = new Intent(this, SettingsActivity.class);
+ 		        intent6.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
  		        startActivity(intent6);
  		        break;
  		        

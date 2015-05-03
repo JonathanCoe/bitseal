@@ -95,6 +95,7 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 				Log.i(TAG, "Security settings button clicked");
 				
 		        Intent i = new Intent(getBaseContext(), SecurityActivity.class);
+		        i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 		        startActivityForResult(i, 0);
 			}
 		});
@@ -108,6 +109,7 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 				Log.i(TAG, "Network settings button clicked");
 				
 		        Intent i = new Intent(getBaseContext(), NetworkSettingsActivity.class);
+		        i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 		        startActivityForResult(i, 0);
 			}
 		});
@@ -121,6 +123,21 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 				Log.i(TAG, "Import or export button clicked");
 				
 		        Intent i = new Intent(getBaseContext(), ImportOrExportActivity.class);
+		        i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+		        startActivityForResult(i, 0);
+			}
+		});
+		
+		mSystemToolsButton = (Button) findViewById(R.id.settings_system_tools_button);
+		mSystemToolsButton.setOnClickListener(new View.OnClickListener()
+		{		
+			@Override
+			public void onClick(View v)
+			{
+				Log.i(TAG, "Settings system tools button clicked");
+				
+		        Intent i = new Intent(getBaseContext(), SystemToolsActivity.class);
+		        i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 		        startActivityForResult(i, 0);
 			}
 		});
@@ -151,19 +168,6 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
 	            }
         	}
         });
-		
-		mSystemToolsButton = (Button) findViewById(R.id.settings_system_tools_button);
-		mSystemToolsButton.setOnClickListener(new View.OnClickListener()
-		{		
-			@Override
-			public void onClick(View v)
-			{
-				Log.i(TAG, "Settings system tools button clicked");
-				
-		        Intent i = new Intent(getBaseContext(), SystemToolsActivity.class);
-		        startActivityForResult(i, 0);
-			}
-		});
 		
 		// Read the Shared Preferences to determine whether or not the settings should be visible
 		boolean showSettings = prefs.getBoolean(KEY_SHOW_SETTINGS, false);
@@ -227,26 +231,31 @@ public class SettingsActivity extends Activity implements ICacheWordSubscriber
  	    {
  		    case R.id.menu_item_inbox:
  		        Intent intent1 = new Intent(this, InboxActivity.class);
+ 		        intent1.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
  		        startActivity(intent1);
  		        break;
  		        
  		    case R.id.menu_item_sent:
  		        Intent intent2 = new Intent(this, SentActivity.class);
+ 		        intent2.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
  		        startActivity(intent2);
  		        break;  
  		        
  		    case R.id.menu_item_compose:
  		        Intent intent3 = new Intent(this, ComposeActivity.class);
+ 		        intent3.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
  		        startActivity(intent3);
  		        break;
  		        
  		    case R.id.menu_item_identities:
  		        Intent intent4 = new Intent(this, IdentitiesActivity.class);
+ 		        intent4.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
  		        startActivity(intent4);
  		        break;
  		        
  		    case R.id.menu_item_addressBook:
  		        Intent intent5 = new Intent(this, AddressBookActivity.class);
+ 		        intent5.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
  		        startActivity(intent5);
  		        break;
  		        
