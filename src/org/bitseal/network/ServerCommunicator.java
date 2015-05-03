@@ -82,7 +82,7 @@ public class ServerCommunicator
 	 * a large number of servers it would take too long to poll all of them on each
 	 * attempt to retrieve data. 
 	 */
-	private static final int MAX_SERVERS_TO_POLL = 2;
+	private static final int MAX_SERVERS_TO_POLL = 1;
 	
 	/**
 	 * The maximum size of an incoming payload that we will accept, in bytes.
